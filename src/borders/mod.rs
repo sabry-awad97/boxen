@@ -2,5 +2,5 @@
 pub mod chars;
 pub mod styles;
 
-pub use chars::*;
-pub use styles::*;
+// Re-export key utilities
+pub use styles::BorderStyleUtils;
