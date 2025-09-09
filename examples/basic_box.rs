@@ -1,6 +1,6 @@
 /// Basic boxen usage example
 /// Run with: cargo run --example basic_box
-use ::boxen::{boxen, simple_box, double_box, round_box};
+use ::boxen::{boxen, double_box, round_box, simple_box};
 
 fn main() {
     println!("=== Basic Boxen Examples ===\n");

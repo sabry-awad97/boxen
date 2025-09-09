@@ -1,4 +1,200 @@
-/// Configuration options and types for boxen
+//! # Configuration System
+//!
+//! This module provides comprehensive configuration options for customizing the appearance
+//! and behavior of terminal boxes. The configuration system is built around flexible,
+//! composable options that allow fine-grained control over every aspect of box rendering.
+//!
+//! ## Overview
+//!
+//! The configuration system consists of several key components:
+//! - **`BoxenOptions`**: Main configuration struct containing all styling options
+//! - **`BoxenBuilder`**: Ergonomic builder pattern for constructing configurations
+//! - **Style Enums**: Type-safe options for borders, alignment, positioning, and colors
+//! - **Spacing Types**: Flexible spacing configuration for padding and margins
+//!
+//! ## Quick Start
+//!
+//! ```rust
+//! use boxen::{BoxenBuilder, BorderStyle, TextAlignment, Color, TitleAlignment};
+//!
+//! // Simple box with basic styling
+//! let result = BoxenBuilder::new()
+//!     .border_style(BorderStyle::Double)
+//!     .padding(2)
+//!     .text_alignment(TextAlignment::Center)
+//!     .render("Hello, World!")
+//!     .unwrap();
+//!
+//! // Advanced box with colors and title
+//! let result = BoxenBuilder::new()
+//!     .border_style(BorderStyle::Round)
+//!     .border_color(Color::Named("blue".to_string()))
+//!     .background_color(Color::Named("white".to_string()))
+//!     .title("Status Report")
+//!     .title_alignment(TitleAlignment::Center)
+//!     .width(50)
+//!     .margin(1)
+//!     .render("System operational")
+//!     .unwrap();
+//! ```
+//!
+//! ## Configuration Categories
+//!
+//! ### Border Configuration
+//! - **Style**: Choose from 9 predefined border styles (Single, Double, Rounded, etc.)
+//! - **Color**: Optional border coloring with full color palette support
+//! - **Dimming**: Reduce border intensity for subtle presentation
+//!
+//! ### Layout Configuration
+//! - **Dimensions**: Fixed width/height or automatic sizing
+//! - **Positioning**: Left, center, or right alignment within terminal
+//! - **Spacing**: Independent padding and margin control
+//! - **Fullscreen**: Optional fullscreen mode with various behaviors
+//!
+//! ### Content Configuration
+//! - **Text Alignment**: Left, center, or right alignment within the box
+//! - **Background**: Optional background coloring for content area
+//! - **Title**: Optional title with independent alignment control
+//!
+//! ## Builder Pattern
+//!
+//! The recommended way to create configurations is through the builder pattern:
+//!
+//! ```rust
+//! use boxen::{BoxenBuilder, BorderStyle, TextAlignment, Float};
+//!
+//! let config = BoxenBuilder::new()
+//!     .border_style(BorderStyle::Bold)
+//!     .padding(3)
+//!     .margin(1)
+//!     .text_alignment(TextAlignment::Center)
+//!     .float(Float::Center)
+//!     .width(60)
+//!     .title("Configuration Example")
+//!     .build();
+//! ```
+//!
+//! ## Direct Configuration
+//!
+//! For advanced use cases, you can construct `BoxenOptions` directly:
+//!
+//! ```rust
+//! use boxen::{BoxenOptions, BorderStyle, TextAlignment, Spacing, Color};
+//!
+//! let options = BoxenOptions {
+//!     border_style: BorderStyle::Double,
+//!     padding: Spacing::from((2, 4, 2, 4)), // top, right, bottom, left
+//!     margin: Spacing::from(1),
+//!     text_alignment: TextAlignment::Center,
+//!     border_color: Some(Color::Named("green".to_string())),
+//!     title: Some("Direct Config".to_string()),
+//!     width: Some(50),
+//!     ..Default::default()
+//! };
+//! ```
+//!
+//! ## Spacing System
+//!
+//! The spacing system provides flexible control over padding and margins:
+//!
+//! ### Uniform Spacing
+//! ```rust
+//! use boxen::Spacing;
+//! let spacing = Spacing::from(2); // 2 units on all sides
+//! ```
+//!
+//! ### Individual Control
+//! ```rust
+//! use boxen::Spacing;
+//! let spacing = Spacing::from((1, 2, 1, 2)); // top, right, bottom, left
+//! ```
+//!
+//! ### Direct Field Access
+//! ```rust
+//! use boxen::Spacing;
+//! let spacing = Spacing {
+//!     top: 2,
+//!     right: 3,
+//!     bottom: 1,
+//!     left: 3,
+//! };
+//! ```
+//!
+//! ## Color System
+//!
+//! Colors can be specified in multiple formats:
+//!
+//! ### Named Colors
+//! ```rust
+//! use boxen::{BoxenBuilder, Color};
+//!
+//! let result = BoxenBuilder::new().border_color(Color::Named("red".to_string()));
+//! ```
+//!
+//! ### RGB Values
+//! ```rust
+//! use boxen::{BoxenBuilder, Color};
+//!
+//! let result = BoxenBuilder::new().border_color(Color::Rgb(255, 128, 0));
+//! ```
+//!
+//! ### Hex Strings
+//! ```rust
+//! use boxen::{BoxenBuilder, Color};
+//!
+//! let result = BoxenBuilder::new().border_color(Color::Hex("#FF8000".to_string()));
+//! ```
+//!
+//! ## Fullscreen Mode
+//!
+//! Fullscreen mode provides several behaviors for terminal-wide boxes:
+//!
+//! ```rust
+//! use boxen::{BoxenBuilder, FullscreenMode};
+//!
+//! // Automatically use terminal dimensions
+//! let result = BoxenBuilder::new().fullscreen(FullscreenMode::Auto);
+//!
+//! // Use custom function to calculate dimensions
+//! let result = BoxenBuilder::new().fullscreen(FullscreenMode::Custom(|width, height| {
+//!     (width - 4, height - 2)
+//! }));
+//! ```
+//!
+//! ## Validation and Error Handling
+//!
+//! All configuration options are validated before rendering:
+//!
+//! ```rust
+//! use boxen::BoxenBuilder;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     match BoxenBuilder::new().width(0).render("Invalid") {
+//!         Ok(result) => println!("{}", result),
+//!         Err(e) => {
+//!             println!("Configuration error: {}", e);
+//!             // Error includes helpful suggestions for fixing the issue
+//!             for recommendation in e.recommendations() {
+//!                 println!("💡 {}: {}", recommendation.issue, recommendation.suggestion);
+//!             }
+//!         }
+//!     }
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ## Performance Considerations
+//!
+//! - Configuration structs are lightweight and can be cloned efficiently
+//! - Builder operations are zero-cost until `build()` or `render()` is called
+//! - Default values are optimized for common use cases
+//! - Validation is performed only when necessary to avoid overhead
+//!
+//! ## Thread Safety
+//!
+//! All configuration types are thread-safe and can be shared between threads
+//! or used in concurrent rendering operations.
+
 use crate::error::{BoxenError, BoxenResult};
 use crate::terminal::{calculate_border_width, get_terminal_height, get_terminal_width};
 
@@ -57,18 +253,31 @@ use crate::terminal::{calculate_border_width, get_terminal_height, get_terminal_
 /// - `fullscreen`: Optional fullscreen mode configuration
 #[derive(Debug, Clone)]
 pub struct BoxenOptions {
+    /// The visual style of the border (Single, Double, Rounded, etc.)
     pub border_style: BorderStyle,
+    /// Internal spacing between the border and content
     pub padding: Spacing,
+    /// External spacing around the entire box
     pub margin: Spacing,
+    /// How to align text within the box content area
     pub text_alignment: TextAlignment,
+    /// Optional title to display in the top border
     pub title: Option<String>,
+    /// How to align the title within the top border
     pub title_alignment: TitleAlignment,
+    /// How to position the box within the terminal width
     pub float: Float,
+    /// Optional fixed width for the box (overrides automatic sizing)
     pub width: Option<usize>,
+    /// Optional fixed height for the box (overrides automatic sizing)
     pub height: Option<usize>,
+    /// Optional color for the border characters
     pub border_color: Option<Color>,
+    /// Optional background color for the content area
     pub background_color: Option<Color>,
+    /// Whether to render the border with reduced intensity
     pub dim_border: bool,
+    /// Optional fullscreen mode configuration
     pub fullscreen: Option<FullscreenMode>,
 }
 
@@ -169,13 +378,21 @@ pub enum BorderStyle {
 /// Border character set for custom borders
 #[derive(Debug, Clone)]
 pub struct BorderChars {
+    /// Character for the top-left corner of the border
     pub top_left: char,
+    /// Character for the top-right corner of the border
     pub top_right: char,
+    /// Character for the bottom-left corner of the border
     pub bottom_left: char,
+    /// Character for the bottom-right corner of the border
     pub bottom_right: char,
+    /// Character for the left vertical edge of the border
     pub left: char,
+    /// Character for the right vertical edge of the border
     pub right: char,
+    /// Character for the top horizontal edge of the border
     pub top: char,
+    /// Character for the bottom horizontal edge of the border
     pub bottom: char,
 }
 
@@ -262,32 +479,44 @@ impl From<(usize, usize, usize, usize)> for Spacing {
 /// Text alignment within the box
 #[derive(Debug, Clone)]
 pub enum TextAlignment {
+    /// Align text to the left side of the box
     Left,
+    /// Center text within the box
     Center,
+    /// Align text to the right side of the box
     Right,
 }
 
 /// Title alignment within the top border
 #[derive(Debug, Clone)]
 pub enum TitleAlignment {
+    /// Align title to the left side of the top border
     Left,
+    /// Center title within the top border
     Center,
+    /// Align title to the right side of the top border
     Right,
 }
 
 /// Box positioning relative to terminal
 #[derive(Debug, Clone)]
 pub enum Float {
+    /// Position box on the left side of the terminal
     Left,
+    /// Center box horizontally in the terminal
     Center,
+    /// Position box on the right side of the terminal
     Right,
 }
 
 /// Color specification for borders and backgrounds
 #[derive(Debug, Clone)]
 pub enum Color {
+    /// Named color (e.g., "red", "blue", "green")
     Named(String),
+    /// Hexadecimal color code (e.g., "#FF0000", "#00FF00")
     Hex(String),
+    /// RGB color values (red, green, blue components 0-255)
     Rgb(u8, u8, u8),
 }
 
@@ -1702,22 +1931,33 @@ mod tests {
 /// Dimension constraints for box calculation
 #[derive(Debug, Clone)]
 pub struct DimensionConstraints {
+    /// Maximum allowed width for the box
     pub max_width: usize,
+    /// Maximum allowed height for the box (None if unlimited)
     pub max_height: Option<usize>,
+    /// Current terminal width in columns
     pub terminal_width: usize,
+    /// Current terminal height in rows (None if unknown)
     pub terminal_height: Option<usize>,
+    /// Width consumed by borders (0 for no border, 2 for visible borders)
     pub border_width: usize,
 }
 
 /// Final calculated layout dimensions
 #[derive(Debug, Clone)]
 pub struct LayoutDimensions {
+    /// Width of the actual text content area
     pub content_width: usize,
+    /// Height of the actual text content area
     pub content_height: usize,
+    /// Total width including borders, padding, and margins
     pub total_width: usize,
+    /// Total height including borders, padding, and margins
     pub total_height: usize,
-    pub inner_width: usize,  // content width + padding
-    pub inner_height: usize, // content height + padding
+    /// Width of content area plus padding (excludes borders and margins)
+    pub inner_width: usize,
+    /// Height of content area plus padding (excludes borders and margins)
+    pub inner_height: usize,
 }
 
 impl Spacing {
