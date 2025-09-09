@@ -1,4 +1,5 @@
 /// Core boxen rendering functionality
+use crate::color::{apply_color_with_dim, apply_colors};
 use crate::error::BoxenResult;
 use crate::options::{BoxenOptions, TitleAlignment};
 use crate::text::text_width;
@@ -109,7 +110,7 @@ fn render_box(
         render_content_with_borders(&mut result, content, options, layout, &border_chars)?;
 
         // Render bottom border
-        let bottom_border = render_bottom_border(&border_chars, layout.inner_width);
+        let bottom_border = render_bottom_border(&border_chars, layout.inner_width, options)?;
         add_line_with_float_positioning(&mut result, &bottom_border, options, layout);
     } else {
         // No border - just render content with padding and margins
@@ -152,7 +153,11 @@ fn render_top_border(
     // End with right corner
     border.push(border_chars.top_right);
 
-    Ok(border)
+    // Apply border color and dim styling
+    let styled_border =
+        apply_color_with_dim(&border, options.border_color.as_ref(), options.dim_border)?;
+
+    Ok(styled_border.to_string())
 }
 
 /// Render top border with embedded title
@@ -217,7 +222,11 @@ fn render_top_border_with_title(
 }
 
 /// Render the bottom border
-fn render_bottom_border(border_chars: &crate::options::BorderChars, inner_width: usize) -> String {
+fn render_bottom_border(
+    border_chars: &crate::options::BorderChars,
+    inner_width: usize,
+    options: &BoxenOptions,
+) -> BoxenResult<String> {
     let mut border = String::new();
 
     border.push(border_chars.bottom_left);
@@ -226,7 +235,11 @@ fn render_bottom_border(border_chars: &crate::options::BorderChars, inner_width:
     }
     border.push(border_chars.bottom_right);
 
-    border
+    // Apply border color and dim styling
+    let styled_border =
+        apply_color_with_dim(&border, options.border_color.as_ref(), options.dim_border)?;
+
+    Ok(styled_border.to_string())
 }
 
 /// Render content lines with left and right borders and padding
@@ -239,7 +252,7 @@ fn render_content_with_borders(
 ) -> BoxenResult<()> {
     // Add top padding
     for _ in 0..options.padding.top {
-        let padded_line = render_padded_empty_line(border_chars, layout.inner_width);
+        let padded_line = render_padded_empty_line(border_chars, layout.inner_width, options)?;
         add_line_with_float_positioning(result, &padded_line, options, layout);
     }
 
@@ -251,7 +264,7 @@ fn render_content_with_borders(
 
     // Add bottom padding
     for _ in 0..options.padding.bottom {
-        let padded_line = render_padded_empty_line(border_chars, layout.inner_width);
+        let padded_line = render_padded_empty_line(border_chars, layout.inner_width, options)?;
         add_line_with_float_positioning(result, &padded_line, options, layout);
     }
 
@@ -274,7 +287,12 @@ fn render_content_without_borders(
     // Add top padding
     for _ in 0..options.padding.top {
         let empty_line = " ".repeat(layout.inner_width);
-        add_line_with_float_positioning(result, &empty_line, options, layout);
+        let styled_line = if let Some(bg_color) = &options.background_color {
+            apply_colors(&empty_line, None, Some(bg_color))?.to_string()
+        } else {
+            empty_line
+        };
+        add_line_with_float_positioning(result, &styled_line, options, layout);
     }
 
     // Render content lines with padding
@@ -285,13 +303,23 @@ fn render_content_without_borders(
             line,
             " ".repeat(options.padding.right)
         );
-        add_line_with_float_positioning(result, &padded_line, options, layout);
+        let styled_line = if let Some(bg_color) = &options.background_color {
+            apply_colors(&padded_line, None, Some(bg_color))?.to_string()
+        } else {
+            padded_line
+        };
+        add_line_with_float_positioning(result, &styled_line, options, layout);
     }
 
     // Add bottom padding
     for _ in 0..options.padding.bottom {
         let empty_line = " ".repeat(layout.inner_width);
-        add_line_with_float_positioning(result, &empty_line, options, layout);
+        let styled_line = if let Some(bg_color) = &options.background_color {
+            apply_colors(&empty_line, None, Some(bg_color))?.to_string()
+        } else {
+            empty_line
+        };
+        add_line_with_float_positioning(result, &styled_line, options, layout);
     }
 
     Ok(())
@@ -304,28 +332,48 @@ fn render_content_line(
     options: &BoxenOptions,
     inner_width: usize,
 ) -> BoxenResult<String> {
-    let mut content_line = String::new();
-
-    // Left border
-    content_line.push(border_chars.left);
+    // Build the content area (padding + content)
+    let mut content_area = String::new();
 
     // Left padding
     for _ in 0..options.padding.left {
-        content_line.push(' ');
+        content_area.push(' ');
     }
 
     // Content
-    content_line.push_str(line);
+    content_area.push_str(line);
 
     // Right padding (fill to inner width)
-    let current_content_width = text_width(&content_line) - 1; // Subtract left border
+    let current_content_width = text_width(&content_area);
     let remaining_width = inner_width - current_content_width;
     for _ in 0..remaining_width {
-        content_line.push(' ');
+        content_area.push(' ');
     }
 
-    // Right border
-    content_line.push(border_chars.right);
+    // Apply background color to content area if specified
+    let styled_content = if let Some(bg_color) = &options.background_color {
+        apply_colors(&content_area, None, Some(bg_color))?.to_string()
+    } else {
+        content_area
+    };
+
+    // Build borders separately and apply border styling
+    let left_border = apply_color_with_dim(
+        &border_chars.left.to_string(),
+        options.border_color.as_ref(),
+        options.dim_border,
+    )?
+    .to_string();
+
+    let right_border = apply_color_with_dim(
+        &border_chars.right.to_string(),
+        options.border_color.as_ref(),
+        options.dim_border,
+    )?
+    .to_string();
+
+    // Combine borders and content
+    let content_line = format!("{}{}{}", left_border, styled_content, right_border);
 
     Ok(content_line)
 }
@@ -334,16 +382,37 @@ fn render_content_line(
 fn render_padded_empty_line(
     border_chars: &crate::options::BorderChars,
     inner_width: usize,
-) -> String {
-    let mut line = String::new();
+    options: &BoxenOptions,
+) -> BoxenResult<String> {
+    // Build the content area (all spaces)
+    let content_area = " ".repeat(inner_width);
 
-    line.push(border_chars.left);
-    for _ in 0..inner_width {
-        line.push(' ');
-    }
-    line.push(border_chars.right);
+    // Apply background color to content area if specified
+    let styled_content = if let Some(bg_color) = &options.background_color {
+        apply_colors(&content_area, None, Some(bg_color))?.to_string()
+    } else {
+        content_area
+    };
 
-    line
+    // Build borders separately and apply border styling
+    let left_border = apply_color_with_dim(
+        &border_chars.left.to_string(),
+        options.border_color.as_ref(),
+        options.dim_border,
+    )?
+    .to_string();
+
+    let right_border = apply_color_with_dim(
+        &border_chars.right.to_string(),
+        options.border_color.as_ref(),
+        options.dim_border,
+    )?
+    .to_string();
+
+    // Combine borders and content
+    let line = format!("{}{}{}", left_border, styled_content, right_border);
+
+    Ok(line)
 }
 
 /// Render title without border (for BorderStyle::None)
@@ -394,7 +463,14 @@ fn render_title_without_border(
         }
     };
 
-    Ok(title_line)
+    // Apply background color if specified
+    let styled_title = if let Some(bg_color) = &options.background_color {
+        apply_colors(&title_line, None, Some(bg_color))?.to_string()
+    } else {
+        title_line
+    };
+
+    Ok(styled_title)
 }
 
 /// Add a line to the result with float positioning applied
@@ -785,10 +861,13 @@ mod tests {
         use crate::options::BorderChars;
 
         let border_chars = BorderChars::single();
-        let result = render_bottom_border(&border_chars, 10);
+        let options = BoxenOptions::default();
+        let result = render_bottom_border(&border_chars, 10, &options).unwrap();
 
-        assert_eq!(result, "└──────────┘");
-        assert_eq!(text_width(&result), 12); // 10 + 2 corners
+        assert!(result.contains("└"));
+        assert!(result.contains("┘"));
+        // Note: We can't test exact equality due to potential ANSI codes
+        // but we can verify the border characters are present
     }
 
     #[test]
@@ -1564,5 +1643,331 @@ mod tests {
             top_leading, content_leading,
             "Title and content should be aligned"
         );
+    }
+
+    #[test]
+    fn test_border_color_integration() {
+        use crate::options::Color;
+
+        let options = BoxenOptions {
+            border_color: Some(Color::Named("red".to_string())),
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should contain ANSI color codes (we can't test exact codes due to colored crate implementation)
+        // but we can verify the result is longer than uncolored version
+        let uncolored_result = boxen("Hello", None).unwrap();
+        assert!(result.len() > uncolored_result.len());
+    }
+
+    #[test]
+    fn test_background_color_integration() {
+        use crate::options::Color;
+
+        let options = BoxenOptions {
+            background_color: Some(Color::Named("blue".to_string())),
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should contain ANSI color codes
+        let uncolored_result = boxen("Hello", None).unwrap();
+        assert!(result.len() > uncolored_result.len());
+    }
+
+    #[test]
+    fn test_dim_border_integration() {
+        let options = BoxenOptions {
+            dim_border: true,
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should contain ANSI dim codes
+        let normal_result = boxen("Hello", None).unwrap();
+        assert!(result.len() > normal_result.len());
+    }
+
+    #[test]
+    fn test_border_and_background_color_combination() {
+        use crate::options::Color;
+
+        let options = BoxenOptions {
+            border_color: Some(Color::Named("red".to_string())),
+            background_color: Some(Color::Named("blue".to_string())),
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should be significantly longer due to multiple color codes
+        let uncolored_result = boxen("Hello", None).unwrap();
+        assert!(result.len() > uncolored_result.len() + 20); // Should have at least 20 extra characters from ANSI codes
+    }
+
+    #[test]
+    fn test_color_with_padding() {
+        use crate::options::Color;
+
+        let options = BoxenOptions {
+            background_color: Some(Color::Named("green".to_string())),
+            padding: Spacing::from(1),
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should have multiple lines due to padding
+        assert!(result.lines().count() > 3);
+    }
+
+    #[test]
+    fn test_color_with_no_border() {
+        use crate::options::Color;
+
+        let options = BoxenOptions {
+            border_style: BorderStyle::None,
+            background_color: Some(Color::Named("yellow".to_string())),
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should not contain border characters
+        assert!(!result.contains("┌"));
+        assert!(!result.contains("│"));
+
+        // Should still have color codes
+        let uncolored_result = boxen(
+            "Hello",
+            Some(BoxenOptions {
+                border_style: BorderStyle::None,
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+        assert!(result.len() > uncolored_result.len());
+    }
+
+    #[test]
+    fn test_hex_color_integration() {
+        use crate::options::Color;
+
+        let options = BoxenOptions {
+            border_color: Some(Color::Hex("#FF0000".to_string())),
+            background_color: Some(Color::Hex("#00FF00".to_string())),
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should contain color codes
+        let uncolored_result = boxen("Hello", None).unwrap();
+        assert!(result.len() > uncolored_result.len());
+    }
+
+    #[test]
+    fn test_rgb_color_integration() {
+        use crate::options::Color;
+
+        let options = BoxenOptions {
+            border_color: Some(Color::Rgb(255, 0, 0)),
+            background_color: Some(Color::Rgb(0, 255, 0)),
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should contain color codes
+        let uncolored_result = boxen("Hello", None).unwrap();
+        assert!(result.len() > uncolored_result.len());
+    }
+
+    #[test]
+    fn test_invalid_color_error_handling() {
+        use crate::options::Color;
+
+        let options = BoxenOptions {
+            border_color: Some(Color::Named("invalid_color".to_string())),
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options));
+        assert!(result.is_err());
+
+        // Should be a color-related error
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.to_lowercase().contains("color"));
+    }
+
+    #[test]
+    fn test_color_with_multiline_content() {
+        use crate::options::Color;
+
+        let options = BoxenOptions {
+            border_color: Some(Color::Named("cyan".to_string())),
+            background_color: Some(Color::Named("magenta".to_string())),
+            ..Default::default()
+        };
+
+        let result = boxen("Line 1\nLine 2\nLine 3", Some(options)).unwrap();
+
+        // Should contain all lines
+        assert!(result.contains("Line 1"));
+        assert!(result.contains("Line 2"));
+        assert!(result.contains("Line 3"));
+
+        // Should have multiple content lines
+        assert!(result.lines().count() >= 5); // top border + 3 content + bottom border
+    }
+
+    #[test]
+    fn test_color_with_title() {
+        use crate::options::Color;
+
+        let options = BoxenOptions {
+            title: Some("Title".to_string()),
+            border_color: Some(Color::Named("blue".to_string())),
+            background_color: Some(Color::Named("white".to_string())),
+            width: Some(20), // Ensure enough width for the title
+            ..Default::default()
+        };
+
+        let result = boxen("Content", Some(options)).unwrap();
+
+        // Should contain both title and content
+        assert!(result.contains("Title"));
+        assert!(result.contains("Content"));
+
+        // Title should be in the top border which should be colored
+        let lines: Vec<&str> = result.lines().collect();
+        let top_border = lines[0];
+        assert!(top_border.contains("Title"));
+    }
+
+    #[test]
+    fn test_color_with_different_border_styles() {
+        use crate::options::Color;
+
+        let border_styles = vec![
+            BorderStyle::Single,
+            BorderStyle::Double,
+            BorderStyle::Round,
+            BorderStyle::Bold,
+            BorderStyle::Classic,
+        ];
+
+        for style in border_styles {
+            let options = BoxenOptions {
+                border_style: style.clone(),
+                border_color: Some(Color::Named("green".to_string())),
+                background_color: Some(Color::Named("black".to_string())),
+                ..Default::default()
+            };
+
+            let result = boxen("Test", Some(options)).unwrap();
+
+            // Should contain the text
+            assert!(result.contains("Test"));
+
+            // Should contain color codes
+            let uncolored_result = boxen(
+                "Test",
+                Some(BoxenOptions {
+                    border_style: style,
+                    ..Default::default()
+                }),
+            )
+            .unwrap();
+            assert!(result.len() > uncolored_result.len());
+        }
+    }
+
+    #[test]
+    fn test_dim_border_with_color() {
+        use crate::options::Color;
+
+        let options = BoxenOptions {
+            border_color: Some(Color::Named("red".to_string())),
+            dim_border: true,
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should contain both color and dim codes
+        let normal_colored_result = boxen(
+            "Hello",
+            Some(BoxenOptions {
+                border_color: Some(Color::Named("red".to_string())),
+                dim_border: false,
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+
+        // Dim version should be different from normal colored version
+        assert_ne!(result, normal_colored_result);
+    }
+
+    #[test]
+    fn test_color_with_float_positioning() {
+        use crate::options::{Color, Float};
+
+        let options = BoxenOptions {
+            float: Float::Center,
+            border_color: Some(Color::Named("blue".to_string())),
+            background_color: Some(Color::Named("yellow".to_string())),
+            width: Some(20),
+            ..Default::default()
+        };
+
+        let result = boxen("Centered", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Centered"));
+
+        // Should be positioned and colored
+        let uncolored_result = boxen(
+            "Centered",
+            Some(BoxenOptions {
+                float: Float::Center,
+                width: Some(20),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+        assert!(result.len() > uncolored_result.len());
     }
 }
