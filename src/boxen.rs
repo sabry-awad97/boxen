@@ -1,6 +1,6 @@
 /// Core boxen rendering functionality
 use crate::error::BoxenResult;
-use crate::options::{BoxenOptions, Spacing, TitleAlignment};
+use crate::options::{BoxenOptions, TitleAlignment};
 use crate::text::text_width;
 use crate::text::wrapping::wrap_text;
 use std::fmt::Write;
@@ -36,6 +36,9 @@ fn process_content(text: &str, options: &BoxenOptions) -> BoxenResult<ProcessedC
     // Calculate maximum content width available
     let max_content_width = options.calculate_max_content_width()?;
 
+    // Calculate maximum content height available
+    let max_content_height = options.calculate_max_content_height()?;
+
     // Wrap text if needed
     let wrapped_lines = if text.is_empty() {
         vec![String::new()]
@@ -58,9 +61,19 @@ fn process_content(text: &str, options: &BoxenOptions) -> BoxenResult<ProcessedC
         natural_content_width.min(max_content_width)
     };
 
+    // Apply height constraints if specified
+    let height_constrained_lines = if let Some(max_height) = max_content_height {
+        crate::text::apply_height_constraints(&wrapped_lines, max_height)
+    } else {
+        wrapped_lines
+    };
+
     // Apply text alignment without padding (padding will be applied during rendering)
-    let aligned_lines =
-        crate::text::align_lines(&wrapped_lines, options.text_alignment.clone(), target_width);
+    let aligned_lines = crate::text::align_lines(
+        &height_constrained_lines,
+        options.text_alignment.clone(),
+        target_width,
+    );
 
     let content_height = aligned_lines.len();
 
@@ -971,8 +984,232 @@ mod tests {
 
         // Title should be truncated to fit width
         assert_eq!(text_width(title_line), 15);
-        assert!(title_line.contains("This is a very"));
-        assert!(!title_line.contains("truncated")); // Should be cut off
+        assert!(title_line.starts_with("This is a very"));
+    }
+
+    #[test]
+    fn test_height_constraint_padding() {
+        let options = BoxenOptions {
+            height: Some(10), // Specify height larger than content
+            ..Default::default()
+        };
+
+        let result = boxen("Hello\nWorld", Some(options)).unwrap();
+
+        // Should be exactly 10 lines total (including borders)
+        assert_eq!(result.lines().count(), 10);
+
+        // Should contain the content
+        assert!(result.contains("Hello"));
+        assert!(result.contains("World"));
+
+        // Should have borders
+        assert!(result.contains("┌"));
+        assert!(result.contains("└"));
+    }
+
+    #[test]
+    fn test_height_constraint_truncation() {
+        let long_text = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8";
+        let options = BoxenOptions {
+            height: Some(5), // Small height to force truncation
+            ..Default::default()
+        };
+
+        let result = boxen(long_text, Some(options)).unwrap();
+
+        // Should be exactly 5 lines total
+        assert_eq!(result.lines().count(), 5);
+
+        // Should contain some of the content (truncated)
+        assert!(result.contains("Line 1"));
+        assert!(result.contains("Line 2"));
+
+        // Should not contain later lines due to truncation
+        assert!(!result.contains("Line 7"));
+        assert!(!result.contains("Line 8"));
+
+        // Should still have borders
+        assert!(result.contains("┌"));
+        assert!(result.contains("└"));
+    }
+
+    #[test]
+    fn test_height_constraint_exact_fit() {
+        let options = BoxenOptions {
+            height: Some(3), // Exact fit for single line + borders
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should be exactly 3 lines (top border, content, bottom border)
+        assert_eq!(result.lines().count(), 3);
+
+        // Should contain the content
+        assert!(result.contains("Hello"));
+
+        // Should have borders
+        assert!(result.contains("┌"));
+        assert!(result.contains("└"));
+    }
+
+    #[test]
+    fn test_height_constraint_with_padding() {
+        let options = BoxenOptions {
+            height: Some(8),
+            padding: Spacing {
+                top: 1,
+                right: 1,
+                bottom: 1,
+                left: 1,
+            },
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should be exactly 8 lines total
+        assert_eq!(result.lines().count(), 8);
+
+        // Should contain the content
+        assert!(result.contains("Hello"));
+
+        // Should have proper padding structure
+        let lines: Vec<&str> = result.lines().collect();
+        assert!(lines[0].contains("┌")); // Top border
+        assert!(lines[7].contains("└")); // Bottom border
+    }
+
+    #[test]
+    fn test_height_constraint_with_margins() {
+        let options = BoxenOptions {
+            height: Some(10), // Total height including margins (need more space)
+            margin: Spacing {
+                top: 1,
+                right: 0,
+                bottom: 1,
+                left: 0,
+            },
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should be 10 lines total (1 top margin + 8 box + 1 bottom margin)
+        assert_eq!(result.lines().count(), 10);
+
+        // Should contain the content
+        assert!(result.contains("Hello"));
+
+        // First and last lines should be empty (margins)
+        let lines: Vec<&str> = result.lines().collect();
+        assert_eq!(lines[0], ""); // Top margin
+        assert_eq!(lines[9], ""); // Bottom margin
+    }
+
+    #[test]
+    fn test_height_constraint_no_border() {
+        let options = BoxenOptions {
+            border_style: BorderStyle::None,
+            height: Some(4), // Height constraint without borders
+            ..Default::default()
+        };
+
+        let result = boxen("Line 1\nLine 2\nLine 3\nLine 4\nLine 5", Some(options)).unwrap();
+
+        // Should be exactly 4 lines (no borders)
+        assert_eq!(result.lines().count(), 4);
+
+        // Should contain truncated content
+        assert!(result.contains("Line 1"));
+        assert!(result.contains("Line 4"));
+        assert!(!result.contains("Line 5")); // Truncated
+
+        // Should not have border characters
+        assert!(!result.contains("┌"));
+        assert!(!result.contains("└"));
+    }
+
+    #[test]
+    fn test_height_constraint_minimum_height() {
+        let options = BoxenOptions {
+            height: Some(2), // Very small height
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should be exactly 2 lines (just borders, no content space)
+        assert_eq!(result.lines().count(), 2);
+
+        // Should have borders but no visible content due to space constraints
+        assert!(result.contains("┌"));
+        assert!(result.contains("└"));
+    }
+
+    #[test]
+    fn test_height_constraint_with_title() {
+        let options = BoxenOptions {
+            title: Some("Title".to_string()),
+            height: Some(5),
+            ..Default::default()
+        };
+
+        let result = boxen("Content\nMore content\nEven more", Some(options)).unwrap();
+
+        // Should be exactly 5 lines
+        assert_eq!(result.lines().count(), 5);
+
+        // Should contain title and some content
+        assert!(result.contains("Title"));
+        assert!(result.contains("Content"));
+
+        // Title should be in the top border
+        let lines: Vec<&str> = result.lines().collect();
+        assert!(lines[0].contains("Title"));
+    }
+
+    #[test]
+    fn test_height_constraint_error_handling() {
+        // Test with height too small for borders and padding
+        let options = BoxenOptions {
+            height: Some(1), // Too small for borders
+            padding: Spacing::from(1),
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options));
+
+        // Should return an error due to invalid dimensions
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_process_content_with_height_constraints() {
+        let options = BoxenOptions {
+            height: Some(8), // Total height including borders
+            padding: Spacing {
+                top: 1,
+                right: 1,
+                bottom: 1,
+                left: 1,
+            },
+            ..Default::default()
+        };
+
+        let content = process_content("Line 1\nLine 2\nLine 3\nLine 4\nLine 5", &options).unwrap();
+
+        // Content height should be constrained by available space
+        // Total height: 8, borders: 2, padding: 2 vertical = 4 available for content
+        assert_eq!(content.content_height, 4);
+        assert_eq!(content.lines.len(), 4);
+
+        // Should contain first 4 lines
+        assert_eq!(content.lines[0], "Line 1");
+        assert_eq!(content.lines[1], "Line 2");
+        assert_eq!(content.lines[2], "Line 3");
+        assert_eq!(content.lines[3], "Line 4");
     }
 
     #[test]

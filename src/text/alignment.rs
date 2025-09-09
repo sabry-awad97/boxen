@@ -129,6 +129,73 @@ pub fn process_text_alignment(
     apply_padding(&aligned_lines, padding, total_content_width)
 }
 
+/// Process text with alignment, padding, and height constraints
+pub fn process_text_with_height_constraints(
+    text: &str,
+    alignment: TextAlignment,
+    padding: &Spacing,
+    target_width: Option<usize>,
+    max_content_height: Option<usize>,
+) -> Vec<String> {
+    // Handle empty text case - create one empty line
+    let lines: Vec<String> = if text.is_empty() {
+        vec![String::new()]
+    } else {
+        text.lines().map(|s| s.to_string()).collect()
+    };
+
+    // Calculate dimensions
+    let content_width = if let Some(width) = target_width {
+        // Use specified width, accounting for padding
+        if width > padding.left + padding.right {
+            width - padding.left - padding.right
+        } else {
+            // When target width is too small, use natural content width
+            lines.iter().map(|line| text_width(line)).max().unwrap_or(0)
+        }
+    } else {
+        // Use natural width of content
+        lines.iter().map(|line| text_width(line)).max().unwrap_or(0)
+    };
+
+    // Apply height constraints if specified
+    let constrained_lines = if let Some(max_height) = max_content_height {
+        apply_height_constraints(&lines, max_height)
+    } else {
+        lines
+    };
+
+    // Align the text lines
+    let aligned_lines = align_lines(&constrained_lines, alignment, content_width);
+
+    // Apply padding
+    let total_content_width = content_width + padding.left + padding.right;
+    apply_padding(&aligned_lines, padding, total_content_width)
+}
+
+/// Apply height constraints to text lines - truncate or pad as needed
+pub fn apply_height_constraints(lines: &[String], max_height: usize) -> Vec<String> {
+    if max_height == 0 {
+        // If max height is 0, return empty content
+        return vec![];
+    }
+
+    if lines.len() <= max_height {
+        // Content fits within height constraint - pad if needed
+        let mut result = lines.to_vec();
+
+        // Add empty lines to reach the target height
+        while result.len() < max_height {
+            result.push(String::new());
+        }
+
+        result
+    } else {
+        // Content exceeds height constraint - truncate
+        lines[..max_height].to_vec()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -330,5 +397,188 @@ mod tests {
         assert_eq!(result[0], "      "); // Top padding
         assert_eq!(result[1], "      "); // Empty content with padding  
         assert_eq!(result[2], "      "); // Bottom padding
+    }
+
+    #[test]
+    fn test_apply_height_constraints_no_constraint() {
+        let lines = vec![
+            "line1".to_string(),
+            "line2".to_string(),
+            "line3".to_string(),
+        ];
+        let result = apply_height_constraints(&lines, 5);
+
+        // Should pad to reach target height
+        assert_eq!(result.len(), 5);
+        assert_eq!(result[0], "line1");
+        assert_eq!(result[1], "line2");
+        assert_eq!(result[2], "line3");
+        assert_eq!(result[3], ""); // Padding
+        assert_eq!(result[4], ""); // Padding
+    }
+
+    #[test]
+    fn test_apply_height_constraints_truncation() {
+        let lines = vec![
+            "line1".to_string(),
+            "line2".to_string(),
+            "line3".to_string(),
+            "line4".to_string(),
+            "line5".to_string(),
+        ];
+        let result = apply_height_constraints(&lines, 3);
+
+        // Should truncate to max height
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], "line1");
+        assert_eq!(result[1], "line2");
+        assert_eq!(result[2], "line3");
+    }
+
+    #[test]
+    fn test_apply_height_constraints_exact_fit() {
+        let lines = vec!["line1".to_string(), "line2".to_string()];
+        let result = apply_height_constraints(&lines, 2);
+
+        // Should return as-is when exact fit
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], "line1");
+        assert_eq!(result[1], "line2");
+    }
+
+    #[test]
+    fn test_apply_height_constraints_zero_height() {
+        let lines = vec!["line1".to_string(), "line2".to_string()];
+        let result = apply_height_constraints(&lines, 0);
+
+        // Should return empty when max height is 0
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_apply_height_constraints_empty_input() {
+        let lines: Vec<String> = vec![];
+        let result = apply_height_constraints(&lines, 3);
+
+        // Should pad empty input to target height
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], "");
+        assert_eq!(result[1], "");
+        assert_eq!(result[2], "");
+    }
+
+    #[test]
+    fn test_process_text_with_height_constraints_padding() {
+        let text = "hello\nworld";
+        let padding = Spacing {
+            top: 1,
+            right: 1,
+            bottom: 1,
+            left: 1,
+        };
+        let result = process_text_with_height_constraints(
+            text,
+            TextAlignment::Left,
+            &padding,
+            Some(10),
+            Some(4), // Max content height of 4, but we only have 2 lines
+        );
+
+        // Should have: 1 top padding + 4 content lines (2 actual + 2 empty) + 1 bottom padding = 6 total
+        assert_eq!(result.len(), 6);
+
+        // Check content lines (accounting for left/right padding)
+        assert_eq!(result[1], " hello    "); // Content with padding
+        assert_eq!(result[2], " world    "); // Content with padding
+        assert_eq!(result[3], "          "); // Empty content line with padding
+        assert_eq!(result[4], "          "); // Empty content line with padding
+    }
+
+    #[test]
+    fn test_process_text_with_height_constraints_truncation() {
+        let text = "line1\nline2\nline3\nline4\nline5";
+        let padding = Spacing {
+            top: 0,
+            right: 1,
+            bottom: 0,
+            left: 1,
+        };
+        let result = process_text_with_height_constraints(
+            text,
+            TextAlignment::Left,
+            &padding,
+            Some(10),
+            Some(3), // Max content height of 3, but we have 5 lines
+        );
+
+        // Should have exactly 3 content lines (truncated)
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], " line1    ");
+        assert_eq!(result[1], " line2    ");
+        assert_eq!(result[2], " line3    ");
+    }
+
+    #[test]
+    fn test_process_text_with_height_constraints_no_constraint() {
+        let text = "hello\nworld";
+        let padding = Spacing {
+            top: 0,
+            right: 1,
+            bottom: 0,
+            left: 1,
+        };
+        let result = process_text_with_height_constraints(
+            text,
+            TextAlignment::Center,
+            &padding,
+            Some(10),
+            None, // No height constraint
+        );
+
+        // Should process normally without height constraints
+        assert_eq!(result.len(), 2);
+        assert!(result[0].contains("hello"));
+        assert!(result[1].contains("world"));
+    }
+
+    #[test]
+    fn test_process_text_with_height_constraints_empty_text() {
+        let text = "";
+        let padding = Spacing {
+            top: 0,
+            right: 1,
+            bottom: 0,
+            left: 1,
+        };
+        let result = process_text_with_height_constraints(
+            text,
+            TextAlignment::Center,
+            &padding,
+            Some(8),
+            Some(3), // Height constraint of 3
+        );
+
+        // Should create 3 empty lines
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], "        "); // Empty line with padding
+        assert_eq!(result[1], "        "); // Empty line with padding
+        assert_eq!(result[2], "        "); // Empty line with padding
+    }
+
+    #[test]
+    fn test_height_constraints_with_unicode() {
+        let text = "你好\n世界\n测试\n内容";
+        let padding = Spacing::default();
+        let result = process_text_with_height_constraints(
+            text,
+            TextAlignment::Left,
+            &padding,
+            None,
+            Some(2), // Truncate to 2 lines
+        );
+
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], "你好");
+        assert_eq!(result[1], "世界");
     }
 }

@@ -643,15 +643,19 @@ impl BoxenOptions {
 
         // Calculate maximum available height
         let max_height = if let Some(specified_height) = self.height {
-            Some(specified_height)
+            // When height is specified, it represents the total box height including margins
+            // So we need to subtract margins to get the available height for content + borders + padding
+            if specified_height > self.margin.vertical() {
+                Some(specified_height - self.margin.vertical())
+            } else {
+                return Err(BoxenError::InvalidDimensions {
+                    width: None,
+                    height: Some(specified_height),
+                });
+            }
         } else {
-            terminal_height.map(|h| {
-                if h > self.margin.vertical() {
-                    h - self.margin.vertical()
-                } else {
-                    1 // Minimum height
-                }
-            })
+            // Don't apply height constraints unless explicitly specified by user
+            None
         };
 
         Ok(DimensionConstraints {
@@ -675,10 +679,18 @@ impl BoxenOptions {
         let inner_width = content_width + self.padding.horizontal();
         let inner_height = content_height + self.padding.vertical();
 
-        // Calculate total dimensions (inner + borders + margins)
-        let total_width = inner_width + constraints.border_width + self.margin.horizontal();
-        let total_height = inner_height + (if matches!(self.border_style, BorderStyle::None) { 0 } else { 2 }) + // top and bottom borders
-            self.margin.vertical();
+        // Calculate box dimensions without margins (for constraint validation)
+        let box_width = inner_width + constraints.border_width;
+        let box_height = inner_height
+            + (if matches!(self.border_style, BorderStyle::None) {
+                0
+            } else {
+                2
+            }); // top and bottom borders
+
+        // Calculate total dimensions (box + margins)
+        let total_width = box_width + self.margin.horizontal();
+        let total_height = box_height + self.margin.vertical();
 
         // Validate against constraints
         // If a specific width was set, compare against that; otherwise use max_width
@@ -695,11 +707,12 @@ impl BoxenOptions {
             )));
         }
 
+        // For height validation, compare box height (without margins) against max_height (which already has margins subtracted)
         if let Some(max_height) = constraints.max_height {
-            if total_height > max_height {
+            if box_height > max_height {
                 return Err(BoxenError::ConfigurationError(format!(
                     "Calculated box height ({}) exceeds maximum available height ({})",
-                    total_height, max_height
+                    box_height, max_height
                 )));
             }
         }
