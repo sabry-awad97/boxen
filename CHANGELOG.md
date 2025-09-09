@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - N/A (initial release)
 
-## [0.1.1] - 2025-09-09
+## [0.1.2] - 2025-09-09
 
 ### Added
 
@@ -59,5 +59,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance optimizations
 - Error handling with descriptive messages
 
-[Unreleased]: https://github.com/sabry-awad97/boxen/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/sabry-awad97/boxen/releases/tag/v0.1.1
+[Unreleased]: https://github.com/sabry-awad97/boxen/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/sabry-awad97/boxen/releases/tag/v0.1.2
