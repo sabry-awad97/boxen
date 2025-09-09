@@ -9,3 +9,7 @@ colored = "3.0.0"
 unicode-width = "0.2.1"
 textwrap = "0.16.2"
 thiserror = "2.0.16"
+
+[dev-dependencies]
+chrono = "0.4.41"
+ctrlc = "3.5.0"
