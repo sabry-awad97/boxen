@@ -22,18 +22,18 @@ pub fn align_line(line: &str, alignment: TextAlignment, width: usize) -> String 
     match alignment {
         TextAlignment::Left => {
             result.push_str(line);
-            result.extend(std::iter::repeat(' ').take(padding_needed));
+            result.extend(std::iter::repeat_n(' ', padding_needed));
         }
         TextAlignment::Right => {
-            result.extend(std::iter::repeat(' ').take(padding_needed));
+            result.extend(std::iter::repeat_n(' ', padding_needed));
             result.push_str(line);
         }
         TextAlignment::Center => {
             let left_padding = padding_needed / 2;
             let right_padding = padding_needed - left_padding;
-            result.extend(std::iter::repeat(' ').take(left_padding));
+            result.extend(std::iter::repeat_n(' ', left_padding));
             result.push_str(line);
-            result.extend(std::iter::repeat(' ').take(right_padding));
+            result.extend(std::iter::repeat_n(' ', right_padding));
         }
     }
 
