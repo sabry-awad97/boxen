@@ -252,6 +252,12 @@ fn render_content_without_borders(
     options: &BoxenOptions,
     layout: &crate::options::LayoutDimensions,
 ) -> BoxenResult<()> {
+    // Render title if present (requirement 5.4)
+    if let Some(title) = &options.title {
+        let title_line = render_title_without_border(title, options, layout.inner_width)?;
+        add_line_with_margins(result, &title_line, &options.margin);
+    }
+
     // Add top padding
     for _ in 0..options.padding.top {
         let empty_line = " ".repeat(layout.inner_width);
@@ -325,6 +331,57 @@ fn render_padded_empty_line(
     line.push(border_chars.right);
 
     line
+}
+
+/// Render title without border (for BorderStyle::None)
+fn render_title_without_border(
+    title: &str,
+    options: &BoxenOptions,
+    inner_width: usize,
+) -> BoxenResult<String> {
+    let title_width = text_width(title);
+
+    // If title is too long, truncate it
+    let effective_title = if title_width > inner_width {
+        // Truncate title to fit
+        let mut truncated = String::new();
+        let mut current_width = 0;
+        for ch in title.chars() {
+            let char_width = text_width(&ch.to_string());
+            if current_width + char_width > inner_width {
+                break;
+            }
+            truncated.push(ch);
+            current_width += char_width;
+        }
+        truncated
+    } else {
+        title.to_string()
+    };
+
+    let effective_title_width = text_width(&effective_title);
+    let remaining_width = inner_width - effective_title_width;
+
+    let title_line = match options.title_alignment {
+        TitleAlignment::Left => {
+            format!("{}{}", effective_title, " ".repeat(remaining_width))
+        }
+        TitleAlignment::Right => {
+            format!("{}{}", " ".repeat(remaining_width), effective_title)
+        }
+        TitleAlignment::Center => {
+            let left_padding = remaining_width / 2;
+            let right_padding = remaining_width - left_padding;
+            format!(
+                "{}{}{}",
+                " ".repeat(left_padding),
+                effective_title,
+                " ".repeat(right_padding)
+            )
+        }
+    };
+
+    Ok(title_line)
 }
 
 /// Add a line to the result with left and right margins
@@ -772,5 +829,209 @@ mod tests {
         // Margin lines should be empty
         assert_eq!(text_width(lines[0]), 0); // top margin
         assert_eq!(text_width(lines[4]), 0); // bottom margin
+    }
+
+    #[test]
+    fn test_title_with_no_border_left_alignment() {
+        let options = BoxenOptions {
+            title: Some("Left Title".to_string()),
+            title_alignment: TitleAlignment::Left,
+            border_style: BorderStyle::None,
+            width: Some(20),
+            ..Default::default()
+        };
+
+        let result = boxen("Content", Some(options)).unwrap();
+
+        // Should contain both title and content
+        assert!(result.contains("Left Title"));
+        assert!(result.contains("Content"));
+
+        // Should be 2 lines (title line, content line)
+        assert_eq!(result.lines().count(), 2);
+
+        let lines: Vec<&str> = result.lines().collect();
+        let title_line = lines[0];
+
+        // Title should be left-aligned
+        assert!(title_line.starts_with("Left Title"));
+        assert_eq!(text_width(title_line), 20);
+    }
+
+    #[test]
+    fn test_title_with_no_border_center_alignment() {
+        let options = BoxenOptions {
+            title: Some("Center".to_string()),
+            title_alignment: TitleAlignment::Center,
+            border_style: BorderStyle::None,
+            width: Some(20),
+            ..Default::default()
+        };
+
+        let result = boxen("Content", Some(options)).unwrap();
+
+        let lines: Vec<&str> = result.lines().collect();
+        let title_line = lines[0];
+
+        // Title should be centered (with spaces on both sides)
+        assert!(title_line.contains("Center"));
+        assert_eq!(text_width(title_line), 20);
+
+        // Should have roughly equal padding on both sides
+        let title_start = title_line.find("Center").unwrap();
+        assert!(title_start > 5); // Should have some left padding
+    }
+
+    #[test]
+    fn test_title_with_no_border_right_alignment() {
+        let options = BoxenOptions {
+            title: Some("Right Title".to_string()),
+            title_alignment: TitleAlignment::Right,
+            border_style: BorderStyle::None,
+            width: Some(20),
+            ..Default::default()
+        };
+
+        let result = boxen("Content", Some(options)).unwrap();
+
+        let lines: Vec<&str> = result.lines().collect();
+        let title_line = lines[0];
+
+        // Title should be right-aligned
+        assert!(title_line.ends_with("Right Title"));
+        assert_eq!(text_width(title_line), 20);
+    }
+
+    #[test]
+    fn test_title_truncation_no_border() {
+        let options = BoxenOptions {
+            title: Some("This is a very long title that should be truncated".to_string()),
+            border_style: BorderStyle::None,
+            width: Some(15),
+            ..Default::default()
+        };
+
+        let result = boxen("Content", Some(options)).unwrap();
+
+        let lines: Vec<&str> = result.lines().collect();
+        let title_line = lines[0];
+
+        // Title should be truncated to fit width
+        assert_eq!(text_width(title_line), 15);
+        assert!(title_line.contains("This is a very"));
+        assert!(!title_line.contains("truncated")); // Should be cut off
+    }
+
+    #[test]
+    fn test_title_with_no_border_and_padding() {
+        let options = BoxenOptions {
+            title: Some("Title".to_string()),
+            border_style: BorderStyle::None,
+            padding: Spacing {
+                top: 1,
+                right: 2,
+                bottom: 1,
+                left: 2,
+            },
+            width: Some(20),
+            ..Default::default()
+        };
+
+        let result = boxen("Content", Some(options)).unwrap();
+
+        // Should have title, top padding, content, bottom padding
+        assert_eq!(result.lines().count(), 4);
+
+        let lines: Vec<&str> = result.lines().collect();
+        assert!(lines[0].contains("Title")); // Title line
+        assert_eq!(lines[1].trim(), ""); // Top padding (empty line)
+        assert!(lines[2].contains("Content")); // Content with padding
+        assert_eq!(lines[3].trim(), ""); // Bottom padding (empty line)
+    }
+
+    #[test]
+    fn test_title_with_unicode_characters() {
+        let options = BoxenOptions {
+            title: Some("测试标题".to_string()),
+            title_alignment: TitleAlignment::Center,
+            width: Some(20),
+            ..Default::default()
+        };
+
+        let result = boxen("内容", Some(options)).unwrap();
+
+        // Should contain Unicode title and content
+        assert!(result.contains("测试标题"));
+        assert!(result.contains("内容"));
+
+        let lines: Vec<&str> = result.lines().collect();
+        let top_border = lines[0];
+        assert!(top_border.contains("测试标题"));
+    }
+
+    #[test]
+    fn test_title_edge_cases() {
+        // Empty title
+        let options = BoxenOptions {
+            title: Some("".to_string()),
+            ..Default::default()
+        };
+        let result = boxen("Content", Some(options)).unwrap();
+        assert!(result.contains("Content"));
+
+        // Title same width as box
+        let options = BoxenOptions {
+            title: Some("12345".to_string()),
+            width: Some(7), // 5 content + 2 borders = 7
+            ..Default::default()
+        };
+        let result = boxen("X", Some(options)).unwrap();
+        assert!(result.contains("12345"));
+
+        // Single character title
+        let options = BoxenOptions {
+            title: Some("T".to_string()),
+            title_alignment: TitleAlignment::Center,
+            width: Some(10),
+            ..Default::default()
+        };
+        let result = boxen("Content", Some(options)).unwrap();
+        assert!(result.contains("T"));
+    }
+
+    #[test]
+    fn test_render_title_without_border_function() {
+        let options = BoxenOptions {
+            title_alignment: TitleAlignment::Left,
+            ..Default::default()
+        };
+
+        // Test basic functionality
+        let result = render_title_without_border("Test Title", &options, 20).unwrap();
+        assert_eq!(text_width(&result), 20);
+        assert!(result.starts_with("Test Title"));
+
+        // Test center alignment
+        let options = BoxenOptions {
+            title_alignment: TitleAlignment::Center,
+            ..Default::default()
+        };
+        let result = render_title_without_border("Test", &options, 20).unwrap();
+        assert_eq!(text_width(&result), 20);
+        assert!(result.contains("Test"));
+
+        // Test right alignment
+        let options = BoxenOptions {
+            title_alignment: TitleAlignment::Right,
+            ..Default::default()
+        };
+        let result = render_title_without_border("Test", &options, 20).unwrap();
+        assert_eq!(text_width(&result), 20);
+        assert!(result.ends_with("Test"));
+
+        // Test truncation
+        let result = render_title_without_border("Very Long Title", &options, 5).unwrap();
+        assert_eq!(text_width(&result), 5);
+        assert_eq!(result, "Very ");
     }
 }
