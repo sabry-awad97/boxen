@@ -1,3 +1,15 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![deny(missing_docs)]
+#![warn(clippy::all)]
+// #![warn(clippy::pedantic)]
+// #![warn(clippy::nursery)]
+// #![warn(clippy::cargo)]
+#![doc(html_root_url = "https://docs.rs/boxen")]
+#![doc(html_logo_url = "https://raw.githubusercontent.com/sabry-awad97/boxen/main/assets/logo.png")]
+#![doc(
+    html_favicon_url = "https://raw.githubusercontent.com/sabry-awad97/boxen/main/assets/favicon.ico"
+)]
+
 //! # Boxen
 //!
 //! A Rust implementation of the boxen library for drawing styled boxes around text in terminals.
@@ -112,7 +124,7 @@ pub use validation::{
 // Re-export terminal utilities
 pub use terminal::{get_terminal_height, get_terminal_size, get_terminal_width};
 
-/// Create a new BoxenBuilder for fluent configuration.
+/// Create a new `BoxenBuilder` for fluent configuration.
 ///
 /// The builder pattern is the recommended way to create boxes with custom styling.
 /// It provides a fluent interface for setting all available options.
@@ -136,6 +148,7 @@ pub use terminal::{get_terminal_height, get_terminal_size, get_terminal_width};
 ///
 /// The builder validates configuration only when `render()` is called,
 /// allowing for efficient method chaining without intermediate validations.
+#[must_use]
 pub fn builder() -> BoxenBuilder {
     BoxenBuilder::new()
 }
