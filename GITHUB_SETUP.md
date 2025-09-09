@@ -36,11 +36,13 @@ git push -u origin main
 Navigate to your GitHub repository → Settings → Secrets and variables → Actions, and add these secrets:
 
 #### Required Secrets:
+
 - **`CARGO_REGISTRY_TOKEN`**: Token for publishing to crates.io
   - Get from: https://crates.io/settings/tokens
   - Permissions: "Publish new crates" and "Publish updates"
 
 #### Optional Secrets (for enhanced features):
+
 - **`CODECOV_TOKEN`**: For code coverage reporting
   - Get from: https://codecov.io after linking your repository
 
@@ -49,11 +51,13 @@ Navigate to your GitHub repository → Settings → Secrets and variables → Ac
 Configure these settings in your GitHub repository:
 
 #### Pages (for documentation):
+
 - Go to Settings → Pages
 - Source: "GitHub Actions"
 - This enables automatic documentation deployment
 
 #### Branch Protection (recommended):
+
 - Go to Settings → Branches
 - Add rule for `main` branch:
   - ✅ Require status checks to pass before merging
@@ -62,7 +66,9 @@ Configure these settings in your GitHub repository:
   - ✅ Require pull request reviews before merging
 
 #### Labels (optional, for Dependabot):
+
 If you want Dependabot to automatically label PRs, create these labels:
+
 - Go to Issues → Labels → New label
 - Create labels: `dependencies`, `rust`, `github-actions`
 - Then uncomment the `labels:` sections in `.github/dependabot.yml`
@@ -72,8 +78,10 @@ If you want Dependabot to automatically label PRs, create these labels:
 The CI/CD setup includes these workflows:
 
 ### 1. **CI Workflow** (`ci.yml`)
+
 **Triggers**: Push to main/develop, Pull requests, Daily schedule
 **Features**:
+
 - Multi-platform testing (Linux, Windows, macOS)
 - Multiple Rust versions (stable, beta, MSRV 1.70.0)
 - Code formatting and linting with clippy
@@ -83,24 +91,31 @@ The CI/CD setup includes these workflows:
 - Documentation building
 
 ### 2. **Release Workflow** (`release.yml`)
+
 **Triggers**: Git tags starting with 'v', Manual dispatch
 **Features**:
+
 - Automated GitHub releases
 - Cross-platform binary building
 - Automatic crates.io publishing
 - Documentation deployment
-- Version verification
 
 ### 3. **Security Workflow** (`security.yml`)
+
 **Triggers**: Push to main, Pull requests, Daily schedule
 **Features**:
-- Security audit with cargo-audit
-- Dependency review for PRs
-- License compatibility checking
-- Supply chain security monitoring
+
+- ~~Security auditing with cargo-audit and cargo-deny~~ (Disabled)
+- Dependency review for pull requests
+- ~~License compatibility checking~~ (Disabled)
+- ~~Supply chain security monitoring~~ (Disabled)
+
+**Note**: Most security jobs are currently disabled to avoid GitHub Actions billing issues. Only dependency review for PRs remains active.
 
 ### 4. **Dependabot** (`dependabot.yml`)
+
 **Features**:
+
 - Weekly dependency updates
 - GitHub Actions updates
 - Automatic PR creation with proper labels
@@ -108,6 +123,7 @@ The CI/CD setup includes these workflows:
 ## 📦 Making Your First Release
 
 ### 1. Prepare for Release
+
 ```bash
 # Update version in Cargo.toml
 # Update CHANGELOG.md
@@ -118,6 +134,7 @@ git push
 ```
 
 ### 2. Create Release Tag
+
 ```bash
 # Create and push tag
 git tag v0.1.2
@@ -125,7 +142,9 @@ git push origin v0.1.2
 ```
 
 ### 3. Automatic Process
+
 The release workflow will automatically:
+
 - Create GitHub release
 - Build cross-platform binaries
 - Publish to crates.io
@@ -134,6 +153,7 @@ The release workflow will automatically:
 ## 🔍 Monitoring and Maintenance
 
 ### CI Status Badges
+
 Add these badges to your README.md:
 
 ```markdown
@@ -144,6 +164,7 @@ Add these badges to your README.md:
 ```
 
 ### Regular Maintenance
+
 - **Weekly**: Review Dependabot PRs
 - **Monthly**: Check security audit results
 - **Per Release**: Verify all CI checks pass before tagging
@@ -153,6 +174,7 @@ Add these badges to your README.md:
 ### Common Issues:
 
 1. **GitHub Actions billing error**: "Recent account payments have failed or spending limit needs to be increased"
+
    - **Solution**: Go to Settings → Billing and plans → Payment information
    - **For public repos**: Should be free (unlimited minutes)
    - **For private repos**: Add payment method or upgrade to paid plan
@@ -164,6 +186,7 @@ Add these badges to your README.md:
 5. **Documentation not deploying**: Check Pages settings are configured
 
 ### Debug Commands:
+
 ```bash
 # Test locally before pushing
 cargo test --all-features
@@ -178,23 +201,35 @@ cargo deny check
 ## 💰 GitHub Actions Billing Solutions
 
 ### Option 1: Make Repository Public (Recommended)
+
 ```bash
 # Public repositories get unlimited GitHub Actions minutes
 # Go to Settings → General → Danger Zone → Change repository visibility
 ```
 
 ### Option 2: Set Up Billing for Private Repository
+
 1. Go to GitHub Settings → Billing and plans
 2. Add payment method under "Payment information"
 3. Set spending limit under "Spending limits"
 4. GitHub Actions pricing: $0.008/minute for private repos
 
 ### Option 3: Use Alternative CI/CD (Free)
+
 Consider these free alternatives:
+
 - **GitLab CI/CD**: 400 minutes/month free
 - **Cirrus CI**: Free for public repos
 - **Travis CI**: Free for open source
 - **Local testing**: Run all checks locally before pushing
+
+### Option 4: Re-enable Security Jobs Later
+
+To re-enable the disabled security jobs:
+
+1. Resolve GitHub Actions billing issues
+2. Uncomment the jobs in `.github/workflows/security.yml`
+3. Remove the `#` symbols from the security-audit, supply-chain-security, and license-check jobs
 
 ## 📚 Additional Resources
 

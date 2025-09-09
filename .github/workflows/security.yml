@@ -13,31 +13,31 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  security-audit:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+  # security-audit:
+  #   name: Security Audit
+  #   runs-on: ubuntu-latest
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
 
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
+  #   - name: Install Rust toolchain
+  #     uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
+  #   - name: Cache dependencies
+  #     uses: Swatinem/rust-cache@v2
 
-    - name: Install cargo-audit
-      run: cargo install cargo-audit
+  #   - name: Install cargo-audit
+  #     run: cargo install cargo-audit
 
-    - name: Run security audit
-      run: cargo audit
+  #   - name: Run security audit
+  #     run: cargo audit
 
-    - name: Install cargo-deny
-      run: cargo install cargo-deny
+  #   - name: Install cargo-deny
+  #     run: cargo install cargo-deny
 
-    - name: Run cargo-deny
-      run: cargo deny check
+  #   - name: Run cargo-deny
+  #     run: cargo deny check
 
   dependency-review:
     name: Dependency Review
@@ -53,58 +53,58 @@ jobs:
       with:
         fail-on-severity: moderate
 
-  supply-chain-security:
-    name: Supply Chain Security
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+  # supply-chain-security:
+  #   name: Supply Chain Security
+  #   runs-on: ubuntu-latest
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
 
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
+  #   - name: Install Rust toolchain
+  #     uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
+  #   - name: Cache dependencies
+  #     uses: Swatinem/rust-cache@v2
 
-    - name: Check for known vulnerabilities
-      run: |
-        cargo install cargo-audit
-        cargo audit --db ./advisory-db --json > audit-results.json || true
+  #   - name: Check for known vulnerabilities
+  #     run: |
+  #       cargo install cargo-audit
+  #       cargo audit --db ./advisory-db --json > audit-results.json || true
 
-    - name: Upload audit results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: security-audit-results
-        path: audit-results.json
-        retention-days: 30
+  #   - name: Upload audit results
+  #     uses: actions/upload-artifact@v4
+  #     if: always()
+  #     with:
+  #       name: security-audit-results
+  #       path: audit-results.json
+  #       retention-days: 30
 
-  license-check:
-    name: License Check
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+  # license-check:
+  #   name: License Check
+  #   runs-on: ubuntu-latest
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
 
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
+  #   - name: Install Rust toolchain
+  #     uses: dtolnay/rust-toolchain@stable
 
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
+  #   - name: Cache dependencies
+  #     uses: Swatinem/rust-cache@v2
 
-    - name: Install cargo-license
-      run: cargo install cargo-license
+  #   - name: Install cargo-license
+  #     run: cargo install cargo-license
 
-    - name: Check licenses
-      run: cargo license --json > licenses.json
+  #   - name: Check licenses
+  #     run: cargo license --json > licenses.json
 
-    - name: Verify license compatibility
-      run: |
-        # Check that all dependencies use compatible licenses
-        cargo license | grep -E "(MIT|Apache|BSD)" || {
-          echo "Found incompatible licenses"
-          cargo license
-          exit 1
-        }
+  #   - name: Verify license compatibility
+  #     run: |
+  #       # Check that all dependencies use compatible licenses
+  #       cargo license | grep -E "(MIT|Apache|BSD)" || {
+  #         echo "Found incompatible licenses"
+  #         cargo license
+  #         exit 1
+  #       }
