@@ -19,7 +19,7 @@ This guide provides comprehensive examples and patterns for using the boxen libr
 The simplest way to create a box is using the `boxen` function:
 
 ```rust
-use boxen::boxen;
+use ::boxen::boxen;
 
 // Basic box with default settings
 let result = boxen("Hello, World!", None).unwrap();
@@ -34,7 +34,7 @@ println!("{}", result);
 For common use cases, use the convenience functions:
 
 ```rust
-use boxen::{simple_box, double_box, round_box};
+use ::boxen::{simple_box, double_box, round_box};
 
 println!("{}", simple_box("Single border"));
 // ┌─────────────┐
@@ -59,7 +59,7 @@ The builder pattern provides the most flexibility and is the recommended approac
 ### Basic Builder Usage
 
 ```rust
-use boxen::{builder, BorderStyle, TextAlignment};
+use ::boxen::{builder, BorderStyle, TextAlignment};
 
 let result = builder()
     .border_style(BorderStyle::Double)
@@ -74,7 +74,7 @@ let result = builder()
 All builder methods return `self`, allowing for fluent method chaining:
 
 ```rust
-use boxen::{builder, BorderStyle, TextAlignment, TitleAlignment, Float};
+use ::boxen::{builder, BorderStyle, TextAlignment, TitleAlignment, Float};
 
 let result = builder()
     .border_style(BorderStyle::Round)
@@ -96,7 +96,7 @@ let result = builder()
 The builder provides convenience methods for common patterns:
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 
 let result = builder()
     .spacing(2)  // Sets both padding and margin to 2
@@ -115,7 +115,7 @@ Control how text is aligned within the box:
 ### Left Alignment (Default)
 
 ```rust
-use boxen::{builder, TextAlignment};
+use ::boxen::{builder, TextAlignment};
 
 let result = builder()
     .text_alignment(TextAlignment::Left)
@@ -131,7 +131,7 @@ let result = builder()
 ### Center Alignment
 
 ```rust
-use boxen::{builder, TextAlignment};
+use ::boxen::{builder, TextAlignment};
 
 let result = builder()
     .text_alignment(TextAlignment::Center)
@@ -147,7 +147,7 @@ let result = builder()
 ### Right Alignment
 
 ```rust
-use boxen::{builder, TextAlignment};
+use ::boxen::{builder, TextAlignment};
 
 let result = builder()
     .text_alignment(TextAlignment::Right)
@@ -167,7 +167,7 @@ let result = builder()
 Padding adds space between the border and content:
 
 ```rust
-use boxen::{builder, Spacing};
+use ::boxen::{builder, Spacing};
 
 // Uniform padding
 let result = builder()
@@ -199,7 +199,7 @@ let result = builder()
 Margins add space around the entire box:
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 
 // Uniform margin
 let result = builder()
@@ -217,7 +217,7 @@ let result = builder()
 ### Combined Spacing
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 
 let result = builder()
     .padding(1)
@@ -231,7 +231,7 @@ let result = builder()
 ### Fixed Dimensions
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 
 // Fixed width
 let result = builder()
@@ -257,7 +257,7 @@ let result = builder()
 Control horizontal positioning within the terminal:
 
 ```rust
-use boxen::{builder, Float};
+use ::boxen::{builder, Float};
 
 // Left-aligned (default)
 let result = builder()
@@ -281,7 +281,7 @@ let result = builder()
 ### Fullscreen Mode
 
 ```rust
-use boxen::{builder, FullscreenMode};
+use ::boxen::{builder, FullscreenMode};
 
 // Auto fullscreen (fills terminal)
 let result = builder()
@@ -306,7 +306,7 @@ Boxen provides comprehensive error handling with descriptive messages:
 ### Common Error Patterns
 
 ```rust
-use boxen::{builder, BoxenError};
+use ::boxen::{builder, BoxenError};
 
 // Handle configuration errors
 match builder()
@@ -336,7 +336,7 @@ match builder()
 ### Error Recovery
 
 ```rust
-use boxen::{builder, BoxenError, simple_box};
+use ::boxen::{builder, BoxenError, simple_box};
 
 fn safe_boxen(text: &str) -> String {
     builder()
@@ -350,7 +350,7 @@ fn safe_boxen(text: &str) -> String {
 ### Validation Helpers
 
 ```rust
-use boxen::{validate_configuration, BoxenOptions, BorderStyle};
+use ::boxen::{validate_configuration, BoxenOptions, BorderStyle};
 
 let options = BoxenOptions {
     border_style: BorderStyle::Double,
@@ -374,7 +374,7 @@ match validate_configuration(&options, "Sample text") {
 ### Efficient String Handling
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 
 // Prefer &str over String when possible
 fn create_box(text: &str) -> String {
@@ -393,7 +393,7 @@ let box2 = builder_template.clone().render("Text 2").unwrap();
 ### Large Text Optimization
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 
 // For very large text, consider chunking
 fn create_large_box(lines: &[String]) -> String {
@@ -408,7 +408,7 @@ fn create_large_box(lines: &[String]) -> String {
 ### Caching Terminal Dimensions
 
 ```rust
-use boxen::{get_terminal_width, builder};
+use ::boxen::{get_terminal_width, builder};
 
 // Cache terminal width for multiple boxes
 let terminal_width = get_terminal_width();
@@ -423,7 +423,7 @@ let box2 = builder().width(max_width).render("Box 2").unwrap();
 ### Conditional Styling
 
 ```rust
-use boxen::{builder, BorderStyle};
+use ::boxen::{builder, BorderStyle};
 
 fn status_box(message: &str, is_error: bool) -> String {
     let mut box_builder = builder()
@@ -449,7 +449,7 @@ fn status_box(message: &str, is_error: bool) -> String {
 ### Template Pattern
 
 ```rust
-use boxen::{BoxenBuilder, BorderStyle, TextAlignment};
+use ::boxen::{BoxenBuilder, BorderStyle, TextAlignment};
 
 struct BoxTemplate {
     builder: BoxenBuilder,

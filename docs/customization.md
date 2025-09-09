@@ -19,7 +19,7 @@ This guide covers advanced customization techniques for creating unique and soph
 You can define completely custom border styles using the `BorderChars` struct:
 
 ```rust
-use boxen::{builder, BorderStyle, BorderChars};
+use ::boxen::{builder, BorderStyle, BorderChars};
 
 let custom_chars = BorderChars {
     top_left: '╭',
@@ -43,7 +43,7 @@ let result = builder()
 For environments that don't support Unicode:
 
 ```rust
-use boxen::{builder, BorderStyle, BorderChars};
+use ::boxen::{builder, BorderStyle, BorderChars};
 
 let ascii_chars = BorderChars {
     top_left: '+',
@@ -67,7 +67,7 @@ let result = builder()
 Create themed border collections:
 
 ```rust
-use boxen::{BorderChars, BorderStyle};
+use ::boxen::{BorderChars, BorderStyle};
 
 struct BorderThemes;
 
@@ -84,7 +84,7 @@ impl BorderThemes {
             bottom: '═',
         }
     }
-    
+
     fn minimal() -> BorderChars {
         BorderChars {
             top_left: ' ',
@@ -97,7 +97,7 @@ impl BorderThemes {
             bottom: ' ',
         }
     }
-    
+
     fn heavy() -> BorderChars {
         BorderChars {
             top_left: '┏',
@@ -126,7 +126,7 @@ let result = builder()
 While true gradients aren't supported in most terminals, you can create gradient-like effects:
 
 ```rust
-use boxen::{builder, Color};
+use ::boxen::{builder, Color};
 
 // Create multiple boxes with varying color intensities
 let colors = ["#ff0000", "#ff3333", "#ff6666", "#ff9999", "#ffcccc"];
@@ -146,7 +146,7 @@ for (i, color) in colors.iter().enumerate() {
 Define consistent color schemes:
 
 ```rust
-use boxen::Color;
+use ::boxen::Color;
 
 struct ColorPalette {
     primary: Color,
@@ -168,7 +168,7 @@ impl ColorPalette {
             info: Color::from("#63b3ed"),
         }
     }
-    
+
     fn light_theme() -> Self {
         Self {
             primary: Color::from("#0066cc"),
@@ -195,7 +195,7 @@ let result = builder()
 Apply colors based on content or context:
 
 ```rust
-use boxen::{builder, Color};
+use ::boxen::{builder, Color};
 
 fn status_color(status: &str) -> Color {
     match status.to_lowercase().as_str() {
@@ -224,24 +224,24 @@ fn create_status_box(message: &str, status: &str) -> String {
 Create boxes that adapt to terminal size:
 
 ```rust
-use boxen::{builder, get_terminal_width, Float};
+use ::boxen::{builder, get_terminal_width, Float};
 
 fn responsive_box(content: &str) -> String {
     let terminal_width = get_terminal_width();
-    
+
     let (width, float) = match terminal_width {
         0..=40 => (None, Float::Left),           // Very narrow: no width limit
         41..=80 => (Some(terminal_width - 4), Float::Left),  // Narrow: small margin
         81..=120 => (Some(60), Float::Center),   // Medium: centered with fixed width
         _ => (Some(80), Float::Center),          // Wide: larger centered box
     };
-    
+
     let mut box_builder = builder().float(float);
-    
+
     if let Some(w) = width {
         box_builder = box_builder.width(w);
     }
-    
+
     box_builder.render(content).unwrap()
 }
 ```
@@ -251,37 +251,37 @@ fn responsive_box(content: &str) -> String {
 Create side-by-side boxes:
 
 ```rust
-use boxen::{builder, get_terminal_width};
+use ::boxen::{builder, get_terminal_width};
 
 fn two_column_layout(left_content: &str, right_content: &str) -> String {
     let terminal_width = get_terminal_width();
     let column_width = (terminal_width / 2).saturating_sub(4);
-    
+
     let left_box = builder()
         .width(column_width)
         .title("Left Column")
         .render(left_content)
         .unwrap();
-    
+
     let right_box = builder()
         .width(column_width)
         .title("Right Column")
         .render(right_content)
         .unwrap();
-    
+
     // Combine boxes side by side (simplified example)
     let left_lines: Vec<&str> = left_box.lines().collect();
     let right_lines: Vec<&str> = right_box.lines().collect();
-    
+
     let max_lines = left_lines.len().max(right_lines.len());
     let mut result = String::new();
-    
+
     for i in 0..max_lines {
         let left_line = left_lines.get(i).unwrap_or(&"");
         let right_line = right_lines.get(i).unwrap_or(&"");
         result.push_str(&format!("{:<width$} {}\n", left_line, right_line, width = column_width + 2));
     }
-    
+
     result
 }
 ```
@@ -291,7 +291,7 @@ fn two_column_layout(left_content: &str, right_content: &str) -> String {
 Create boxes within boxes:
 
 ```rust
-use boxen::{builder, BorderStyle};
+use ::boxen::{builder, BorderStyle};
 
 fn nested_box_example() -> String {
     let inner_box = builder()
@@ -299,7 +299,7 @@ fn nested_box_example() -> String {
         .padding(1)
         .render("Inner content")
         .unwrap();
-    
+
     builder()
         .border_style(BorderStyle::Double)
         .padding(2)
@@ -316,7 +316,7 @@ fn nested_box_example() -> String {
 Boxen properly handles wide Unicode characters:
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 
 let result = builder()
     .width(20)
@@ -335,7 +335,7 @@ let result = builder()
 For RTL languages, you might want to adjust alignment:
 
 ```rust
-use boxen::{builder, TextAlignment};
+use ::boxen::{builder, TextAlignment};
 
 let result = builder()
     .text_alignment(TextAlignment::Right)  // Better for RTL text
@@ -349,7 +349,7 @@ let result = builder()
 Handle text with mixed writing systems:
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 
 let mixed_text = "English + 中文 + العربية + русский";
 let result = builder()
@@ -366,7 +366,7 @@ let result = builder()
 Boxen preserves ANSI escape sequences in text:
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 use colored::Colorize;
 
 let colored_text = format!(
@@ -383,7 +383,7 @@ let result = builder()
 ### Combining with External Styling
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 use colored::Colorize;
 
 fn styled_error_box(message: &str) -> String {
@@ -392,7 +392,7 @@ fn styled_error_box(message: &str) -> String {
         "ERROR:".red().bold(),
         message.white()
     );
-    
+
     builder()
         .border_style(BorderStyle::Bold)
         .border_color("red")
@@ -407,22 +407,22 @@ fn styled_error_box(message: &str) -> String {
 Create dynamic progress boxes:
 
 ```rust
-use boxen::{builder, BorderStyle};
+use ::boxen::{builder, BorderStyle};
 
 fn progress_box(current: usize, total: usize, message: &str) -> String {
     let percentage = (current * 100) / total;
     let bar_width = 20;
     let filled = (current * bar_width) / total;
-    
+
     let progress_bar = format!(
         "[{}{}] {}%",
         "█".repeat(filled),
         "░".repeat(bar_width - filled),
         percentage
     );
-    
+
     let content = format!("{}\n{}", message, progress_bar);
-    
+
     builder()
         .border_style(BorderStyle::Round)
         .padding(1)
@@ -439,7 +439,7 @@ fn progress_box(current: usize, total: usize, message: &str) -> String {
 For multiple boxes, optimize by reusing configurations:
 
 ```rust
-use boxen::{BoxenBuilder, BorderStyle};
+use ::boxen::{BoxenBuilder, BorderStyle};
 
 struct BoxRenderer {
     template: BoxenBuilder,
@@ -453,7 +453,7 @@ impl BoxRenderer {
                 .padding(1),
         }
     }
-    
+
     fn render_batch(&self, items: &[&str]) -> Vec<String> {
         items.iter()
             .map(|item| self.template.clone().render(item).unwrap())
@@ -467,7 +467,7 @@ impl BoxRenderer {
 For very large text content:
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 
 fn efficient_large_box(lines: impl Iterator<Item = String>) -> String {
     // Process in chunks to avoid loading everything into memory
@@ -475,7 +475,7 @@ fn efficient_large_box(lines: impl Iterator<Item = String>) -> String {
         .take(1000)  // Limit to prevent memory issues
         .collect::<Vec<_>>()
         .join("\n");
-    
+
     builder()
         .width(80)  // Fixed width avoids expensive calculations
         .render(content)
@@ -487,7 +487,7 @@ fn efficient_large_box(lines: impl Iterator<Item = String>) -> String {
 
 ```rust
 use std::collections::HashMap;
-use boxen::{builder, BoxenOptions};
+use ::boxen::{builder, BoxenOptions};
 
 struct BoxCache {
     cache: HashMap<String, String>,
@@ -499,10 +499,10 @@ impl BoxCache {
             cache: HashMap::new(),
         }
     }
-    
+
     fn get_or_create(&mut self, content: &str, options: &BoxenOptions) -> String {
         let key = format!("{:?}:{}", options, content);
-        
+
         self.cache.entry(key).or_insert_with(|| {
             builder()
                 .from_options(options.clone())
@@ -518,7 +518,7 @@ impl BoxCache {
 ### CLI Application Integration
 
 ```rust
-use boxen::{builder, BorderStyle, TextAlignment};
+use ::boxen::{builder, BorderStyle, TextAlignment};
 use clap::{Arg, Command};
 
 fn create_cli_box(message: &str, style: &str, color: Option<&str>) -> String {
@@ -528,16 +528,16 @@ fn create_cli_box(message: &str, style: &str, color: Option<&str>) -> String {
         "bold" => BorderStyle::Bold,
         _ => BorderStyle::Single,
     };
-    
+
     let mut box_builder = builder()
         .border_style(border_style)
         .padding(1)
         .text_alignment(TextAlignment::Center);
-    
+
     if let Some(color) = color {
         box_builder = box_builder.border_color(color);
     }
-    
+
     box_builder.render(message).unwrap()
 }
 
@@ -547,11 +547,11 @@ fn main() {
         .arg(Arg::new("style").long("style").default_value("single"))
         .arg(Arg::new("color").long("color"))
         .get_matches();
-    
+
     let message = matches.get_one::<String>("message").unwrap();
     let style = matches.get_one::<String>("style").unwrap();
     let color = matches.get_one::<String>("color");
-    
+
     println!("{}", create_cli_box(message, style, color.map(|s| s.as_str())));
 }
 ```
@@ -559,7 +559,7 @@ fn main() {
 ### Logging Integration
 
 ```rust
-use boxen::{builder, BorderStyle};
+use ::boxen::{builder, BorderStyle};
 use log::{info, warn, error};
 
 struct BoxedLogger;
@@ -575,7 +575,7 @@ impl BoxedLogger {
             .unwrap();
         info!("\n{}", boxed);
     }
-    
+
     fn warn_box(message: &str) {
         let boxed = builder()
             .border_style(BorderStyle::Bold)
@@ -586,7 +586,7 @@ impl BoxedLogger {
             .unwrap();
         warn!("\n{}", boxed);
     }
-    
+
     fn error_box(message: &str) {
         let boxed = builder()
             .border_style(BorderStyle::Bold)
@@ -603,21 +603,21 @@ impl BoxedLogger {
 ### Testing Utilities
 
 ```rust
-use boxen::{builder, BorderStyle};
+use ::boxen::{builder, BorderStyle};
 
 #[cfg(test)]
 mod test_utils {
     use super::*;
-    
+
     pub fn test_result_box(test_name: &str, passed: bool, details: &str) -> String {
         let (symbol, color, status) = if passed {
             ("✅", "green", "PASSED")
         } else {
             ("❌", "red", "FAILED")
         };
-        
+
         let content = format!("{}\n{}", test_name, details);
-        
+
         builder()
             .border_style(BorderStyle::Round)
             .border_color(color)
@@ -631,18 +631,18 @@ mod test_utils {
 #[cfg(test)]
 mod tests {
     use super::test_utils::*;
-    
+
     #[test]
     fn example_test() {
         let result = some_function();
         let passed = result == expected_value;
-        
+
         println!("{}", test_result_box(
             "example_test",
             passed,
             &format!("Expected: {}, Got: {}", expected_value, result)
         ));
-        
+
         assert!(passed);
     }
 }
