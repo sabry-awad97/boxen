@@ -2,8 +2,12 @@
 
 [![Crates.io](https://img.shields.io/crates/v/boxen.svg)](https://crates.io/crates/boxen)
 [![Documentation](https://docs.rs/boxen/badge.svg)](https://docs.rs/boxen)
-[![Build Status](https://github.com/sabry-awad97/boxen/workflows/CI/badge.svg)](https://github.com/sabry-awad97/boxen/actions)
+[![CI](https://github.com/sabry-awad97/boxen/workflows/CI/badge.svg)](https://github.com/sabry-awad97/boxen/actions/workflows/ci.yml)
+[![Security Audit](https://github.com/sabry-awad97/boxen/workflows/Security%20Audit/badge.svg)](https://github.com/sabry-awad97/boxen/actions/workflows/security.yml)
 [![License](https://img.shields.io/crates/l/boxen.svg)](https://github.com/sabry-awad97/boxen#license)
+[![Downloads](https://img.shields.io/crates/d/boxen.svg)](https://crates.io/crates/boxen)
+[![Rust Version](https://img.shields.io/badge/rust-1.85+-blue.svg)](https://www.rust-lang.org)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-brightgreen.svg)](https://github.com/sabry-awad97/boxen/network/dependencies)
 
 A Rust implementation of the popular [boxen](https://github.com/sindresorhus/boxen) library for creating styled terminal boxes around text.
 
