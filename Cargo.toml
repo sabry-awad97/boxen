@@ -5,10 +5,11 @@ edition = "2024"
 authors = ["Boxen Contributors"]
 description = "A Rust library for creating styled terminal boxes around text"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/example/boxen-rs"
+repository = "https://github.com/sabry-awad97/boxen"
 documentation = "https://docs.rs/boxen"
 keywords = ["terminal", "cli", "box", "text", "formatting"]
 categories = ["command-line-utilities", "text-processing"]
+readme = "README.md"
 
 [dependencies]
 terminal_size = "0.4.3"
