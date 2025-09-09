@@ -65,6 +65,51 @@ mod tests {
     }
 
     #[test]
+    fn test_builder_fluent_interface() {
+        let result = builder()
+            .border_style(BorderStyle::Double)
+            .padding(2)
+            .margin(1)
+            .text_alignment(TextAlignment::Center)
+            .title("Builder Test")
+            .width(50)
+            .border_color("blue")
+            .render("Testing fluent interface");
+
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        assert!(output.contains("Testing fluent interface"));
+        assert!(output.contains("Builder Test"));
+    }
+
+    #[test]
+    fn test_builder_validation() {
+        // Test that builder validates configuration
+        let result = builder()
+            .width(5) // Too small
+            .padding(10) // Too large
+            .render("Test");
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_builder_convenience_methods() {
+        let result = builder()
+            .spacing(1) // Sets both padding and margin
+            .colors("red", "white") // Sets both border and background color
+            .size(50, 8) // Use wider box to avoid text wrapping
+            .center_all() // Centers text, title, and float
+            .title("Convenience Test")
+            .render("Testing convenience methods");
+
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        assert!(output.contains("Testing convenience methods"));
+        assert!(output.contains("Convenience Test"));
+    }
+
+    #[test]
     fn test_convenience_functions() {
         assert!(simple_box("Test").contains("Test"));
         assert!(double_box("Test").contains("Test"));

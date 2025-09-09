@@ -239,7 +239,44 @@ impl BoxenBuilder {
 
     /// Build and render box with the given text
     pub fn render<S: AsRef<str>>(self, text: S) -> BoxenResult<String> {
+        // Validate configuration before rendering
+        self.options.validate_constraints()?;
         crate::boxen(text.as_ref(), Some(self.options))
+    }
+
+    /// Validate the current builder configuration without building
+    pub fn validate(&self) -> BoxenResult<()> {
+        self.options.validate_constraints()
+    }
+
+    /// Convenience method to set both padding and margin to the same value
+    pub fn spacing<T: Into<Spacing>>(mut self, spacing: T) -> Self {
+        let spacing_value = spacing.into();
+        self.options.padding = spacing_value;
+        self.options.margin = spacing_value;
+        self
+    }
+
+    /// Convenience method to set both border and background color
+    pub fn colors<C1: Into<Color>, C2: Into<Color>>(mut self, border: C1, background: C2) -> Self {
+        self.options.border_color = Some(border.into());
+        self.options.background_color = Some(background.into());
+        self
+    }
+
+    /// Convenience method to set both width and height
+    pub fn size(mut self, width: usize, height: usize) -> Self {
+        self.options.width = Some(width);
+        self.options.height = Some(height);
+        self
+    }
+
+    /// Convenience method to center align both text and title
+    pub fn center_all(mut self) -> Self {
+        self.options.text_alignment = TextAlignment::Center;
+        self.options.title_alignment = TitleAlignment::Center;
+        self.options.float = Float::Center;
+        self
     }
 }
 
@@ -268,6 +305,44 @@ impl From<&str> for Color {
 impl From<(u8, u8, u8)> for Color {
     fn from((r, g, b): (u8, u8, u8)) -> Self {
         Color::Rgb(r, g, b)
+    }
+}
+
+// Additional convenient From implementations
+impl From<(usize, usize)> for Spacing {
+    /// Creates spacing from (horizontal, vertical) tuple
+    /// Horizontal value is applied to left and right, vertical to top and bottom
+    fn from((horizontal, vertical): (usize, usize)) -> Self {
+        Self {
+            top: vertical,
+            right: horizontal,
+            bottom: vertical,
+            left: horizontal,
+        }
+    }
+}
+
+impl From<[usize; 4]> for Spacing {
+    /// Creates spacing from [top, right, bottom, left] array
+    fn from([top, right, bottom, left]: [usize; 4]) -> Self {
+        Self {
+            top,
+            right,
+            bottom,
+            left,
+        }
+    }
+}
+
+impl From<[usize; 2]> for Spacing {
+    /// Creates spacing from [horizontal, vertical] array
+    fn from([horizontal, vertical]: [usize; 2]) -> Self {
+        Self {
+            top: vertical,
+            right: horizontal,
+            bottom: vertical,
+            left: horizontal,
+        }
     }
 }
 
@@ -706,6 +781,465 @@ mod tests {
         if let Some(expected_height) = max_content_height {
             assert_eq!(layout.content_height, expected_height);
         }
+    }
+
+    // Builder pattern tests
+    #[test]
+    fn test_builder_new() {
+        let builder = BoxenBuilder::new();
+        let options = builder.build();
+
+        // Should have default values
+        assert!(matches!(options.border_style, BorderStyle::Single));
+        assert!(options.padding.is_empty());
+        assert!(options.margin.is_empty());
+        assert!(matches!(options.text_alignment, TextAlignment::Left));
+        assert!(options.title.is_none());
+        assert!(matches!(options.title_alignment, TitleAlignment::Left));
+        assert!(matches!(options.float, Float::Left));
+        assert!(options.width.is_none());
+        assert!(options.height.is_none());
+        assert!(options.border_color.is_none());
+        assert!(options.background_color.is_none());
+        assert!(!options.dim_border);
+        assert!(options.fullscreen.is_none());
+    }
+
+    #[test]
+    fn test_builder_default() {
+        let builder = BoxenBuilder::default();
+        let options = builder.build();
+
+        // Should be same as new()
+        assert!(matches!(options.border_style, BorderStyle::Single));
+        assert!(options.padding.is_empty());
+    }
+
+    #[test]
+    fn test_builder_method_chaining() {
+        let result = BoxenBuilder::new()
+            .border_style(BorderStyle::Double)
+            .padding(2)
+            .margin((1, 2, 3, 4))
+            .text_alignment(TextAlignment::Center)
+            .title("Test Title")
+            .title_alignment(TitleAlignment::Right)
+            .float(Float::Center)
+            .width(50)
+            .height(20)
+            .border_color("red")
+            .background_color("#ff0000")
+            .dim_border(true)
+            .fullscreen(FullscreenMode::Auto)
+            .render("Hello World");
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_builder_border_style() {
+        let options = BoxenBuilder::new().border_style(BorderStyle::Round).build();
+
+        assert!(matches!(options.border_style, BorderStyle::Round));
+    }
+
+    #[test]
+    fn test_builder_padding_from_usize() {
+        let options = BoxenBuilder::new().padding(3).build();
+
+        assert_eq!(options.padding.top, 3);
+        assert_eq!(options.padding.right, 9); // 3x horizontal
+        assert_eq!(options.padding.bottom, 3);
+        assert_eq!(options.padding.left, 9); // 3x horizontal
+    }
+
+    #[test]
+    fn test_builder_padding_from_tuple() {
+        let options = BoxenBuilder::new().padding((1, 2, 3, 4)).build();
+
+        assert_eq!(options.padding.top, 1);
+        assert_eq!(options.padding.right, 2);
+        assert_eq!(options.padding.bottom, 3);
+        assert_eq!(options.padding.left, 4);
+    }
+
+    #[test]
+    fn test_builder_margin_from_usize() {
+        let options = BoxenBuilder::new().margin(2).build();
+
+        assert_eq!(options.margin.top, 2);
+        assert_eq!(options.margin.right, 6); // 3x horizontal
+        assert_eq!(options.margin.bottom, 2);
+        assert_eq!(options.margin.left, 6); // 3x horizontal
+    }
+
+    #[test]
+    fn test_builder_margin_from_tuple() {
+        let options = BoxenBuilder::new().margin((5, 6, 7, 8)).build();
+
+        assert_eq!(options.margin.top, 5);
+        assert_eq!(options.margin.right, 6);
+        assert_eq!(options.margin.bottom, 7);
+        assert_eq!(options.margin.left, 8);
+    }
+
+    #[test]
+    fn test_builder_text_alignment() {
+        let options = BoxenBuilder::new()
+            .text_alignment(TextAlignment::Right)
+            .build();
+
+        assert!(matches!(options.text_alignment, TextAlignment::Right));
+    }
+
+    #[test]
+    fn test_builder_title() {
+        let options = BoxenBuilder::new().title("My Title").build();
+
+        assert_eq!(options.title, Some("My Title".to_string()));
+    }
+
+    #[test]
+    fn test_builder_title_string() {
+        let title = String::from("Dynamic Title");
+        let options = BoxenBuilder::new().title(title.clone()).build();
+
+        assert_eq!(options.title, Some(title));
+    }
+
+    #[test]
+    fn test_builder_title_alignment() {
+        let options = BoxenBuilder::new()
+            .title_alignment(TitleAlignment::Center)
+            .build();
+
+        assert!(matches!(options.title_alignment, TitleAlignment::Center));
+    }
+
+    #[test]
+    fn test_builder_float() {
+        let options = BoxenBuilder::new().float(Float::Right).build();
+
+        assert!(matches!(options.float, Float::Right));
+    }
+
+    #[test]
+    fn test_builder_dimensions() {
+        let options = BoxenBuilder::new().width(80).height(25).build();
+
+        assert_eq!(options.width, Some(80));
+        assert_eq!(options.height, Some(25));
+    }
+
+    #[test]
+    fn test_builder_border_color_string() {
+        let options = BoxenBuilder::new().border_color("blue").build();
+
+        if let Some(Color::Named(name)) = options.border_color {
+            assert_eq!(name, "blue");
+        } else {
+            panic!("Expected named color");
+        }
+    }
+
+    #[test]
+    fn test_builder_border_color_hex() {
+        let options = BoxenBuilder::new().border_color("#00ff00").build();
+
+        if let Some(Color::Hex(hex)) = options.border_color {
+            assert_eq!(hex, "#00ff00");
+        } else {
+            panic!("Expected hex color");
+        }
+    }
+
+    #[test]
+    fn test_builder_border_color_rgb() {
+        let options = BoxenBuilder::new().border_color((255, 128, 0)).build();
+
+        if let Some(Color::Rgb(r, g, b)) = options.border_color {
+            assert_eq!((r, g, b), (255, 128, 0));
+        } else {
+            panic!("Expected RGB color");
+        }
+    }
+
+    #[test]
+    fn test_builder_background_color() {
+        let options = BoxenBuilder::new().background_color("yellow").build();
+
+        if let Some(Color::Named(name)) = options.background_color {
+            assert_eq!(name, "yellow");
+        } else {
+            panic!("Expected named color");
+        }
+    }
+
+    #[test]
+    fn test_builder_dim_border() {
+        let options = BoxenBuilder::new().dim_border(true).build();
+
+        assert!(options.dim_border);
+    }
+
+    #[test]
+    fn test_builder_fullscreen_auto() {
+        let options = BoxenBuilder::new().fullscreen(FullscreenMode::Auto).build();
+
+        assert!(matches!(options.fullscreen, Some(FullscreenMode::Auto)));
+    }
+
+    #[test]
+    fn test_builder_fullscreen_custom() {
+        let custom_func = |w: usize, h: usize| (w / 2, h / 2);
+        let options = BoxenBuilder::new()
+            .fullscreen(FullscreenMode::Custom(custom_func))
+            .build();
+
+        assert!(matches!(
+            options.fullscreen,
+            Some(FullscreenMode::Custom(_))
+        ));
+    }
+
+    #[test]
+    fn test_builder_render_success() {
+        let result = BoxenBuilder::new()
+            .border_style(BorderStyle::Single)
+            .padding(1)
+            .render("Test content");
+
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        assert!(output.contains("Test content"));
+    }
+
+    #[test]
+    fn test_builder_render_with_validation_error() {
+        let result = BoxenBuilder::new()
+            .width(5) // Too small
+            .padding(10) // Too large padding
+            .render("Test");
+
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            BoxenError::InvalidDimensions { .. }
+        ));
+    }
+
+    #[test]
+    fn test_builder_validate_success() {
+        let builder = BoxenBuilder::new().width(50).padding(2);
+
+        assert!(builder.validate().is_ok());
+    }
+
+    #[test]
+    fn test_builder_validate_error() {
+        let builder = BoxenBuilder::new()
+            .width(3) // Too small
+            .padding(5); // Too large padding
+
+        assert!(builder.validate().is_err());
+    }
+
+    #[test]
+    fn test_builder_complex_configuration() {
+        let result = BoxenBuilder::new()
+            .border_style(BorderStyle::Double)
+            .padding((2, 4, 2, 4))
+            .margin(1)
+            .text_alignment(TextAlignment::Center)
+            .title("Complex Box")
+            .title_alignment(TitleAlignment::Center)
+            .float(Float::Center)
+            .width(60)
+            .border_color("#0066cc")
+            .background_color("white")
+            .dim_border(false)
+            .render("This is a complex box configuration test");
+
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        assert!(output.contains("This is a complex box configuration test"));
+    }
+
+    #[test]
+    fn test_builder_empty_text() {
+        let result = BoxenBuilder::new().render("");
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_builder_multiline_text() {
+        let text = "Line 1\nLine 2\nLine 3";
+        let result = BoxenBuilder::new().padding(1).render(text);
+
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        assert!(output.contains("Line 1"));
+        assert!(output.contains("Line 2"));
+        assert!(output.contains("Line 3"));
+    }
+
+    #[test]
+    fn test_builder_method_chaining_order_independence() {
+        // Test that method order doesn't matter
+        let options1 = BoxenBuilder::new()
+            .width(50)
+            .padding(2)
+            .border_style(BorderStyle::Round)
+            .build();
+
+        let options2 = BoxenBuilder::new()
+            .border_style(BorderStyle::Round)
+            .padding(2)
+            .width(50)
+            .build();
+
+        // Both should produce equivalent options
+        assert!(matches!(options1.border_style, BorderStyle::Round));
+        assert!(matches!(options2.border_style, BorderStyle::Round));
+        assert_eq!(options1.width, Some(50));
+        assert_eq!(options2.width, Some(50));
+        assert_eq!(options1.padding.top, 2);
+        assert_eq!(options2.padding.top, 2);
+    }
+
+    #[test]
+    fn test_builder_overwrite_values() {
+        // Test that later calls overwrite earlier ones
+        let options = BoxenBuilder::new()
+            .width(30)
+            .width(50) // Should overwrite the 30
+            .padding(1)
+            .padding(3) // Should overwrite the 1
+            .build();
+
+        assert_eq!(options.width, Some(50));
+        assert_eq!(options.padding.top, 3);
+        assert_eq!(options.padding.right, 9); // 3x horizontal
+    }
+
+    // Test additional From implementations
+    #[test]
+    fn test_spacing_from_horizontal_vertical_tuple() {
+        let spacing = Spacing::from((4, 2));
+        assert_eq!(spacing.top, 2);
+        assert_eq!(spacing.right, 4);
+        assert_eq!(spacing.bottom, 2);
+        assert_eq!(spacing.left, 4);
+    }
+
+    #[test]
+    fn test_spacing_from_array_4() {
+        let spacing = Spacing::from([1, 2, 3, 4]);
+        assert_eq!(spacing.top, 1);
+        assert_eq!(spacing.right, 2);
+        assert_eq!(spacing.bottom, 3);
+        assert_eq!(spacing.left, 4);
+    }
+
+    #[test]
+    fn test_spacing_from_array_2() {
+        let spacing = Spacing::from([6, 3]);
+        assert_eq!(spacing.top, 3);
+        assert_eq!(spacing.right, 6);
+        assert_eq!(spacing.bottom, 3);
+        assert_eq!(spacing.left, 6);
+    }
+
+    // Test convenience builder methods
+    #[test]
+    fn test_builder_spacing_convenience() {
+        let options = BoxenBuilder::new().spacing(2).build();
+
+        // Both padding and margin should be set
+        assert_eq!(options.padding.top, 2);
+        assert_eq!(options.padding.right, 6); // 3x horizontal
+        assert_eq!(options.margin.top, 2);
+        assert_eq!(options.margin.right, 6); // 3x horizontal
+    }
+
+    #[test]
+    fn test_builder_colors_convenience() {
+        let options = BoxenBuilder::new().colors("red", "#00ff00").build();
+
+        if let Some(Color::Named(border_name)) = options.border_color {
+            assert_eq!(border_name, "red");
+        } else {
+            panic!("Expected named border color");
+        }
+
+        if let Some(Color::Hex(bg_hex)) = options.background_color {
+            assert_eq!(bg_hex, "#00ff00");
+        } else {
+            panic!("Expected hex background color");
+        }
+    }
+
+    #[test]
+    fn test_builder_size_convenience() {
+        let options = BoxenBuilder::new().size(80, 25).build();
+
+        assert_eq!(options.width, Some(80));
+        assert_eq!(options.height, Some(25));
+    }
+
+    #[test]
+    fn test_builder_center_all_convenience() {
+        let options = BoxenBuilder::new().center_all().build();
+
+        assert!(matches!(options.text_alignment, TextAlignment::Center));
+        assert!(matches!(options.title_alignment, TitleAlignment::Center));
+        assert!(matches!(options.float, Float::Center));
+    }
+
+    #[test]
+    fn test_builder_with_array_spacing() {
+        let options = BoxenBuilder::new()
+            .padding([1, 2, 3, 4])
+            .margin([5, 6])
+            .build();
+
+        assert_eq!(options.padding.top, 1);
+        assert_eq!(options.padding.right, 2);
+        assert_eq!(options.padding.bottom, 3);
+        assert_eq!(options.padding.left, 4);
+
+        assert_eq!(options.margin.top, 6);
+        assert_eq!(options.margin.right, 5);
+        assert_eq!(options.margin.bottom, 6);
+        assert_eq!(options.margin.left, 5);
+    }
+
+    #[test]
+    fn test_builder_with_tuple_spacing() {
+        let options = BoxenBuilder::new()
+            .padding((8, 4)) // horizontal, vertical
+            .build();
+
+        assert_eq!(options.padding.top, 4);
+        assert_eq!(options.padding.right, 8);
+        assert_eq!(options.padding.bottom, 4);
+        assert_eq!(options.padding.left, 8);
+    }
+
+    #[test]
+    fn test_builder_convenience_methods_chaining() {
+        let result = BoxenBuilder::new()
+            .spacing(1)
+            .colors("blue", "white")
+            .size(60, 10) // Use smaller height to avoid terminal size issues
+            .center_all()
+            .title("Centered Box")
+            .render("This box uses all convenience methods");
+
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        assert!(output.contains("This box uses all convenience methods"));
     }
 }
 
