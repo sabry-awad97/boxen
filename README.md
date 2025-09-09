@@ -31,7 +31,7 @@ boxen = "0.1.0"
 ## Quick Start
 
 ```rust
-use boxen::{boxen, builder, BorderStyle, TextAlignment};
+use ::boxen::{boxen, builder, BorderStyle, TextAlignment};
 
 fn main() {
     // Simple box with default settings
@@ -57,7 +57,7 @@ fn main() {
 ### Basic Usage
 
 ```rust
-use boxen::boxen;
+use ::boxen::boxen;
 
 let result = boxen("Simple box", None).unwrap();
 println!("{}", result);
@@ -74,7 +74,7 @@ Output:
 ### Builder Pattern
 
 ```rust
-use boxen::{builder, BorderStyle, TextAlignment};
+use ::boxen::{builder, BorderStyle, TextAlignment};
 
 let result = builder()
     .border_style(BorderStyle::Round)
@@ -102,7 +102,7 @@ Output:
 ### Convenience Functions
 
 ```rust
-use boxen::{simple_box, double_box, round_box};
+use ::boxen::{simple_box, double_box, round_box};
 
 println!("{}", simple_box("Default style"));
 println!("{}", double_box("Double border"));
@@ -112,7 +112,7 @@ println!("{}", round_box("Round corners"));
 ### Advanced Styling
 
 ```rust
-use boxen::{builder, BorderStyle, TextAlignment, Float};
+use ::boxen::{builder, BorderStyle, TextAlignment, Float};
 
 let result = builder()
     .border_style(BorderStyle::Bold)
@@ -134,7 +134,7 @@ println!("{}", result);
 ### Error Handling
 
 ```rust
-use boxen::{builder, BoxenError};
+use ::boxen::{builder, BoxenError};
 
 match builder()
     .width(5)  // Too narrow
@@ -167,7 +167,7 @@ Boxen supports various border styles:
 Boxen supports multiple color formats:
 
 ```rust
-use boxen::builder;
+use ::boxen::builder;
 
 // Named colors
 builder().border_color("red");
