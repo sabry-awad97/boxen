@@ -16,10 +16,13 @@ impl BorderStyle {
             BorderStyle::Classic => Ok(BorderChars::classic()),
             BorderStyle::Custom(chars) => {
                 chars.validate().map_err(|msg| {
-                    BoxenError::InvalidBorderStyle(format!(
-                        "Custom border validation failed: {}",
-                        msg
-                    ))
+                    BoxenError::invalid_border_style(
+                        format!("Custom border validation failed: {}", msg),
+                        vec![crate::error::ErrorRecommendation::suggestion_only(
+                            "Border validation failed".to_string(),
+                            "Check that all border characters are valid and visible".to_string(),
+                        )],
+                    )
                 })?;
                 Ok(chars.clone())
             }
@@ -57,10 +60,24 @@ impl BorderStyle {
             "singledouble" | "single_double" => Ok(BorderStyle::SingleDouble),
             "doublesingle" | "double_single" => Ok(BorderStyle::DoubleSingle),
             "classic" => Ok(BorderStyle::Classic),
-            _ => Err(BoxenError::InvalidBorderStyle(format!(
-                "Unknown border style: '{}'. Valid styles are: none, single, double, round, bold, singleDouble, doubleSingle, classic",
-                name
-            ))),
+            _ => Err(BoxenError::invalid_border_style(
+                format!(
+                    "Unknown border style: '{}'. Valid styles are: none, single, double, round, bold, singleDouble, doubleSingle, classic",
+                    name
+                ),
+                vec![
+                    crate::error::ErrorRecommendation::suggestion_only(
+                        "Unknown border style".to_string(),
+                        "Use one of the predefined styles: single, double, round, bold, etc."
+                            .to_string(),
+                    ),
+                    crate::error::ErrorRecommendation::with_auto_fix(
+                        "Use default style".to_string(),
+                        "Try using the default single border style".to_string(),
+                        "BorderStyle::Single".to_string(),
+                    ),
+                ],
+            )),
         }
     }
 
@@ -81,7 +98,13 @@ impl BorderStyle {
     /// Create a custom border style with validation
     pub fn custom(chars: BorderChars) -> Result<BorderStyle, BoxenError> {
         chars.validate().map_err(|msg| {
-            BoxenError::InvalidBorderStyle(format!("Custom border validation failed: {}", msg))
+            BoxenError::invalid_border_style(
+                format!("Custom border validation failed: {}", msg),
+                vec![crate::error::ErrorRecommendation::suggestion_only(
+                    "Border validation failed".to_string(),
+                    "Ensure all border characters are valid and visible".to_string(),
+                )],
+            )
         })?;
         Ok(BorderStyle::Custom(chars))
     }

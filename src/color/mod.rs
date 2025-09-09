@@ -1,3 +1,4 @@
+use crate::ErrorRecommendation;
 /// Color handling functionality for boxen
 use crate::error::{BoxenError, BoxenResult};
 use crate::options::Color;
@@ -42,10 +43,26 @@ pub fn parse_named_color(name: &str) -> BoxenResult<colored::Color> {
         "bright_cyan" | "brightcyan" => Ok(colored::Color::BrightCyan),
         "bright_white" | "brightwhite" => Ok(colored::Color::BrightWhite),
 
-        _ => Err(BoxenError::InvalidColor(format!(
-            "Unknown color name: {}",
-            name
-        ))),
+        _ => Err(BoxenError::invalid_color(
+            format!("Unknown color name: {}", name),
+            name.to_string(),
+            vec![
+                ErrorRecommendation::suggestion_only(
+                    "Unknown color name".to_string(),
+                    "Use a standard terminal color name like 'red', 'blue', 'green', etc."
+                        .to_string(),
+                ),
+                ErrorRecommendation::with_auto_fix(
+                    "Use standard color".to_string(),
+                    "Try using 'red' as a common color".to_string(),
+                    "\"red\"".to_string(),
+                ),
+                ErrorRecommendation::suggestion_only(
+                    "Alternative: Use hex color".to_string(),
+                    "You can also use hex colors like '#FF0000' for red".to_string(),
+                ),
+            ],
+        )),
     }
 }
 
@@ -55,37 +72,113 @@ pub fn parse_hex_color(hex: &str) -> BoxenResult<colored::Color> {
 
     // Validate hex string length
     if hex.len() != 3 && hex.len() != 6 {
-        return Err(BoxenError::InvalidColor(format!(
-            "Invalid hex color format: #{}",
-            hex
-        )));
+        return Err(BoxenError::invalid_color(
+            format!("Invalid hex color format: #{}", hex),
+            format!("#{}", hex),
+            vec![
+                ErrorRecommendation::suggestion_only(
+                    "Invalid hex length".to_string(),
+                    "Hex colors must be 3 or 6 characters long (e.g., #F00 or #FF0000)".to_string(),
+                ),
+                ErrorRecommendation::with_auto_fix(
+                    "Use 6-digit format".to_string(),
+                    "Try using the full 6-digit hex format".to_string(),
+                    "\"#FF0000\"".to_string(),
+                ),
+            ],
+        ));
     }
 
     // Validate hex characters
     if !hex.chars().all(|c| c.is_ascii_hexdigit()) {
-        return Err(BoxenError::InvalidColor(format!(
-            "Invalid hex color format: #{}",
-            hex
-        )));
+        return Err(BoxenError::invalid_color(
+            format!("Invalid hex color format: #{}", hex),
+            format!("#{}", hex),
+            vec![
+                ErrorRecommendation::suggestion_only(
+                    "Invalid hex characters".to_string(),
+                    "Hex colors can only contain digits 0-9 and letters A-F".to_string(),
+                ),
+                ErrorRecommendation::with_auto_fix(
+                    "Use valid hex color".to_string(),
+                    "Try using a valid hex color".to_string(),
+                    "\"#FF0000\"".to_string(),
+                ),
+            ],
+        ));
     }
 
     let (r, g, b) = if hex.len() == 3 {
         // Short format: #RGB -> #RRGGBB
-        let r = u8::from_str_radix(&hex[0..1].repeat(2), 16)
-            .map_err(|_| BoxenError::InvalidColor(format!("Invalid hex color: #{}", hex)))?;
-        let g = u8::from_str_radix(&hex[1..2].repeat(2), 16)
-            .map_err(|_| BoxenError::InvalidColor(format!("Invalid hex color: #{}", hex)))?;
-        let b = u8::from_str_radix(&hex[2..3].repeat(2), 16)
-            .map_err(|_| BoxenError::InvalidColor(format!("Invalid hex color: #{}", hex)))?;
+        let r = u8::from_str_radix(&hex[0..1].repeat(2), 16).map_err(|_| {
+            BoxenError::invalid_color(
+                format!("Invalid hex color: #{}", hex),
+                format!("#{}", hex),
+                vec![ErrorRecommendation::with_auto_fix(
+                    "Invalid hex format".to_string(),
+                    "Use a valid 3-digit hex color".to_string(),
+                    "\"#F00\"".to_string(),
+                )],
+            )
+        })?;
+        let g = u8::from_str_radix(&hex[1..2].repeat(2), 16).map_err(|_| {
+            BoxenError::invalid_color(
+                format!("Invalid hex color: #{}", hex),
+                format!("#{}", hex),
+                vec![ErrorRecommendation::with_auto_fix(
+                    "Invalid hex format".to_string(),
+                    "Use a valid 3-digit hex color".to_string(),
+                    "\"#0F0\"".to_string(),
+                )],
+            )
+        })?;
+        let b = u8::from_str_radix(&hex[2..3].repeat(2), 16).map_err(|_| {
+            BoxenError::invalid_color(
+                format!("Invalid hex color: #{}", hex),
+                format!("#{}", hex),
+                vec![ErrorRecommendation::with_auto_fix(
+                    "Invalid hex format".to_string(),
+                    "Use a valid 3-digit hex color".to_string(),
+                    "\"#00F\"".to_string(),
+                )],
+            )
+        })?;
         (r, g, b)
     } else {
         // Long format: #RRGGBB
-        let r = u8::from_str_radix(&hex[0..2], 16)
-            .map_err(|_| BoxenError::InvalidColor(format!("Invalid hex color: #{}", hex)))?;
-        let g = u8::from_str_radix(&hex[2..4], 16)
-            .map_err(|_| BoxenError::InvalidColor(format!("Invalid hex color: #{}", hex)))?;
-        let b = u8::from_str_radix(&hex[4..6], 16)
-            .map_err(|_| BoxenError::InvalidColor(format!("Invalid hex color: #{}", hex)))?;
+        let r = u8::from_str_radix(&hex[0..2], 16).map_err(|_| {
+            BoxenError::invalid_color(
+                format!("Invalid hex color: #{}", hex),
+                format!("#{}", hex),
+                vec![ErrorRecommendation::with_auto_fix(
+                    "Invalid hex format".to_string(),
+                    "Use a valid 6-digit hex color".to_string(),
+                    "\"#FF0000\"".to_string(),
+                )],
+            )
+        })?;
+        let g = u8::from_str_radix(&hex[2..4], 16).map_err(|_| {
+            BoxenError::invalid_color(
+                format!("Invalid hex color: #{}", hex),
+                format!("#{}", hex),
+                vec![ErrorRecommendation::with_auto_fix(
+                    "Invalid hex format".to_string(),
+                    "Use a valid 6-digit hex color".to_string(),
+                    "\"#00FF00\"".to_string(),
+                )],
+            )
+        })?;
+        let b = u8::from_str_radix(&hex[4..6], 16).map_err(|_| {
+            BoxenError::invalid_color(
+                format!("Invalid hex color: #{}", hex),
+                format!("#{}", hex),
+                vec![ErrorRecommendation::with_auto_fix(
+                    "Invalid hex format".to_string(),
+                    "Use a valid 6-digit hex color".to_string(),
+                    "\"#0000FF\"".to_string(),
+                )],
+            )
+        })?;
         (r, g, b)
     };
 

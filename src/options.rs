@@ -239,9 +239,15 @@ impl BoxenBuilder {
 
     /// Build and render box with the given text
     pub fn render<S: AsRef<str>>(self, text: S) -> BoxenResult<String> {
-        // Validate configuration before rendering
+        let text_ref = text.as_ref();
+
+        // Comprehensive input validation
+        crate::error::validation::validate_all_options(text_ref, &self.options)?;
+
+        // Validate configuration constraints
         self.options.validate_constraints()?;
-        crate::boxen(text.as_ref(), Some(self.options))
+
+        crate::boxen(text_ref, Some(self.options))
     }
 
     /// Validate the current builder configuration without building
@@ -274,15 +280,26 @@ impl BoxenBuilder {
     pub fn render_or_adjust<S: AsRef<str>>(mut self, text: S) -> BoxenResult<String> {
         let text_ref = text.as_ref();
 
-        // Try to render with validation first
-        let validation = crate::validation::validate_configuration(text_ref, &self.options);
-        if validation.is_valid {
-            // Configuration is valid, proceed with normal render
-            self.render(text_ref)
-        } else {
-            // Auto-adjust and try again
-            self.options = crate::validation::auto_adjust_options(text_ref, self.options);
-            self.render(text_ref)
+        // Try comprehensive validation first
+        match crate::error::validation::validate_all_options(text_ref, &self.options) {
+            Ok(_) => {
+                // Input validation passed, try configuration validation
+                let validation = crate::validation::validate_configuration(text_ref, &self.options);
+                if validation.is_valid {
+                    // Configuration is valid, proceed with normal render
+                    self.render(text_ref)
+                } else {
+                    // Auto-adjust and try again
+                    self.options =
+                        crate::validation::recovery::smart_recovery(text_ref, self.options);
+                    self.render(text_ref)
+                }
+            }
+            Err(_) => {
+                // Input validation failed, try smart recovery
+                self.options = crate::validation::recovery::smart_recovery(text_ref, self.options);
+                self.render(text_ref)
+            }
         }
     }
 
@@ -1445,7 +1462,21 @@ impl BoxenOptions {
         } else {
             // Use terminal width minus margins (borders and padding will be subtracted later)
             if terminal_width < self.margin.horizontal() {
-                return Err(BoxenError::TerminalSizeError);
+                return Err(BoxenError::terminal_size_error(
+                    "Failed to detect terminal dimensions".to_string(),
+                    vec![
+                        crate::error::ErrorRecommendation::suggestion_only(
+                            "Terminal detection failed".to_string(),
+                            "Specify explicit width and height instead of using fullscreen mode"
+                                .to_string(),
+                        ),
+                        crate::error::ErrorRecommendation::with_auto_fix(
+                            "Use fixed dimensions".to_string(),
+                            "Set explicit dimensions".to_string(),
+                            ".width(80).height(24)".to_string(),
+                        ),
+                    ],
+                ));
             }
             terminal_width - self.margin.horizontal()
         };

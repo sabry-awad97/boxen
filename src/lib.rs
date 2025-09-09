@@ -8,6 +8,9 @@ pub mod terminal;
 pub mod text;
 pub mod validation;
 
+#[cfg(test)]
+mod error_tests;
+
 // Re-export main types and functions
 pub use boxen::boxen;
 pub use error::{BoxenError, BoxenResult, ErrorRecommendation};

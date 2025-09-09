@@ -119,6 +119,11 @@ pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationR
                     "Alternative: Use no border".to_string(),
                     "Set border_style to BorderStyle::None to save 2 characters width".to_string(),
                 ),
+                ErrorRecommendation::with_auto_fix(
+                    "Auto-adjust width".to_string(),
+                    "Let the system automatically adjust the width".to_string(),
+                    ".auto_adjust(text)".to_string(),
+                ),
             ];
 
             result.add_error(BoxenError::invalid_dimensions(
@@ -155,6 +160,11 @@ pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationR
                 ErrorRecommendation::suggestion_only(
                     "Alternative: Use no border".to_string(),
                     "Set border_style to BorderStyle::None to save 2 characters height".to_string(),
+                ),
+                ErrorRecommendation::with_auto_fix(
+                    "Auto-adjust height".to_string(),
+                    "Let the system automatically adjust the height".to_string(),
+                    ".auto_adjust(text)".to_string(),
                 ),
             ];
 
@@ -358,6 +368,160 @@ pub fn auto_adjust_options(text: &str, mut options: BoxenOptions) -> BoxenOption
     }
 
     options
+}
+
+/// Error recovery strategies for common configuration issues
+pub mod recovery {
+    use super::*;
+    use crate::options::{BorderStyle, BoxenOptions, Spacing};
+
+    /// Attempt to recover from invalid width by adjusting configuration
+    pub fn recover_from_invalid_width(
+        text: &str,
+        mut options: BoxenOptions,
+        target_width: usize,
+    ) -> BoxenOptions {
+        let min_dims = calculate_minimum_dimensions(text, &options);
+
+        if target_width < min_dims.width {
+            // Try reducing padding first
+            if options.padding.horizontal() > 0 {
+                let reduction_needed = min_dims.width - target_width;
+                let current_horizontal = options.padding.horizontal();
+
+                if current_horizontal >= reduction_needed {
+                    let new_horizontal = current_horizontal - reduction_needed;
+                    options.padding = Spacing {
+                        left: new_horizontal / 2,
+                        right: new_horizontal / 2,
+                        ..options.padding
+                    };
+                    return options;
+                }
+            }
+
+            // If padding reduction isn't enough, try removing borders
+            if !matches!(options.border_style, BorderStyle::None) {
+                options.border_style = BorderStyle::None;
+                let new_min_dims = calculate_minimum_dimensions(text, &options);
+                if target_width >= new_min_dims.width {
+                    return options;
+                }
+            }
+
+            // As last resort, set width to minimum required
+            options.width = Some(min_dims.width);
+        }
+
+        options
+    }
+
+    /// Attempt to recover from invalid height by adjusting configuration
+    pub fn recover_from_invalid_height(
+        text: &str,
+        mut options: BoxenOptions,
+        target_height: usize,
+    ) -> BoxenOptions {
+        let min_dims = calculate_minimum_dimensions(text, &options);
+
+        if target_height < min_dims.height {
+            // Try reducing padding first
+            if options.padding.vertical() > 0 {
+                let reduction_needed = min_dims.height - target_height;
+                let current_vertical = options.padding.vertical();
+
+                if current_vertical >= reduction_needed {
+                    let new_vertical = current_vertical - reduction_needed;
+                    options.padding = Spacing {
+                        top: new_vertical / 2,
+                        bottom: new_vertical / 2,
+                        ..options.padding
+                    };
+                    return options;
+                }
+            }
+
+            // If padding reduction isn't enough, try removing borders
+            if !matches!(options.border_style, BorderStyle::None) {
+                options.border_style = BorderStyle::None;
+                let new_min_dims = calculate_minimum_dimensions(text, &options);
+                if target_height >= new_min_dims.height {
+                    return options;
+                }
+            }
+
+            // As last resort, set height to minimum required
+            options.height = Some(min_dims.height);
+        }
+
+        options
+    }
+
+    /// Attempt to recover from terminal size overflow
+    pub fn recover_from_terminal_overflow(text: &str, mut options: BoxenOptions) -> BoxenOptions {
+        let terminal_width = get_terminal_width();
+        let terminal_height = get_terminal_height();
+
+        // Adjust width if it exceeds terminal
+        let total_width = options.width.unwrap_or_else(|| {
+            let min_dims = calculate_minimum_dimensions(text, &options);
+            min_dims.width
+        }) + options.margin.horizontal();
+
+        if total_width > terminal_width {
+            let margin_horizontal = options.margin.horizontal();
+            options = recover_from_invalid_width(text, options, terminal_width - margin_horizontal);
+        }
+
+        // Adjust height if it exceeds terminal
+        if let Some(term_height) = terminal_height {
+            let total_height = options.height.unwrap_or_else(|| {
+                let min_dims = calculate_minimum_dimensions(text, &options);
+                min_dims.height
+            }) + options.margin.vertical();
+
+            if total_height > term_height {
+                let margin_vertical = options.margin.vertical();
+                options = recover_from_invalid_height(text, options, term_height - margin_vertical);
+            }
+        }
+
+        options
+    }
+
+    /// Smart recovery that tries multiple strategies
+    pub fn smart_recovery(text: &str, options: BoxenOptions) -> BoxenOptions {
+        let validation = validate_configuration(text, &options);
+
+        if validation.is_valid {
+            return options;
+        }
+
+        let mut recovered_options = options;
+
+        // Apply recovery strategies based on error types
+        for error in &validation.errors {
+            match error {
+                BoxenError::InvalidDimensions { width, height, .. } => {
+                    if let Some(w) = width {
+                        recovered_options = recover_from_invalid_width(text, recovered_options, *w);
+                    }
+                    if let Some(h) = height {
+                        recovered_options =
+                            recover_from_invalid_height(text, recovered_options, *h);
+                    }
+                }
+                BoxenError::ConfigurationError { message, .. } => {
+                    if message.contains("terminal width") || message.contains("terminal height") {
+                        recovered_options = recover_from_terminal_overflow(text, recovered_options);
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        recovered_options
+    }
 }
 
 #[cfg(test)]

@@ -55,10 +55,21 @@ pub fn validate_text_measurement(text: &str) -> Result<usize, BoxenError> {
     // Basic validation - width should never be negative (impossible with usize)
     // and should be reasonable for terminal display
     if width > 10000 {
-        return Err(BoxenError::TextProcessingError(format!(
-            "Text width {} seems unreasonably large",
-            width
-        )));
+        return Err(BoxenError::text_processing_error(
+            format!("Text width {} seems unreasonably large", width),
+            vec![
+                crate::error::ErrorRecommendation::suggestion_only(
+                    "Excessive text width".to_string(),
+                    "This may indicate an issue with text measurement or very wide content"
+                        .to_string(),
+                ),
+                crate::error::ErrorRecommendation::with_auto_fix(
+                    "Use width constraint".to_string(),
+                    "Limit the box width to prevent issues".to_string(),
+                    ".width(80)".to_string(),
+                ),
+            ],
+        ));
     }
 
     Ok(width)

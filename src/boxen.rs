@@ -11,17 +11,48 @@ pub fn boxen<S: AsRef<str>>(text: S, options: Option<BoxenOptions>) -> BoxenResu
     let text = text.as_ref();
     let options = options.unwrap_or_default();
 
+    // Comprehensive input validation
+    crate::error::validation::validate_all_options(text, &options).map_err(|e| {
+        crate::error::BoxenError::rendering_error(
+            format!("Input validation failed: {}", e),
+            e.recommendations(),
+        )
+    })?;
+
     // Process the text content
-    let processed_content = process_content(text, &options)?;
+    let processed_content = process_content(text, &options).map_err(|e| {
+        crate::error::BoxenError::rendering_error(
+            format!("Text processing failed: {}", e),
+            vec![crate::error::ErrorRecommendation::suggestion_only(
+                "Text processing error".to_string(),
+                "Check your text content and box dimensions".to_string(),
+            )],
+        )
+    })?;
 
     // Calculate final layout dimensions
-    let layout = options.calculate_layout_dimensions(
-        processed_content.content_width,
-        processed_content.content_height,
-    )?;
+    let layout = options
+        .calculate_layout_dimensions(
+            processed_content.content_width,
+            processed_content.content_height,
+        )
+        .map_err(|e| {
+            crate::error::BoxenError::rendering_error(
+                format!("Layout calculation failed: {}", e),
+                e.recommendations(),
+            )
+        })?;
 
     // Render the box
-    render_box(&processed_content, &options, &layout)
+    render_box(&processed_content, &options, &layout).map_err(|e| {
+        crate::error::BoxenError::rendering_error(
+            format!("Box rendering failed: {}", e),
+            vec![crate::error::ErrorRecommendation::suggestion_only(
+                "Rendering error".to_string(),
+                "Check your configuration and try reducing complexity".to_string(),
+            )],
+        )
+    })
 }
 
 /// Processed text content with dimensions

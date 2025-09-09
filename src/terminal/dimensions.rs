@@ -153,7 +153,21 @@ pub fn calculate_max_content_width(
 
     // Use terminal width minus overhead
     if terminal_width < total_overhead {
-        return Err(BoxenError::TerminalSizeError);
+        return Err(BoxenError::terminal_size_error(
+            "Unable to detect terminal size".to_string(),
+            vec![
+                crate::error::ErrorRecommendation::suggestion_only(
+                    "Terminal size detection failed".to_string(),
+                    "This may happen in non-interactive environments or unsupported terminals"
+                        .to_string(),
+                ),
+                crate::error::ErrorRecommendation::with_auto_fix(
+                    "Use fallback dimensions".to_string(),
+                    "Specify explicit dimensions instead".to_string(),
+                    ".width(80).height(24)".to_string(),
+                ),
+            ],
+        ));
     }
 
     Ok(terminal_width - total_overhead)
@@ -319,7 +333,7 @@ mod tests {
             None,
         );
         assert!(result.is_err());
-        matches!(result.unwrap_err(), BoxenError::TerminalSizeError);
+        matches!(result.unwrap_err(), BoxenError::TerminalSizeError { .. });
     }
 
     #[test]

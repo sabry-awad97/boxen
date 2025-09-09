@@ -5,8 +5,19 @@ use textwrap::{Options, WordSeparator, WordSplitter, wrap};
 /// Wrap text to fit within a specified width, preserving ANSI escape sequences
 pub fn wrap_text(text: &str, width: usize) -> Result<Vec<String>, BoxenError> {
     if width == 0 {
-        return Err(BoxenError::TextProcessingError(
+        return Err(BoxenError::text_processing_error(
             "Cannot wrap text with zero width".to_string(),
+            vec![
+                crate::error::ErrorRecommendation::suggestion_only(
+                    "Zero width constraint".to_string(),
+                    "Text cannot be wrapped to zero width".to_string(),
+                ),
+                crate::error::ErrorRecommendation::with_auto_fix(
+                    "Use minimum width".to_string(),
+                    "Set a reasonable minimum width".to_string(),
+                    ".width(10)".to_string(),
+                ),
+            ],
         ));
     }
 
@@ -105,8 +116,19 @@ fn wrap_line_with_ansi(line: &str, width: usize) -> Vec<String> {
 /// Wrap text with word boundary preservation when possible
 pub fn wrap_text_preserve_words(text: &str, width: usize) -> Result<Vec<String>, BoxenError> {
     if width == 0 {
-        return Err(BoxenError::TextProcessingError(
+        return Err(BoxenError::text_processing_error(
             "Cannot wrap text with zero width".to_string(),
+            vec![
+                crate::error::ErrorRecommendation::suggestion_only(
+                    "Zero width constraint".to_string(),
+                    "Text cannot be wrapped to zero width".to_string(),
+                ),
+                crate::error::ErrorRecommendation::with_auto_fix(
+                    "Use minimum width".to_string(),
+                    "Set a reasonable minimum width".to_string(),
+                    ".width(10)".to_string(),
+                ),
+            ],
         ));
     }
 
