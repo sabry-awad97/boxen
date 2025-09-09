@@ -1,4 +1,35 @@
-/// Predefined border styles and style utilities
+//! # Border Style Implementations and Utilities
+//!
+//! This module provides implementations and utilities for working with different border styles.
+//! It includes methods for converting between style names and enums, validating custom styles,
+//! and providing utilities for border style operations.
+//!
+//! ## Available Operations
+//!
+//! - **Style Conversion**: Convert between string names and BorderStyle enums
+//! - **Character Retrieval**: Get the appropriate BorderChars for each style
+//! - **Validation**: Validate custom border styles and characters
+//! - **Comparison**: Compare border styles for equality
+//! - **Preview**: Generate visual previews of border styles
+//!
+//! ## Usage Examples
+//!
+//! ```rust
+//! use ::boxen::BorderStyle;
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! // Parse style from string
+//! let style = BorderStyle::from_name("double")?;
+//!
+//! // Get characters for a style
+//! let chars = style.get_chars()?;
+//!
+//! // Check if style is visible
+//! assert!(style.is_visible());
+//! # Ok(())
+//! # }
+//! ```
+
 use crate::error::BoxenError;
 use crate::options::{BorderChars, BorderStyle};
 

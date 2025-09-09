@@ -1,4 +1,35 @@
-/// Border character definitions and utilities
+//! # Border Character Definitions and Utilities
+//!
+//! This module provides comprehensive border character definitions and utilities for creating
+//! various box drawing styles. It includes predefined character sets for common border styles
+//! and utilities for creating custom border configurations.
+//!
+//! ## Available Border Styles
+//!
+//! - **Single**: Standard single-line box drawing characters (┌┐└┘│─)
+//! - **Double**: Double-line box drawing characters (╔╗╚╝║═)
+//! - **Round**: Rounded corner characters (╭╮╰╯│─)
+//! - **Bold**: Thick/bold line characters (┏┓┗┛┃━)
+//! - **Classic**: ASCII-compatible characters (+|-) for maximum compatibility
+//! - **Mixed**: Combinations of single/double horizontal and vertical lines
+//!
+//! ## Usage Examples
+//!
+//! ```rust
+//! use ::boxen::BorderChars;
+//!
+//! // Use predefined styles
+//! let single = BorderChars::single();
+//! let double = BorderChars::double();
+//! let rounded = BorderChars::round();
+//!
+//! // Create custom uniform borders
+//! let stars = BorderChars::uniform('*');
+//!
+//! // Validate border characters
+//! assert!(single.validate().is_ok());
+//! ```
+
 use crate::options::BorderChars;
 
 impl BorderChars {

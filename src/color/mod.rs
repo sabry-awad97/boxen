@@ -1,5 +1,199 @@
+//! # Color System
+//!
+//! This module provides comprehensive color functionality for terminal boxes, including
+//! color parsing, validation, and application to text content. It supports multiple
+//! color specification formats and provides robust error handling with helpful recommendations.
+//!
+//! ## Overview
+//!
+//! The color system supports three main color specification formats:
+//! - **Named Colors**: Standard terminal color names (red, blue, green, etc.)
+//! - **Hex Colors**: CSS-style hexadecimal color codes (#FF0000, #F00)
+//! - **RGB Colors**: Direct RGB component specification (255, 0, 0)
+//!
+//! ## Quick Start
+//!
+//! ```rust
+//! use boxen::color::{parse_color, apply_colors, validate_color};
+//! use boxen::Color;
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! // Named colors
+//! let red = Color::Named("red".to_string());
+//! let blue = Color::Named("blue".to_string());
+//!
+//! // Hex colors (both 3 and 6 digit formats)
+//! let orange = Color::Hex("#FF8000".to_string());
+//! let green = Color::Hex("#0F0".to_string());
+//!
+//! // RGB colors
+//! let purple = Color::Rgb(128, 0, 128);
+//!
+//! // Validate colors before use
+//! validate_color(&red)?;
+//!
+//! // Apply colors to text
+//! let styled = apply_colors("Hello", Some(&red), Some(&blue))?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Supported Named Colors
+//!
+//! ### Standard Colors
+//! - `black`, `red`, `green`, `yellow`, `blue`, `magenta`/`purple`, `cyan`, `white`
+//!
+//! ### Bright Colors
+//! - `bright_black`/`gray`/`grey`, `bright_red`, `bright_green`, `bright_yellow`
+//! - `bright_blue`, `bright_magenta`/`bright_purple`, `bright_cyan`, `bright_white`
+//!
+//! ### Alternative Formats
+//! - Underscore format: `bright_red`, `bright_blue`
+//! - Compact format: `brightred`, `brightblue`
+//! - Case insensitive: `RED`, `Blue`, `GREEN`
+//!
+//! ## Hex Color Formats
+//!
+//! ### 6-Digit Format
+//! ```rust
+//! use boxen::Color;
+//!
+//! let red = Color::Hex("#FF0000".to_string());
+//! let green = Color::Hex("#00FF00".to_string());
+//! let blue = Color::Hex("#0000FF".to_string());
+//! ```
+//!
+//! ### 3-Digit Format (Shorthand)
+//! ```rust
+//! use boxen::Color;
+//!
+//! let red = Color::Hex("#F00".to_string());    // Expands to #FF0000
+//! let green = Color::Hex("#0F0".to_string());  // Expands to #00FF00
+//! let blue = Color::Hex("#00F".to_string());   // Expands to #0000FF
+//! ```
+//!
+//! ### Optional Hash Prefix
+//! ```rust
+//! use boxen::Color;
+//!
+//! let with_hash = Color::Hex("#FF0000".to_string());
+//! let without_hash = Color::Hex("FF0000".to_string());  // Also valid
+//! ```
+//!
+//! ## RGB Color Format
+//!
+//! ```rust
+//! use boxen::Color;
+//!
+//! let red = Color::Rgb(255, 0, 0);
+//! let green = Color::Rgb(0, 255, 0);
+//! let blue = Color::Rgb(0, 0, 255);
+//! let black = Color::Rgb(0, 0, 0);       // Pure black
+//! let white = Color::Rgb(255, 255, 255); // Pure white
+//! ```
+//!
+//! ## Color Application
+//!
+//! ### Foreground Colors
+//! ```rust
+//! use boxen::color::apply_foreground_color;
+//! use boxen::Color;
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let red_text = apply_foreground_color("Error", &Color::Named("red".to_string()))?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Background Colors
+//! ```rust
+//! use boxen::color::apply_background_color;
+//! use boxen::Color;
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let highlighted = apply_background_color("Important", &Color::Named("yellow".to_string()))?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Combined Colors
+//! ```rust
+//! use boxen::color::apply_colors;
+//! use boxen::Color;
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let fg = Color::Named("white".to_string());
+//! let bg = Color::Named("red".to_string());
+//! let styled = apply_colors("Alert", Some(&fg), Some(&bg))?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Dim Styling
+//! ```rust
+//! use boxen::color::{apply_dim, apply_color_with_dim};
+//! use boxen::Color;
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! // Apply only dim effect
+//! let dimmed = apply_dim("Subtle text");
+//!
+//! // Apply color with optional dim effect
+//! let dim_red = apply_color_with_dim(
+//!     "Warning",
+//!     Some(&Color::Named("red".to_string())),
+//!     true  // Enable dim
+//! )?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Error Handling
+//!
+//! The color system provides detailed error messages with actionable recommendations:
+//!
+//! ```rust
+//! use boxen::color::validate_color;
+//! use boxen::Color;
+//!
+//! # fn main() {
+//! let invalid = Color::Named("invalid_color".to_string());
+//! match validate_color(&invalid) {
+//!     Ok(_) => println!("Color is valid"),
+//!     Err(e) => {
+//!         println!("Error: {}", e);
+//!         for rec in e.recommendations() {
+//!             println!("Suggestion: {}", rec.suggestion);
+//!             if let Some(fix) = &rec.auto_fix {
+//!                 println!("Auto-fix: {}", fix);
+//!             }
+//!         }
+//!     }
+//! }
+//! # }
+//! ```
+//!
+//! ## Performance Considerations
+//!
+//! - Color parsing is cached internally by the `colored` crate
+//! - Named color lookup is O(1) using match statements
+//! - Hex parsing is optimized for both 3 and 6 digit formats
+//! - RGB colors have no parsing overhead
+//! - Color validation is performed once during creation
+//!
+//! ## Terminal Compatibility
+//!
+//! - Named colors work on all terminals supporting basic ANSI colors
+//! - RGB/Hex colors require true color terminal support
+//! - Graceful fallback to nearest colors on limited terminals
+//! - Dim styling is widely supported across terminal emulators
+//!
+//! ## Thread Safety
+//!
+//! All color operations are thread-safe and can be used concurrently
+//! without synchronization concerns.
+
 use crate::ErrorRecommendation;
-/// Color handling functionality for boxen
 use crate::error::{BoxenError, BoxenResult};
 use crate::options::Color;
 use colored::{ColoredString, Colorize};
@@ -17,7 +211,7 @@ pub fn parse_color(color: &Color) -> BoxenResult<colored::Color> {
     }
 }
 
-/// Parse a named color into a colored::Color
+/// Parse a named color into a `colored::Color`
 pub fn parse_named_color(name: &str) -> BoxenResult<colored::Color> {
     let normalized = name.to_lowercase();
     match normalized.as_str() {
@@ -224,6 +418,7 @@ pub fn apply_colors(
 }
 
 /// Apply dim styling to text (for dim borders)
+#[must_use]
 pub fn apply_dim(text: &str) -> ColoredString {
     text.dimmed()
 }
@@ -416,7 +611,7 @@ mod tests {
         assert!(validate_color(&Color::Rgb(255, 0, 0)).is_ok());
 
         // Invalid colors
-        assert!(validate_color(&Color::Named("invalid".to_string())).is_err());
+        assert!(validate_color(&Color::Named("invalid_color".to_string())).is_err());
         assert!(validate_color(&Color::Hex("#GGGGGG".to_string())).is_err());
     }
 
