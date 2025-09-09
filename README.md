@@ -25,7 +25,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-boxen = "0.1.0"
+boxen = "0.1.1"
 ```
 
 ## Quick Start
