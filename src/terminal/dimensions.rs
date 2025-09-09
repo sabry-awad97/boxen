@@ -1,3 +1,59 @@
+//! # Terminal Dimensions Detection and Calculation
+//!
+//! This module provides utilities for detecting terminal dimensions and calculating
+//! layout constraints for box rendering. It handles terminal size detection with
+//! intelligent fallbacks and caching for performance.
+//!
+//! ## Core Functionality
+//!
+//! - **Terminal Size Detection**: Detect current terminal width and height
+//! - **Dimension Calculation**: Calculate available space for content
+//! - **Constraint Validation**: Validate that boxes fit within terminal limits
+//! - **Performance Caching**: Cache terminal size to avoid repeated system calls
+//!
+//! ## Usage Examples
+//!
+//! ```rust
+//! use boxen::terminal::dimensions::{get_terminal_size, calculate_max_content_width};
+//! use boxen::BorderStyle;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Get terminal dimensions
+//!     let (width, height) = get_terminal_size();
+//!     println!("Terminal: {}x{:?}", width, height);
+//!
+//!     // Calculate available content width
+//!     let max_width = calculate_max_content_width(
+//!         width,
+//!         &BorderStyle::Single,
+//!         4, // padding
+//!         0, // margin
+//!         None // no width constraint
+//!     )?;
+//!     println!("Max content width: {}", max_width);
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ## Performance Considerations
+//!
+//! Terminal size detection involves system calls that can be expensive when called
+//! repeatedly. This module caches the detected size on first access to improve
+//! performance for applications that render multiple boxes.
+//!
+//! ## Error Handling
+//!
+//! The module provides comprehensive error handling for scenarios where:
+//! - Terminal size cannot be detected (non-interactive environments)
+//! - Requested dimensions exceed terminal constraints
+//! - Invalid dimension configurations are provided
+//!
+//! ## Thread Safety
+//!
+//! All functions in this module are thread-safe and can be called concurrently
+//! from multiple threads. The caching mechanism uses atomic operations to ensure
+//! thread safety.
+
 use crate::ErrorRecommendation;
 use crate::error::{BoxenError, BoxenResult};
 use crate::options::BorderStyle;

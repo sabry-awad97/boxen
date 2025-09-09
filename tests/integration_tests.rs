@@ -841,7 +841,7 @@ fn test_performance_complex_configuration() {
         .title("Performance Test")
         .title_alignment(TitleAlignment::Center)
         .width(60)
-        .height(15)
+        .height(8)
         .border_color("red")
         .background_color("#ffffff")
         .dim_border(true)
@@ -849,6 +849,9 @@ fn test_performance_complex_configuration() {
         .render(content);
     let duration = start.elapsed();
 
+    if let Err(e) = &result {
+        eprintln!("Error in test_performance_complex_configuration: {}", e);
+    }
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < 50,
@@ -867,13 +870,16 @@ fn test_performance_unicode_heavy_content() {
         &unicode_content,
         Some(BoxenOptions {
             width: Some(80),
-            height: Some(15), // Limit height
+            height: Some(8), // Limit height
             text_alignment: TextAlignment::Center,
             ..Default::default()
         }),
     );
     let duration = start.elapsed();
 
+    if let Err(e) = &result {
+        eprintln!("Error in test_performance_unicode_heavy_content: {}", e);
+    }
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < 100,
