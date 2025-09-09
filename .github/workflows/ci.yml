@@ -19,14 +19,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest]
         rust: [stable, beta, 1.85.0] # MSRV
-        exclude:
-          # Only test MSRV on Ubuntu to save CI time
-          - os: windows-latest
-            rust: 1.85.0
-          - os: macos-latest
-            rust: 1.85.0
 
     steps:
     - name: Checkout code
@@ -44,7 +38,7 @@ jobs:
         key: ${{ matrix.os }}-${{ matrix.rust }}
 
     - name: Check formatting
-      if: matrix.rust == 'stable' && matrix.os == 'ubuntu-latest'
+      if: matrix.rust == 'stable' && matrix.os == 'windows-latest'
       run: cargo fmt --all -- --check
 
     - name: Run clippy
@@ -65,12 +59,12 @@ jobs:
         cargo run --example custom_styles
 
     - name: Test documentation
-      if: matrix.rust == 'stable' && matrix.os == 'ubuntu-latest'
+      if: matrix.rust == 'stable' && matrix.os == 'windows-latest'
       run: cargo doc --no-deps --all-features
 
   coverage:
     name: Code Coverage
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     
     steps:
@@ -97,7 +91,7 @@ jobs:
 
   check-dependencies:
     name: Check Dependencies
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     
     steps:
     - name: Checkout code
@@ -119,7 +113,7 @@ jobs:
 
   msrv-check:
     name: MSRV Check
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     
     steps:
     - name: Checkout code
