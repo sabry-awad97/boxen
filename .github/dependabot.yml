@@ -15,9 +15,6 @@ updates:
     commit-message:
       prefix: "deps"
       include: "scope"
-    labels:
-      - "dependencies"
-      - "rust"
     ignore:
       # Ignore major version updates for stable dependencies
       - dependency-name: "*"
@@ -38,6 +35,3 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
-    labels:
-      - "dependencies"
-      - "github-actions"
