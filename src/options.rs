@@ -249,6 +249,78 @@ impl BoxenBuilder {
         self.options.validate_constraints()
     }
 
+    /// Validate configuration with intelligent recommendations
+    pub fn validate_with_suggestions(&self, text: &str) -> crate::validation::ValidationResult {
+        crate::validation::validate_configuration(text, &self.options)
+    }
+
+    /// Calculate minimum dimensions required for the given text
+    pub fn minimum_dimensions(&self, text: &str) -> crate::validation::MinimumDimensions {
+        crate::validation::calculate_minimum_dimensions(text, &self.options)
+    }
+
+    /// Suggest optimal dimensions for the given text
+    pub fn suggest_dimensions(&self, text: &str) -> (usize, usize) {
+        crate::validation::suggest_optimal_dimensions(text, &self.options)
+    }
+
+    /// Auto-adjust configuration to fix common issues
+    pub fn auto_adjust(mut self, text: &str) -> Self {
+        self.options = crate::validation::auto_adjust_options(text, self.options);
+        self
+    }
+
+    /// Render with auto-adjustment if the current configuration fails
+    pub fn render_or_adjust<S: AsRef<str>>(mut self, text: S) -> BoxenResult<String> {
+        let text_ref = text.as_ref();
+
+        // Try to render with validation first
+        let validation = crate::validation::validate_configuration(text_ref, &self.options);
+        if validation.is_valid {
+            // Configuration is valid, proceed with normal render
+            self.render(text_ref)
+        } else {
+            // Auto-adjust and try again
+            self.options = crate::validation::auto_adjust_options(text_ref, self.options);
+            self.render(text_ref)
+        }
+    }
+
+    /// Get detailed validation information with recommendations
+    pub fn check_configuration(&self, text: &str) -> String {
+        let validation = self.validate_with_suggestions(text);
+        let min_dims = self.minimum_dimensions(text);
+        let (opt_width, opt_height) = self.suggest_dimensions(text);
+
+        let mut message = format!("Configuration Analysis for text: {:?}\n", text);
+        message.push_str(&format!(
+            "Minimum required: {}×{}\n",
+            min_dims.width, min_dims.height
+        ));
+        message.push_str(&format!(
+            "Suggested optimal: {}×{}\n",
+            opt_width, opt_height
+        ));
+
+        if validation.is_valid {
+            message.push_str("✓ Configuration is valid\n");
+        } else {
+            message.push_str("✗ Configuration has errors:\n");
+            for error in &validation.errors {
+                message.push_str(&format!("  - {}\n", error.detailed_message()));
+            }
+        }
+
+        if !validation.warnings.is_empty() {
+            message.push_str("⚠ Warnings:\n");
+            for warning in &validation.warnings {
+                message.push_str(&format!("  - {}: {}\n", warning.issue, warning.suggestion));
+            }
+        }
+
+        message
+    }
+
     /// Convenience method to set both padding and margin to the same value
     pub fn spacing<T: Into<Spacing>>(mut self, spacing: T) -> Self {
         let spacing_value = spacing.into();
@@ -636,7 +708,7 @@ mod tests {
 
         // Should fail with configuration error
         assert!(result.is_err());
-        matches!(result.unwrap_err(), BoxenError::ConfigurationError(_));
+        matches!(result.unwrap_err(), BoxenError::ConfigurationError { .. });
     }
 
     #[test]
@@ -1282,6 +1354,44 @@ impl Spacing {
 }
 
 impl BoxenOptions {
+    /// Helper to create InvalidDimensions error with basic recommendations
+    fn invalid_dimensions_error(
+        message: String,
+        width: Option<usize>,
+        height: Option<usize>,
+    ) -> crate::error::BoxenError {
+        use crate::error::{BoxenError, ErrorRecommendation};
+
+        let mut recommendations = vec![];
+
+        if let Some(w) = width {
+            recommendations.push(ErrorRecommendation::suggestion_only(
+                "Width too small".to_string(),
+                format!("Consider increasing width from {}", w),
+            ));
+        }
+
+        if let Some(h) = height {
+            recommendations.push(ErrorRecommendation::suggestion_only(
+                "Height too small".to_string(),
+                format!("Consider increasing height from {}", h),
+            ));
+        }
+
+        BoxenError::invalid_dimensions(message, width, height, recommendations)
+    }
+
+    /// Helper to create ConfigurationError with basic recommendations
+    fn configuration_error(message: String) -> crate::error::BoxenError {
+        use crate::error::{BoxenError, ErrorRecommendation};
+
+        let recommendations = vec![ErrorRecommendation::suggestion_only(
+            "Configuration conflict".to_string(),
+            "Check your width, height, padding, and margin settings".to_string(),
+        )];
+
+        BoxenError::configuration_error(message, recommendations)
+    }
     /// Calculate dimension constraints based on terminal size and options
     pub fn calculate_constraints(&self) -> BoxenResult<DimensionConstraints> {
         let terminal_width = get_terminal_width();
@@ -1308,18 +1418,27 @@ impl BoxenOptions {
             let available_width_for_content = if specified_width > self.margin.horizontal() {
                 specified_width - self.margin.horizontal()
             } else {
-                return Err(BoxenError::InvalidDimensions {
-                    width: Some(specified_width),
-                    height: self.height,
-                });
+                return Err(Self::invalid_dimensions_error(
+                    format!(
+                        "Width {} is too small for margins {}",
+                        specified_width,
+                        self.margin.horizontal()
+                    ),
+                    Some(specified_width),
+                    self.height,
+                ));
             };
 
             // Validate that we have enough space for borders and padding
             if available_width_for_content < border_width + self.padding.horizontal() {
-                return Err(BoxenError::InvalidDimensions {
-                    width: Some(specified_width),
-                    height: self.height,
-                });
+                return Err(Self::invalid_dimensions_error(
+                    format!(
+                        "Width {} is too small for borders and padding",
+                        specified_width
+                    ),
+                    Some(specified_width),
+                    self.height,
+                ));
             }
 
             available_width_for_content
@@ -1338,10 +1457,15 @@ impl BoxenOptions {
             if specified_height > self.margin.vertical() {
                 Some(specified_height - self.margin.vertical())
             } else {
-                return Err(BoxenError::InvalidDimensions {
-                    width: None,
-                    height: Some(specified_height),
-                });
+                return Err(Self::invalid_dimensions_error(
+                    format!(
+                        "Height {} is too small for margins {}",
+                        specified_height,
+                        self.margin.vertical()
+                    ),
+                    None,
+                    Some(specified_height),
+                ));
             }
         } else {
             // Don't apply height constraints unless explicitly specified by user
@@ -1410,7 +1534,7 @@ impl BoxenOptions {
         };
 
         if total_width > width_limit {
-            return Err(BoxenError::ConfigurationError(format!(
+            return Err(Self::configuration_error(format!(
                 "Calculated box width ({}) exceeds maximum available width ({})",
                 total_width, width_limit
             )));
@@ -1419,7 +1543,7 @@ impl BoxenOptions {
         // For height validation, compare box height (without margins) against max_height (which already has margins subtracted)
         if let Some(max_height) = constraints.max_height {
             if box_height > max_height {
-                return Err(BoxenError::ConfigurationError(format!(
+                return Err(Self::configuration_error(format!(
                     "Calculated box height ({}) exceeds maximum available height ({})",
                     box_height, max_height
                 )));
@@ -1428,7 +1552,7 @@ impl BoxenOptions {
 
         // Validate against terminal constraints
         if total_width > constraints.terminal_width {
-            return Err(BoxenError::ConfigurationError(format!(
+            return Err(Self::configuration_error(format!(
                 "Box width ({}) exceeds terminal width ({})",
                 total_width, constraints.terminal_width
             )));
@@ -1436,7 +1560,7 @@ impl BoxenOptions {
 
         if let Some(terminal_height) = constraints.terminal_height {
             if total_height > terminal_height {
-                return Err(BoxenError::ConfigurationError(format!(
+                return Err(Self::configuration_error(format!(
                     "Box height ({}) exceeds terminal height ({})",
                     total_height, terminal_height
                 )));
@@ -1459,10 +1583,14 @@ impl BoxenOptions {
         let total_overhead = constraints.border_width + self.padding.horizontal();
 
         if constraints.max_width < total_overhead {
-            return Err(BoxenError::InvalidDimensions {
-                width: Some(constraints.max_width),
-                height: None,
-            });
+            return Err(Self::invalid_dimensions_error(
+                format!(
+                    "Width {} is too small for borders and padding",
+                    constraints.max_width
+                ),
+                Some(constraints.max_width),
+                None,
+            ));
         }
 
         Ok(constraints.max_width - total_overhead)
@@ -1481,10 +1609,11 @@ impl BoxenOptions {
                 });
 
             if max_height < vertical_overhead {
-                return Err(BoxenError::InvalidDimensions {
-                    width: None,
-                    height: Some(max_height),
-                });
+                return Err(Self::invalid_dimensions_error(
+                    format!("Height {} is too small for borders and padding", max_height),
+                    None,
+                    Some(max_height),
+                ));
             }
 
             Ok(Some(max_height - vertical_overhead))
@@ -1519,20 +1648,22 @@ impl BoxenOptions {
         let max_width = if target_width > self.margin.horizontal() {
             target_width - self.margin.horizontal()
         } else {
-            return Err(BoxenError::InvalidDimensions {
-                width: Some(target_width),
-                height: target_height,
-            });
+            return Err(Self::invalid_dimensions_error(
+                format!("Target width {} is too small for margins", target_width),
+                Some(target_width),
+                target_height,
+            ));
         };
 
         let max_height = if let Some(height) = target_height {
             if height > self.margin.vertical() {
                 Some(height - self.margin.vertical())
             } else {
-                return Err(BoxenError::InvalidDimensions {
-                    width: Some(target_width),
-                    height: Some(height),
-                });
+                return Err(Self::invalid_dimensions_error(
+                    format!("Target height {} is too small for margins", height),
+                    Some(target_width),
+                    Some(height),
+                ));
             }
         } else {
             None
@@ -1540,10 +1671,11 @@ impl BoxenOptions {
 
         // Validate that we have enough space for borders and padding
         if max_width < border_width + self.padding.horizontal() {
-            return Err(BoxenError::InvalidDimensions {
-                width: Some(target_width),
-                height: target_height,
-            });
+            return Err(Self::invalid_dimensions_error(
+                "Insufficient space for borders and padding".to_string(),
+                Some(target_width),
+                target_height,
+            ));
         }
 
         if let Some(height) = max_height {
@@ -1553,10 +1685,11 @@ impl BoxenOptions {
                 2
             };
             if height < vertical_border_overhead + self.padding.vertical() {
-                return Err(BoxenError::InvalidDimensions {
-                    width: Some(target_width),
-                    height: Some(height + self.margin.vertical()),
-                });
+                return Err(Self::invalid_dimensions_error(
+                    "Insufficient space for vertical borders and padding".to_string(),
+                    Some(target_width),
+                    Some(height + self.margin.vertical()),
+                ));
             }
         }
 

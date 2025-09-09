@@ -1,3 +1,4 @@
+use crate::ErrorRecommendation;
 use crate::error::{BoxenError, BoxenResult};
 use crate::options::BorderStyle;
 
@@ -137,10 +138,15 @@ pub fn calculate_max_content_width(
     // If a specific width is requested, validate it
     if let Some(width) = specified_width {
         if width < total_overhead {
-            return Err(BoxenError::InvalidDimensions {
-                width: Some(width),
-                height: None,
-            });
+            return Err(BoxenError::invalid_dimensions(
+                "Width too small for borders and padding".to_string(),
+                Some(width),
+                None,
+                vec![ErrorRecommendation::suggestion_only(
+                    "Width insufficient".to_string(),
+                    format!("Need at least {} width", total_overhead),
+                )],
+            ));
         }
         return Ok(width - total_overhead);
     }
@@ -175,18 +181,30 @@ pub fn validate_terminal_constraints(
     terminal_height: Option<usize>,
 ) -> BoxenResult<()> {
     if box_width > terminal_width {
-        return Err(BoxenError::ConfigurationError(format!(
-            "Box width ({}) exceeds terminal width ({})",
-            box_width, terminal_width
-        )));
+        return Err(BoxenError::configuration_error(
+            format!(
+                "Box width ({}) exceeds terminal width ({})",
+                box_width, terminal_width
+            ),
+            vec![ErrorRecommendation::suggestion_only(
+                "Width exceeds terminal".to_string(),
+                format!("Reduce width to fit in {} columns", terminal_width),
+            )],
+        ));
     }
 
     if let Some(term_height) = terminal_height {
         if box_height > term_height {
-            return Err(BoxenError::ConfigurationError(format!(
-                "Box height ({}) exceeds terminal height ({})",
-                box_height, term_height
-            )));
+            return Err(BoxenError::configuration_error(
+                format!(
+                    "Box height ({}) exceeds terminal height ({})",
+                    box_height, term_height
+                ),
+                vec![ErrorRecommendation::suggestion_only(
+                    "Height exceeds terminal".to_string(),
+                    format!("Reduce height to fit in {} rows", term_height),
+                )],
+            ));
         }
     }
 
@@ -314,14 +332,14 @@ mod tests {
     fn test_validate_terminal_constraints_width_too_large() {
         let result = validate_terminal_constraints(100, 20, 80, Some(30));
         assert!(result.is_err());
-        matches!(result.unwrap_err(), BoxenError::ConfigurationError(_));
+        matches!(result.unwrap_err(), BoxenError::ConfigurationError { .. });
     }
 
     #[test]
     fn test_validate_terminal_constraints_height_too_large() {
         let result = validate_terminal_constraints(50, 40, 80, Some(30));
         assert!(result.is_err());
-        matches!(result.unwrap_err(), BoxenError::ConfigurationError(_));
+        matches!(result.unwrap_err(), BoxenError::ConfigurationError { .. });
     }
 
     #[test]

@@ -6,13 +6,18 @@ pub mod error;
 pub mod options;
 pub mod terminal;
 pub mod text;
+pub mod validation;
 
 // Re-export main types and functions
 pub use boxen::boxen;
-pub use error::{BoxenError, BoxenResult};
+pub use error::{BoxenError, BoxenResult, ErrorRecommendation};
 pub use options::{
     BorderChars, BorderStyle, BoxenBuilder, BoxenOptions, Color, DimensionConstraints, Float,
     FullscreenMode, LayoutDimensions, Spacing, TextAlignment, TitleAlignment,
+};
+pub use validation::{
+    MinimumDimensions, ValidationResult, auto_adjust_options, calculate_minimum_dimensions,
+    suggest_optimal_dimensions, validate_configuration,
 };
 
 /// Create a new BoxenBuilder for fluent configuration
