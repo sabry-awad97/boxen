@@ -104,7 +104,7 @@ fn render_box(
 
     if has_border {
         // Render top border with title
-        let top_border = render_top_border(&border_chars, &options, layout.inner_width)?;
+        let top_border = render_top_border(&border_chars, options, layout.inner_width)?;
         add_line_with_float_positioning(&mut result, &top_border, options, layout);
 
         // Render content lines with borders and padding
@@ -120,7 +120,7 @@ fn render_box(
 
     // Add bottom margins as empty lines
     for _ in 0..options.margin.bottom {
-        result.push_str("\n");
+        result.push('\n');
     }
 
     // Only remove the final newline if there are no bottom margins
@@ -495,11 +495,7 @@ fn add_line_with_float_positioning(
         }
         Float::Center => {
             // Center float: center the box within terminal width
-            let available_space = if terminal_width > layout.total_width {
-                terminal_width - layout.total_width
-            } else {
-                0
-            };
+            let available_space = terminal_width.saturating_sub(layout.total_width);
             available_space / 2 + options.margin.left
         }
         Float::Right => {
@@ -1026,9 +1022,9 @@ mod tests {
         assert_eq!(lines[terminal_height - 1], "");
 
         // Box lines should have left margin (2 spaces) and total terminal width
-        for i in 1..(terminal_height - 1) {
-            assert!(lines[i].starts_with("  "));
-            assert_eq!(text_width(lines[i]), terminal_width);
+        for line in lines.iter().take(terminal_height - 1).skip(1) {
+            assert!(line.starts_with("  "));
+            assert_eq!(text_width(line), terminal_width);
         }
     }
 

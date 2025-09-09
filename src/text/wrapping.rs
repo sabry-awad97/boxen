@@ -60,7 +60,7 @@ fn wrap_line_with_ansi(line: &str, width: usize) -> Vec<String> {
             escape_seq.push(chars.next().unwrap()); // consume '['
 
             // Collect the full escape sequence
-            while let Some(escape_char) = chars.next() {
+            for escape_char in chars.by_ref() {
                 escape_seq.push(escape_char);
                 if escape_char.is_ascii_alphabetic() {
                     break;

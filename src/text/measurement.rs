@@ -20,7 +20,7 @@ pub fn strip_ansi_codes(text: &str) -> String {
                 chars.next(); // consume '['
 
                 // Skip until we find the end of the escape sequence
-                while let Some(escape_char) = chars.next() {
+                for escape_char in chars.by_ref() {
                     // ANSI escape sequences end with a letter (A-Z, a-z)
                     if escape_char.is_ascii_alphabetic() {
                         break;
