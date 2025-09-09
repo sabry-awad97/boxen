@@ -739,4 +739,38 @@ mod tests {
         // Should have multiple content lines due to wrapping
         assert!(result.lines().count() > 3); // More than just top border, content, bottom border
     }
+
+    #[test]
+    fn test_width_calculation_fix() {
+        // This test verifies that the width calculation issue is fixed
+        // Previously, specifying width: Some(70) would cause the calculated width
+        // to grow by 2 each time, leading to errors like "72 exceeds 70"
+
+        let options = BoxenOptions {
+            margin: Spacing {
+                top: 1,
+                right: 1,
+                bottom: 1,
+                left: 1,
+            },
+            width: Some(70),
+            ..Default::default()
+        };
+
+        // This should work without errors
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Verify the result has the expected structure
+        assert_eq!(result.lines().count(), 5); // top margin, top border, content, bottom border, bottom margin
+
+        // The box content lines should have the correct total width (70)
+        let lines: Vec<&str> = result.lines().collect();
+        assert_eq!(text_width(lines[1]), 70); // top border line
+        assert_eq!(text_width(lines[2]), 70); // content line  
+        assert_eq!(text_width(lines[3]), 70); // bottom border line
+
+        // Margin lines should be empty
+        assert_eq!(text_width(lines[0]), 0); // top margin
+        assert_eq!(text_width(lines[4]), 0); // bottom margin
+    }
 }

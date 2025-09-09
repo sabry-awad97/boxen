@@ -608,19 +608,31 @@ impl BoxenOptions {
         let terminal_height = get_terminal_height();
         let border_width = calculate_border_width(&self.border_style);
 
-        let total_horizontal_overhead =
+        let _total_horizontal_overhead =
             border_width + self.padding.horizontal() + self.margin.horizontal();
 
         // Calculate maximum available width
         let max_width = if let Some(specified_width) = self.width {
-            // Validate specified width
-            if specified_width < total_horizontal_overhead {
+            // When width is specified, it represents the total box width including margins
+            // So we need to subtract margins to get the available width for content + borders + padding
+            let available_width_for_content = if specified_width > self.margin.horizontal() {
+                specified_width - self.margin.horizontal()
+            } else {
+                return Err(BoxenError::InvalidDimensions {
+                    width: Some(specified_width),
+                    height: self.height,
+                });
+            };
+
+            // Validate that we have enough space for borders and padding
+            if available_width_for_content < border_width + self.padding.horizontal() {
                 return Err(BoxenError::InvalidDimensions {
                     width: Some(specified_width),
                     height: self.height,
                 });
             }
-            specified_width
+
+            available_width_for_content
         } else {
             // Use terminal width minus margins (borders and padding will be subtracted later)
             if terminal_width < self.margin.horizontal() {
@@ -669,10 +681,17 @@ impl BoxenOptions {
             self.margin.vertical();
 
         // Validate against constraints
-        if total_width > constraints.max_width {
+        // If a specific width was set, compare against that; otherwise use max_width
+        let width_limit = if let Some(specified_width) = self.width {
+            specified_width
+        } else {
+            constraints.max_width + self.margin.horizontal()
+        };
+
+        if total_width > width_limit {
             return Err(BoxenError::ConfigurationError(format!(
                 "Calculated box width ({}) exceeds maximum available width ({})",
-                total_width, constraints.max_width
+                total_width, width_limit
             )));
         }
 
