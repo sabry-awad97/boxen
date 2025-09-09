@@ -6,6 +6,10 @@ This guide explains how to set up the GitHub repository and configure the CI/CD 
 
 1. **GitHub Repository**: Create a repository at `https://github.com/sabry-awad97/boxen`
 2. **Local Git Setup**: Ensure your local repository is connected to GitHub
+3. **GitHub Actions Billing**: Ensure your account has sufficient GitHub Actions minutes
+   - **Free accounts**: 2,000 minutes/month for public repositories (unlimited for public repos)
+   - **Private repositories**: Requires paid plan or sufficient billing setup
+   - Check: Settings → Billing and plans → Usage this month
 
 ## 🔧 Repository Setup
 
@@ -148,10 +152,16 @@ Add these badges to your README.md:
 
 ### Common Issues:
 
-1. **Release fails**: Check that `CARGO_REGISTRY_TOKEN` is set correctly
-2. **Tests fail on Windows**: Ensure line endings are handled properly
-3. **Coverage upload fails**: Verify `CODECOV_TOKEN` if using Codecov
-4. **Documentation not deploying**: Check Pages settings are configured
+1. **GitHub Actions billing error**: "Recent account payments have failed or spending limit needs to be increased"
+   - **Solution**: Go to Settings → Billing and plans → Payment information
+   - **For public repos**: Should be free (unlimited minutes)
+   - **For private repos**: Add payment method or upgrade to paid plan
+   - **Alternative**: Make repository public to use free GitHub Actions
+
+2. **Release fails**: Check that `CARGO_REGISTRY_TOKEN` is set correctly
+3. **Tests fail on Windows**: Ensure line endings are handled properly
+4. **Coverage upload fails**: Verify `CODECOV_TOKEN` if using Codecov
+5. **Documentation not deploying**: Check Pages settings are configured
 
 ### Debug Commands:
 ```bash
@@ -164,6 +174,27 @@ cargo fmt --all -- --check
 cargo audit
 cargo deny check
 ```
+
+## 💰 GitHub Actions Billing Solutions
+
+### Option 1: Make Repository Public (Recommended)
+```bash
+# Public repositories get unlimited GitHub Actions minutes
+# Go to Settings → General → Danger Zone → Change repository visibility
+```
+
+### Option 2: Set Up Billing for Private Repository
+1. Go to GitHub Settings → Billing and plans
+2. Add payment method under "Payment information"
+3. Set spending limit under "Spending limits"
+4. GitHub Actions pricing: $0.008/minute for private repos
+
+### Option 3: Use Alternative CI/CD (Free)
+Consider these free alternatives:
+- **GitLab CI/CD**: 400 minutes/month free
+- **Cirrus CI**: Free for public repos
+- **Travis CI**: Free for open source
+- **Local testing**: Run all checks locally before pushing
 
 ## 📚 Additional Resources
 
