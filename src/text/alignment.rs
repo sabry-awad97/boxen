@@ -2,7 +2,10 @@
 use crate::options::{Spacing, TextAlignment};
 use crate::text::measurement::text_width;
 
-/// Align a single line of text within a given width
+/// Align a single line of text within a given width.
+///
+/// Optimized version that pre-allocates string capacity and uses efficient
+/// string building to minimize allocations.
 pub fn align_line(line: &str, alignment: TextAlignment, width: usize) -> String {
     let line_width = text_width(line);
 
@@ -13,32 +16,41 @@ pub fn align_line(line: &str, alignment: TextAlignment, width: usize) -> String 
 
     let padding_needed = width - line_width;
 
+    // Pre-allocate string with exact capacity needed
+    let mut result = String::with_capacity(width);
+
     match alignment {
         TextAlignment::Left => {
-            format!("{}{}", line, " ".repeat(padding_needed))
+            result.push_str(line);
+            result.extend(std::iter::repeat(' ').take(padding_needed));
         }
         TextAlignment::Right => {
-            format!("{}{}", " ".repeat(padding_needed), line)
+            result.extend(std::iter::repeat(' ').take(padding_needed));
+            result.push_str(line);
         }
         TextAlignment::Center => {
             let left_padding = padding_needed / 2;
             let right_padding = padding_needed - left_padding;
-            format!(
-                "{}{}{}",
-                " ".repeat(left_padding),
-                line,
-                " ".repeat(right_padding)
-            )
+            result.extend(std::iter::repeat(' ').take(left_padding));
+            result.push_str(line);
+            result.extend(std::iter::repeat(' ').take(right_padding));
         }
     }
+
+    result
 }
 
-/// Align multiple lines of text within a given width
+/// Align multiple lines of text within a given width.
+///
+/// Optimized version that pre-allocates the result vector to avoid reallocations.
 pub fn align_lines(lines: &[String], alignment: TextAlignment, width: usize) -> Vec<String> {
-    lines
-        .iter()
-        .map(|line| align_line(line, alignment.clone(), width))
-        .collect()
+    let mut result = Vec::with_capacity(lines.len());
+
+    for line in lines {
+        result.push(align_line(line, alignment.clone(), width));
+    }
+
+    result
 }
 
 /// Apply padding to text content

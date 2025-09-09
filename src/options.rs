@@ -2,7 +2,59 @@
 use crate::error::{BoxenError, BoxenResult};
 use crate::terminal::{calculate_border_width, get_terminal_height, get_terminal_width};
 
-/// Main configuration struct for boxen
+/// Main configuration struct for boxen styling options.
+///
+/// `BoxenOptions` contains all the configuration parameters for customizing
+/// the appearance and layout of terminal boxes. This struct is typically
+/// created using the [`BoxenBuilder`] for a more ergonomic API.
+///
+/// # Examples
+///
+/// ## Direct Construction
+///
+/// ```rust
+/// use ::boxen::{BoxenOptions, BorderStyle, TextAlignment, Spacing};
+///
+/// let options = BoxenOptions {
+///     border_style: BorderStyle::Double,
+///     padding: Spacing::from(2),
+///     text_alignment: TextAlignment::Center,
+///     title: Some("My Box".to_string()),
+///     width: Some(40),
+///     ..Default::default()
+/// };
+/// ```
+///
+/// ## Using Builder (Recommended)
+///
+/// ```rust
+/// use ::boxen::{builder, BorderStyle, TextAlignment};
+///
+/// let result = builder()
+///     .border_style(BorderStyle::Double)
+///     .padding(2)
+///     .text_alignment(TextAlignment::Center)
+///     .title("My Box")
+///     .width(40)
+///     .render("Hello, World!")
+///     .unwrap();
+/// ```
+///
+/// # Field Documentation
+///
+/// - `border_style`: The style of border to draw around the box
+/// - `padding`: Internal spacing between the border and content
+/// - `margin`: External spacing around the entire box
+/// - `text_alignment`: How to align text within the box
+/// - `title`: Optional title to display in the top border
+/// - `title_alignment`: How to align the title within the top border
+/// - `float`: How to position the box within the terminal
+/// - `width`: Optional fixed width for the box
+/// - `height`: Optional fixed height for the box
+/// - `border_color`: Optional color for the border
+/// - `background_color`: Optional background color for the content area
+/// - `dim_border`: Whether to render the border with reduced intensity
+/// - `fullscreen`: Optional fullscreen mode configuration
 #[derive(Debug, Clone)]
 pub struct BoxenOptions {
     pub border_style: BorderStyle,
@@ -40,17 +92,77 @@ impl Default for BoxenOptions {
     }
 }
 
-/// Border style definition
+/// Border style definition for box rendering.
+///
+/// Defines the visual style of the border drawn around the box content.
+/// Each style uses different Unicode characters to create distinct visual effects.
+///
+/// # Examples
+///
+/// ```rust
+/// use ::boxen::{builder, BorderStyle};
+///
+/// // Single line border (default)
+/// let single = builder().border_style(BorderStyle::Single);
+///
+/// // Double line border for emphasis
+/// let double = builder().border_style(BorderStyle::Double);
+///
+/// // Rounded corners for a softer look
+/// let round = builder().border_style(BorderStyle::Round);
+///
+/// // No border for minimal styling
+/// let none = builder().border_style(BorderStyle::None);
+/// ```
+///
+/// # Visual Examples
+///
+/// ## Single
+/// ```text
+/// ┌─────┐
+/// │Hello│
+/// └─────┘
+/// ```
+///
+/// ## Double
+/// ```text
+/// ╔═════╗
+/// ║Hello║
+/// ╚═════╝
+/// ```
+///
+/// ## Round
+/// ```text
+/// ╭─────╮
+/// │Hello│
+/// ╰─────╯
+/// ```
+///
+/// ## Bold
+/// ```text
+/// ┏━━━━━┓
+/// ┃Hello┃
+/// ┗━━━━━┛
+/// ```
 #[derive(Debug, Clone)]
 pub enum BorderStyle {
+    /// No border - content only
     None,
+    /// Single line border (default)
     Single,
+    /// Double line border
     Double,
+    /// Rounded corners
     Round,
+    /// Bold/thick lines
     Bold,
+    /// Single horizontal, double vertical
     SingleDouble,
+    /// Double horizontal, single vertical
     DoubleSingle,
+    /// Classic ASCII-style border using +, -, |
     Classic,
+    /// Custom border using specified characters
     Custom(BorderChars),
 }
 
@@ -67,12 +179,59 @@ pub struct BorderChars {
     pub bottom: char,
 }
 
-/// Spacing configuration for padding and margins
+/// Spacing configuration for padding and margins.
+///
+/// Represents spacing values for all four sides of a box. Used for both
+/// padding (internal spacing) and margins (external spacing).
+///
+/// # Examples
+///
+/// ## Direct Construction
+///
+/// ```rust
+/// use ::boxen::Spacing;
+///
+/// let spacing = Spacing {
+///     top: 1,
+///     right: 2,
+///     bottom: 1,
+///     left: 2,
+/// };
+/// ```
+///
+/// ## Using From Implementations
+///
+/// ```rust
+/// use ::boxen::Spacing;
+///
+/// // Asymmetric spacing (TypeScript-compatible)
+/// let asymmetric = Spacing::from(2);  // top: 2, right: 6, bottom: 2, left: 6
+///
+/// // Explicit values
+/// let explicit = Spacing::from((1, 2, 3, 4));  // top, right, bottom, left
+///
+/// // Horizontal and vertical
+/// let symmetric = Spacing::from((3, 1));  // horizontal: 3, vertical: 1
+///
+/// // Array syntax
+/// let array = Spacing::from([2, 4]);  // [horizontal, vertical]
+/// let full_array = Spacing::from([1, 2, 3, 4]);  // [top, right, bottom, left]
+/// ```
+///
+/// # TypeScript Compatibility
+///
+/// When created from a single `usize` value, this struct follows the TypeScript
+/// boxen behavior of creating asymmetric spacing with 3x horizontal padding
+/// to account for typical terminal character aspect ratios.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Spacing {
+    /// Top spacing
     pub top: usize,
+    /// Right spacing
     pub right: usize,
+    /// Bottom spacing
     pub bottom: usize,
+    /// Left spacing
     pub left: usize,
 }
 
@@ -141,32 +300,194 @@ pub enum FullscreenMode {
     Custom(fn(usize, usize) -> (usize, usize)),
 }
 
-/// Builder pattern for creating BoxenOptions
+/// Builder pattern for creating BoxenOptions with a fluent interface.
+///
+/// The `BoxenBuilder` provides a convenient and type-safe way to configure box styling
+/// options using method chaining. This is the recommended approach for creating boxes
+/// with custom styling.
+///
+/// # Examples
+///
+/// ## Basic Builder Usage
+///
+/// ```rust
+/// use ::boxen::{builder, BorderStyle, TextAlignment};
+///
+/// let result = builder()
+///     .border_style(BorderStyle::Double)
+///     .padding(2)
+///     .text_alignment(TextAlignment::Center)
+///     .render("Hello, World!")
+///     .unwrap();
+/// ```
+///
+/// ## Advanced Configuration
+///
+/// ```rust
+/// use ::boxen::{builder, BorderStyle, TextAlignment, TitleAlignment, Float, Color};
+///
+/// let result = builder()
+///     .border_style(BorderStyle::Round)
+///     .padding((2, 4, 2, 4))  // top, right, bottom, left
+///     .margin(1)
+///     .text_alignment(TextAlignment::Center)
+///     .title("Status Report")
+///     .title_alignment(TitleAlignment::Center)
+///     .float(Float::Center)
+///     .width(50)
+///     .height(10)
+///     .border_color("green")
+///     .background_color("#f0f0f0")
+///     .dim_border(false)
+///     .render("All systems operational")
+///     .unwrap();
+/// ```
+///
+/// ## Convenience Methods
+///
+/// ```rust
+/// use ::boxen::builder;
+///
+/// let result = builder()
+///     .spacing(1)              // Sets both padding and margin
+///     .colors("red", "white")  // Sets border and background colors
+///     .size(40, 8)            // Sets width and height
+///     .center_all()           // Centers text, title, and float
+///     .title("Centered Box")
+///     .render("This box is centered in every way")
+///     .unwrap();
+/// ```
+///
+/// # Validation and Error Handling
+///
+/// The builder validates configuration when `render()` is called, not during method chaining.
+/// This allows for efficient configuration building without intermediate validations.
+///
+/// ```rust
+/// use ::boxen::builder;
+///
+/// let result = builder()
+///     .width(10)
+///     .padding(20)  // This will cause an error - padding too large for width
+///     .render("Test");
+///
+/// match result {
+///     Ok(output) => println!("{}", output),
+///     Err(e) => println!("Configuration error: {}", e),
+/// }
+/// ```
+///
+/// # Performance
+///
+/// - Method chaining is zero-cost - no allocations until `render()` is called
+/// - Configuration validation is performed once at render time
+/// - The builder can be reused by calling `render()` multiple times with different text
+///
+/// # Auto-Adjustment
+///
+/// The builder provides methods for automatic configuration adjustment:
+///
+/// ```rust
+/// use ::boxen::builder;
+///
+/// // Automatically adjust configuration to fix common issues
+/// let result = builder()
+///     .width(5)     // Too small
+///     .padding(10)  // Too large
+///     .auto_adjust("Hello, World!")  // Fixes the configuration
+///     .render("Hello, World!")
+///     .unwrap();
+///
+/// // Or render with automatic adjustment if needed
+/// let result = builder()
+///     .width(5)
+///     .padding(10)
+///     .render_or_adjust("Hello, World!")  // Tries render, auto-adjusts if it fails
+///     .unwrap();
+/// ```
 pub struct BoxenBuilder {
     options: BoxenOptions,
 }
 
 impl BoxenBuilder {
-    /// Create a new builder with default options
+    /// Create a new builder with default options.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::BoxenBuilder;
+    ///
+    /// let builder = BoxenBuilder::new();
+    /// let result = builder.render("Hello").unwrap();
+    /// ```
     pub fn new() -> Self {
         Self {
             options: BoxenOptions::default(),
         }
     }
 
-    /// Set the border style
+    /// Set the border style for the box.
+    ///
+    /// # Arguments
+    ///
+    /// * `style` - The border style to use (Single, Double, Round, Bold, etc.)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::{builder, BorderStyle};
+    ///
+    /// let result = builder()
+    ///     .border_style(BorderStyle::Double)
+    ///     .render("Double border")
+    ///     .unwrap();
+    /// ```
     pub fn border_style(mut self, style: BorderStyle) -> Self {
         self.options.border_style = style;
         self
     }
 
-    /// Set padding (accepts usize or Spacing)
+    /// Set padding around the text content.
+    ///
+    /// Padding is the space between the text and the border. Accepts various formats:
+    /// - `usize`: Creates asymmetric padding (3x horizontal, 1x vertical) to match TypeScript behavior
+    /// - `(usize, usize, usize, usize)`: Explicit (top, right, bottom, left) values
+    /// - `(usize, usize)`: Horizontal and vertical values
+    /// - `Spacing`: Direct spacing struct
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::{builder, Spacing};
+    ///
+    /// // Asymmetric padding (TypeScript-compatible)
+    /// let result1 = builder().padding(1).render("Text").unwrap();
+    ///
+    /// // Explicit padding values
+    /// let result2 = builder().padding((1, 2, 1, 2)).render("Text").unwrap();
+    ///
+    /// // Horizontal and vertical
+    /// let result3 = builder().padding((3, 1)).render("Text").unwrap();
+    /// ```
     pub fn padding<T: Into<Spacing>>(mut self, padding: T) -> Self {
         self.options.padding = padding.into();
         self
     }
 
-    /// Set margin (accepts usize or Spacing)
+    /// Set margin around the entire box.
+    ///
+    /// Margin is the space outside the border. Accepts the same formats as padding.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::builder;
+    ///
+    /// let result = builder()
+    ///     .margin(2)
+    ///     .render("Text with margin")
+    ///     .unwrap();
+    /// ```
     pub fn margin<T: Into<Spacing>>(mut self, margin: T) -> Self {
         self.options.margin = margin.into();
         self
@@ -237,7 +558,53 @@ impl BoxenBuilder {
         self.options
     }
 
-    /// Build and render box with the given text
+    /// Build and render box with the given text.
+    ///
+    /// This is the final method in the builder chain that validates the configuration
+    /// and renders the box. All validation is performed at this stage.
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - The text content to render in the box
+    ///
+    /// # Returns
+    ///
+    /// Returns `Result<String, BoxenError>` with the rendered box or detailed error information.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::{builder, BorderStyle};
+    ///
+    /// let result = builder()
+    ///     .border_style(BorderStyle::Round)
+    ///     .padding(1)
+    ///     .render("Hello, World!")
+    ///     .unwrap();
+    ///
+    /// println!("{}", result);
+    /// ```
+    ///
+    /// # Error Handling
+    ///
+    /// ```rust
+    /// use ::boxen::builder;
+    ///
+    /// let result = builder()
+    ///     .width(5)     // Too small
+    ///     .padding(10)  // Too large
+    ///     .render("Hello");
+    ///
+    /// match result {
+    ///     Ok(output) => println!("{}", output),
+    ///     Err(e) => {
+    ///         println!("Error: {}", e);
+    ///         for rec in e.recommendations() {
+    ///             println!("Try: {}", rec.suggestion);
+    ///         }
+    ///     }
+    /// }
+    /// ```
     pub fn render<S: AsRef<str>>(self, text: S) -> BoxenResult<String> {
         let text_ref = text.as_ref();
 
@@ -1354,19 +1721,93 @@ pub struct LayoutDimensions {
 }
 
 impl Spacing {
-    /// Get total horizontal spacing (left + right)
+    /// Calculate total horizontal spacing (left + right).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::Spacing;
+    ///
+    /// let spacing = Spacing::from((1, 2, 3, 4));  // top, right, bottom, left
+    /// assert_eq!(spacing.horizontal(), 6);  // right + left = 2 + 4
+    /// ```
     pub fn horizontal(&self) -> usize {
         self.left + self.right
     }
 
-    /// Get total vertical spacing (top + bottom)
+    /// Calculate total vertical spacing (top + bottom).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::Spacing;
+    ///
+    /// let spacing = Spacing::from((1, 2, 3, 4));  // top, right, bottom, left
+    /// assert_eq!(spacing.vertical(), 4);  // top + bottom = 1 + 3
+    /// ```
     pub fn vertical(&self) -> usize {
         self.top + self.bottom
     }
 
-    /// Check if spacing has any non-zero values
+    /// Check if all spacing values are zero.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::Spacing;
+    ///
+    /// let empty = Spacing::default();
+    /// assert!(empty.is_empty());
+    ///
+    /// let non_empty = Spacing::from(1);
+    /// assert!(!non_empty.is_empty());
+    /// ```
     pub fn is_empty(&self) -> bool {
         self.top == 0 && self.right == 0 && self.bottom == 0 && self.left == 0
+    }
+
+    /// Create uniform spacing with the same value for all sides.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::Spacing;
+    ///
+    /// let uniform = Spacing::uniform(2);
+    /// assert_eq!(uniform.top, 2);
+    /// assert_eq!(uniform.right, 2);
+    /// assert_eq!(uniform.bottom, 2);
+    /// assert_eq!(uniform.left, 2);
+    /// ```
+    pub fn uniform(value: usize) -> Self {
+        Self {
+            top: value,
+            right: value,
+            bottom: value,
+            left: value,
+        }
+    }
+
+    /// Create spacing with separate horizontal and vertical values.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::Spacing;
+    ///
+    /// let spacing = Spacing::symmetric(3, 1);  // horizontal: 3, vertical: 1
+    /// assert_eq!(spacing.top, 1);
+    /// assert_eq!(spacing.right, 3);
+    /// assert_eq!(spacing.bottom, 1);
+    /// assert_eq!(spacing.left, 3);
+    /// ```
+    pub fn symmetric(horizontal: usize, vertical: usize) -> Self {
+        Self {
+            top: vertical,
+            right: horizontal,
+            bottom: vertical,
+            left: horizontal,
+        }
     }
 }
 

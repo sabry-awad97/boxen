@@ -2,6 +2,13 @@
 name = "boxen"
 version = "0.1.0"
 edition = "2024"
+authors = ["Boxen Contributors"]
+description = "A Rust library for creating styled terminal boxes around text"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/example/boxen-rs"
+documentation = "https://docs.rs/boxen"
+keywords = ["terminal", "cli", "box", "text", "formatting"]
+categories = ["command-line-utilities", "text-processing"]
 
 [dependencies]
 terminal_size = "0.4.3"
@@ -13,3 +20,18 @@ thiserror = "2.0.16"
 [dev-dependencies]
 chrono = "0.4.41"
 ctrlc = "3.5.0"
+
+# Performance optimizations
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+opt-level = 1  # Some optimization in dev for better performance during development
+
+# Documentation settings
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

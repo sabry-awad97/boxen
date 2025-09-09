@@ -3,6 +3,7 @@ use crate::text::measurement::{strip_ansi_codes, text_width};
 use textwrap::{Options, WordSeparator, WordSplitter, wrap};
 
 /// Wrap text to fit within a specified width, preserving ANSI escape sequences
+/// Optimized version with pre-allocated capacity and efficient iteration
 pub fn wrap_text(text: &str, width: usize) -> Result<Vec<String>, BoxenError> {
     if width == 0 {
         return Err(BoxenError::text_processing_error(
@@ -21,21 +22,26 @@ pub fn wrap_text(text: &str, width: usize) -> Result<Vec<String>, BoxenError> {
         ));
     }
 
-    let lines: Vec<String> = text
-        .lines()
-        .flat_map(|line| wrap_line(line, width))
-        .collect();
+    // Pre-allocate with estimated capacity to reduce reallocations
+    let line_count = text.matches('\n').count() + 1;
+    let estimated_capacity = line_count * 2; // Estimate 2 wrapped lines per original line
+    let mut lines = Vec::with_capacity(estimated_capacity);
+
+    for line in text.lines() {
+        lines.extend(wrap_line(line, width));
+    }
 
     Ok(lines)
 }
 
 /// Wrap a single line of text, handling ANSI escape sequences properly
+/// Optimized version with fast path for lines that don't need wrapping
 pub fn wrap_line(line: &str, width: usize) -> Vec<String> {
     if width == 0 {
         return vec![line.to_string()];
     }
 
-    // If the line fits within the width, return it as-is
+    // Fast path: if the line fits within the width, return it as-is
     if text_width(line) <= width {
         return vec![line.to_string()];
     }
@@ -44,7 +50,7 @@ pub fn wrap_line(line: &str, width: usize) -> Vec<String> {
     if line.contains('\x1b') {
         wrap_line_with_ansi(line, width)
     } else {
-        // Use textwrap for plain text
+        // Use textwrap for plain text - create options once to avoid repeated allocation
         let options = Options::new(width)
             .word_separator(WordSeparator::AsciiSpace)
             .word_splitter(WordSplitter::HyphenSplitter);

@@ -2,14 +2,26 @@ use crate::error::BoxenError;
 use unicode_width::UnicodeWidthStr;
 
 /// Calculate the display width of text, handling Unicode and ANSI escape sequences
+/// Optimized version that avoids allocation when no ANSI codes are present
 pub fn text_width(text: &str) -> usize {
-    // Remove ANSI escape sequences before measuring width
+    // Fast path: if no ANSI codes, measure directly
+    if !text.contains('\x1b') {
+        return UnicodeWidthStr::width(text);
+    }
+
+    // Slow path: strip ANSI codes first
     let clean_text = strip_ansi_codes(text);
     UnicodeWidthStr::width(clean_text.as_str())
 }
 
 /// Strip ANSI escape sequences from text
+/// Optimized version that pre-allocates capacity and uses efficient iteration
 pub fn strip_ansi_codes(text: &str) -> String {
+    // Quick check: if no escape sequences, return clone to avoid allocation
+    if !text.contains('\x1b') {
+        return text.to_string();
+    }
+
     let mut result = String::with_capacity(text.len());
     let mut chars = text.chars().peekable();
 

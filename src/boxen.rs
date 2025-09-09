@@ -6,7 +6,128 @@ use crate::text::text_width;
 use crate::text::wrapping::wrap_text;
 use std::fmt::Write;
 
-/// Main boxen function that renders text within a styled box
+/// Main boxen function that renders text within a styled box.
+///
+/// This is the core function of the boxen library. It takes text and optional configuration
+/// and returns a formatted string with the text enclosed in a styled box.
+///
+/// # Arguments
+///
+/// * `text` - The text content to be boxed. Can be a `&str`, `String`, or any type that implements `AsRef<str>`
+/// * `options` - Optional configuration for the box. If `None`, default settings are used
+///
+/// # Returns
+///
+/// Returns `Result<String, BoxenError>` where:
+/// - `Ok(String)` contains the formatted box as a string ready for terminal output
+/// - `Err(BoxenError)` contains detailed error information with helpful recommendations
+///
+/// # Examples
+///
+/// ## Basic Usage
+///
+/// ```rust
+/// use ::boxen::boxen;
+///
+/// // Simple box with default settings
+/// let result = boxen("Hello, World!", None).unwrap();
+/// println!("{}", result);
+/// // ┌─────────────┐
+/// // │Hello, World!│
+/// // └─────────────┘
+/// ```
+///
+/// ## With Custom Options
+///
+/// ```rust
+/// use ::boxen::{boxen, BoxenOptions, BorderStyle, TextAlignment, Spacing};
+///
+/// let options = BoxenOptions {
+///     border_style: BorderStyle::Double,
+///     padding: Spacing::from(1),
+///     text_alignment: TextAlignment::Center,
+///     title: Some("Greeting".to_string()),
+///     width: Some(20),
+///     ..Default::default()
+/// };
+///
+/// let result = boxen("Hello!", Some(options)).unwrap();
+/// ```
+///
+/// ## Multiline Text
+///
+/// ```rust
+/// use ::boxen::boxen;
+///
+/// let multiline = "Line 1\nLine 2\nLine 3";
+/// let result = boxen(multiline, None).unwrap();
+/// // ┌──────┐
+/// // │Line 1│
+/// // │Line 2│
+/// // │Line 3│
+/// // └──────┘
+/// ```
+///
+/// # Error Handling
+///
+/// The function validates all input parameters and configuration options.
+/// Common error scenarios include:
+///
+/// - Invalid dimensions (width/height too small for content + padding + borders)
+/// - Invalid color specifications
+/// - Configuration conflicts (e.g., fullscreen mode with explicit dimensions)
+///
+/// All errors include detailed messages and actionable recommendations:
+///
+/// ```rust
+/// use ::boxen::{boxen, BoxenOptions, Spacing};
+///
+/// let options = BoxenOptions {
+///     width: Some(5),  // Too small
+///     padding: Spacing::from(10),  // Too large
+///     ..Default::default()
+/// };
+///
+/// match boxen("Hello", Some(options)) {
+///     Ok(result) => println!("{}", result),
+///     Err(e) => {
+///         println!("Error: {}", e);
+///         // Error includes recommendations for fixing the issue
+///         for rec in e.recommendations() {
+///             println!("Suggestion: {}", rec.suggestion);
+///         }
+///     }
+/// }
+/// ```
+///
+/// # Performance
+///
+/// This function is optimized for performance:
+/// - Pre-allocates string buffers based on estimated output size
+/// - Uses efficient Unicode width calculation with fast paths for ASCII text
+/// - Minimizes memory allocations in text processing
+/// - Caches terminal dimensions to avoid repeated system calls
+///
+/// For repeated rendering with the same options, consider using the builder pattern
+/// which can reuse validated configuration.
+///
+/// # Unicode and ANSI Support
+///
+/// The function properly handles:
+/// - Unicode characters with correct width calculation (CJK characters count as 2 width)
+/// - ANSI escape sequences for colors and formatting (preserved in output)
+/// - Combining characters and zero-width characters
+///
+/// ```rust
+/// use ::boxen::boxen;
+///
+/// // Unicode text
+/// let result = boxen("你好世界", None).unwrap();
+///
+/// // Text with ANSI colors (colors are preserved)
+/// let colored = "\x1b[31mRed text\x1b[0m";
+/// let result = boxen(colored, None).unwrap();
+/// ```
 pub fn boxen<S: AsRef<str>>(text: S, options: Option<BoxenOptions>) -> BoxenResult<String> {
     let text = text.as_ref();
     let options = options.unwrap_or_default();
@@ -126,7 +247,11 @@ fn render_box(
     let border_chars = options.border_style.get_chars()?;
     let has_border = options.border_style.is_visible();
 
-    let mut result = String::new();
+    // Pre-allocate string capacity to reduce reallocations
+    let estimated_chars_per_line = layout.total_width + 10; // +10 for ANSI codes
+    let estimated_lines = layout.total_height + options.margin.vertical();
+    let estimated_capacity = estimated_chars_per_line * estimated_lines;
+    let mut result = String::with_capacity(estimated_capacity);
 
     // Add top margins
     for _ in 0..options.margin.top {

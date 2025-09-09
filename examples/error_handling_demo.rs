@@ -1,5 +1,5 @@
 /// Demonstration of comprehensive error handling and validation in boxen
-use boxen::{BoxenBuilder, BoxenError};
+use ::boxen::{BoxenBuilder, BoxenError};
 
 fn main() {
     println!("=== Boxen Error Handling and Validation Demo ===\n");
