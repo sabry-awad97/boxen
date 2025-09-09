@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-boxen = "0.1.2"
+boxen = "0.1.3"
 ```
 
 ## Quick Start
