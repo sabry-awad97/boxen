@@ -11,8 +11,8 @@ pub mod text;
 pub use boxen::boxen;
 pub use error::{BoxenError, BoxenResult};
 pub use options::{
-    BorderChars, BorderStyle, BoxenBuilder, BoxenOptions, Color, Float, FullscreenMode, Spacing,
-    TextAlignment, TitleAlignment,
+    BorderChars, BorderStyle, BoxenBuilder, BoxenOptions, Color, DimensionConstraints, Float,
+    FullscreenMode, LayoutDimensions, Spacing, TextAlignment, TitleAlignment,
 };
 
 /// Create a new BoxenBuilder for fluent configuration
