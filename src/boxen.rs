@@ -1,4 +1,305 @@
-/// Core boxen rendering functionality
+//! # Core Boxen Rendering Engine
+//!
+//! This module contains the main boxen rendering functionality, providing the core
+//! `boxen` function that transforms text content into beautifully formatted terminal
+//! boxes with comprehensive styling, layout, and error handling capabilities.
+//!
+//! ## Overview
+//!
+//! The boxen rendering engine is the heart of the library, orchestrating text processing,
+//! layout calculation, border rendering, and color application to create visually
+//! appealing terminal output. It handles complex scenarios including Unicode text,
+//! ANSI escape sequences, dynamic sizing, and terminal constraints.
+//!
+//! ## Core Components
+//!
+//! ### Main Rendering Function (`boxen`)
+//! - **Text Processing**: Handles Unicode, ANSI sequences, and text wrapping
+//! - **Layout Calculation**: Determines optimal box dimensions and positioning
+//! - **Border Rendering**: Draws borders with various styles and decorations
+//! - **Color Application**: Applies colors and styling with terminal compatibility
+//!
+//! ### Content Processing (`process_content`)
+//! - **Text Wrapping**: Intelligent line breaking and width constraint handling
+//! - **Alignment Processing**: Horizontal and vertical text alignment
+//! - **Dimension Calculation**: Accurate content measurement and sizing
+//! - **Unicode Handling**: Proper width calculation for complex characters
+//!
+//! ### Box Rendering (`render_box`)
+//! - **Border Construction**: Creates top, middle, and bottom border sections
+//! - **Content Integration**: Combines text content with border elements
+//! - **Title Rendering**: Positions and styles optional box titles
+//! - **Final Assembly**: Combines all elements into the final output string
+//!
+//! ## Quick Start
+//!
+//! ```rust
+//! # fn main() {
+//! // Simple box with default styling
+//! if let Ok(result) = boxen::boxen("Hello, World!", None) {
+//!     println!("{}", result);
+//! }
+//! # }
+//! ```
+//!
+//! ## Advanced Usage
+//!
+//! ### Custom Styling
+//! ```rust
+//! use boxen::{BoxenOptions, BorderStyle, TextAlignment, Spacing, Color};
+//!
+//! # fn main() {
+//! let options = BoxenOptions {
+//!     border_style: BorderStyle::Double,
+//!     padding: Spacing::from(2),
+//!     text_alignment: TextAlignment::Center,
+//!     border_color: Some(Color::Named("blue".to_string())),
+//!     title: Some("Important Message".to_string()),
+//!     ..Default::default()
+//! };
+//!
+//! if let Ok(result) = boxen::boxen("Your content here", Some(options)) {
+//!     println!("{}", result);
+//! }
+//! # }
+//! ```
+//!
+//! ### Dynamic Sizing
+//! ```rust
+//! use boxen::{BoxenOptions, Spacing};
+//!
+//! # fn main() {
+//! // Auto-size to terminal width with margins
+//! let options = BoxenOptions {
+//!     margin: Spacing::from(4),
+//!     ..Default::default()
+//! };
+//!
+//! if let Ok(result) = boxen::boxen("This will size to fit the terminal", Some(options)) {
+//!     println!("{}", result);
+//! }
+//! # }
+//! ```
+//!
+//! ### Layout Control
+//! ```rust
+//! use boxen::{BoxenOptions, Float, Spacing};
+//!
+//! # fn main() {
+//! let options = BoxenOptions {
+//!     width: Some(60),
+//!     height: Some(10),
+//!     float: Float::Center,
+//!     margin: Spacing::from(3),
+//!     ..Default::default()
+//! };
+//!
+//! if let Ok(result) = boxen::boxen("Centered box with fixed dimensions", Some(options)) {
+//!     println!("{}", result);
+//! }
+//! # }
+//! ```
+//!
+//! ### Multiline Content
+//! ```rust
+//! use boxen::{BoxenOptions, TextAlignment, Spacing};
+//!
+//! # fn main() {
+//! let content = "Line 1\nLine 2\nLine 3\nLonger line of text";
+//! let options = BoxenOptions {
+//!     text_alignment: TextAlignment::Center,
+//!     padding: Spacing::from(1),
+//!     ..Default::default()
+//! };
+//!
+//! if let Ok(result) = boxen::boxen(content, Some(options)) {
+//!     println!("{}", result);
+//! }
+//! # }
+//! ```
+//!
+//! ## Error Handling and Recovery
+//!
+//! The rendering engine includes comprehensive error handling with actionable recommendations:
+//!
+//! ### Validation Errors
+//! ```rust
+//! use boxen::{BoxenOptions, Spacing};
+//!
+//! # fn main() {
+//! let options = BoxenOptions {
+//!     width: Some(5),  // Too small for content
+//!     padding: Spacing::from(10), // Excessive padding
+//!     ..Default::default()
+//! };
+//!
+//! match boxen::boxen("Long content that won't fit", Some(options)) {
+//!     Ok(result) => println!("{}", result),
+//!     Err(error) => {
+//!         println!("Configuration error: {}", error);
+//!         
+//!         // Access specific recommendations
+//!         for recommendation in error.recommendations() {
+//!             println!("Suggestion: {}", recommendation.suggestion);
+//!             if let Some(fix) = &recommendation.auto_fix {
+//!                 println!("Auto-fix: {}", fix);
+//!             }
+//!         }
+//!     }
+//! }
+//! # }
+//! ```
+//!
+//! ### Automatic Recovery
+//! ```rust
+//! use boxen::BoxenOptions;
+//!
+//! # fn main() {
+//! let options = BoxenOptions {
+//!     width: Some(3), // Invalid - too small
+//!     ..Default::default()
+//! };
+//! let content = "Content that doesn't fit";
+//!
+//! // This will return an error with recommendations
+//! match boxen::boxen(content, Some(options)) {
+//!     Ok(result) => println!("{}", result),
+//!     Err(e) => println!("Error: {}", e),
+//! }
+//! # }
+//! ```
+//!
+//! ## Performance Characteristics
+//!
+//! The rendering engine is optimized for performance across various scenarios:
+//!
+//! ### Memory Efficiency
+//! - **Pre-allocation**: Estimates output size to minimize reallocations
+//! - **String Reuse**: Reuses buffers where possible during processing
+//! - **Lazy Processing**: Only processes content when necessary
+//! - **Minimal Copying**: Avoids unnecessary string duplication
+//!
+//! ### Processing Speed
+//! - **Fast ASCII Path**: Optimized handling for ASCII-only content
+//! - **Unicode Optimization**: Efficient width calculation for complex characters
+//! - **Cached Calculations**: Memoizes expensive operations like terminal size
+//! - **Linear Complexity**: Most operations scale linearly with content size
+//!
+//! ### Benchmark Results
+//! ```rust
+//! use std::time::Instant;
+//!
+//! # fn main() {
+//! let start = Instant::now();
+//! if let Ok(result) = boxen::boxen("Sample content", None) {
+//!     let duration = start.elapsed();
+//!     // Typical performance: < 1ms for normal content
+//!     println!("Rendered in {:?}", duration);
+//! }
+//! # }
+//! ```
+//!
+//! ## Unicode and International Support
+//!
+//! The rendering engine provides comprehensive Unicode support:
+//!
+//! ### Character Width Handling
+//! ```rust
+//! # fn main() {
+//! // Properly handles wide characters (CJK)
+//! let _ = boxen::boxen("你好世界", None); // Chinese characters
+//! let _ = boxen::boxen("こんにちは", None); // Japanese characters
+//! let _ = boxen::boxen("안녕하세요", None); // Korean characters
+//!
+//! // Handles combining characters
+//! let _ = boxen::boxen("café naïve résumé", None);
+//!
+//! // Supports emoji
+//! let _ = boxen::boxen("🎉 Celebration! 🎊", None);
+//! # }
+//! ```
+//!
+//! ### ANSI Sequence Preservation
+//! ```rust
+//! # fn main() {
+//! // Colors and formatting are preserved
+//! let colored_text = "\x1b[31mRed\x1b[0m \x1b[32mGreen\x1b[0m \x1b[34mBlue\x1b[0m";
+//! let _ = boxen::boxen(colored_text, None);
+//!
+//! // Bold and italic formatting preserved
+//! let formatted = "\x1b[1mBold\x1b[0m and \x1b[3mItalic\x1b[0m text";
+//! let _ = boxen::boxen(formatted, None);
+//! # }
+//! ```
+//!
+//! ## Integration with Terminal Features
+//!
+//! The rendering engine integrates seamlessly with terminal capabilities:
+//!
+//! ### Terminal Size Detection
+//! ```rust
+//! use boxen::{BoxenOptions, Spacing};
+//!
+//! # fn main() {
+//! // Automatically respects terminal dimensions
+//! let options = BoxenOptions {
+//!     margin: Spacing::from(2),
+//!     ..Default::default()
+//! };
+//!
+//! let _ = boxen::boxen("Content that adapts to terminal size", Some(options));
+//! # }
+//! ```
+//!
+//! ### Color Support Detection
+//! ```rust
+//! use boxen::{BoxenOptions, Color};
+//!
+//! # fn main() {
+//! let options = BoxenOptions {
+//!     border_color: Some(Color::Named("blue".to_string())),
+//!     background_color: Some(Color::Named("lightgray".to_string())),
+//!     ..Default::default()
+//! };
+//!
+//! let _ = boxen::boxen("Colored box content", Some(options));
+//! # }
+//! ```
+//!
+//! ## Thread Safety and Concurrency
+//!
+//! All rendering functions are thread-safe and can be used in concurrent environments:
+//!
+//! ```rust
+//! use std::thread;
+//!
+//! # fn main() {
+//! let handles: Vec<_> = (0..10)
+//!     .map(|i| {
+//!         thread::spawn(move || {
+//!             let content = format!("Thread {} content", i);
+//!             boxen::boxen(&content, None)
+//!         })
+//!     })
+//!     .collect();
+//!
+//! for handle in handles {
+//!     if let Ok(result) = handle.join().unwrap() {
+//!         println!("{}", result);
+//!     }
+//! }
+//! # }
+//! ```
+//!
+//! ## Testing and Quality Assurance
+//!
+//! The rendering engine includes comprehensive test coverage:
+//! - **Unit Tests**: Individual function validation
+//! - **Integration Tests**: End-to-end rendering scenarios
+//! - **Unicode Tests**: Complex character handling validation
+//! - **Performance Tests**: Speed and memory usage benchmarks
+//! - **Error Handling Tests**: Comprehensive error scenario coverage
+
 use crate::color::{apply_color_with_dim, apply_colors};
 use crate::error::BoxenResult;
 use crate::options::{BoxenOptions, TitleAlignment};

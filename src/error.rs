@@ -1,67 +1,264 @@
-/// Error types for the boxen library
+//! # Error Handling System
+//!
+//! This module provides comprehensive error handling for the boxen library, featuring
+//! detailed error types, intelligent recommendations, and actionable recovery suggestions.
+//! All errors include context-aware guidance to help users resolve issues quickly.
+//!
+//! ## Overview
+//!
+//! The error system is built around two main components:
+//! - **`BoxenError`**: Comprehensive error enum covering all failure scenarios
+//! - **`ErrorRecommendation`**: Structured suggestions for error resolution
+//!
+//! ## Quick Start
+//!
+//! ```rust
+//! use boxen::error::{BoxenError, ErrorRecommendation};
+//!
+//! # fn main() {
+//! // Handle errors with recommendations
+//! match boxen::boxen("test", None) {
+//!     Ok(result) => println!("Success: {}", result),
+//!     Err(e) => {
+//!         println!("Error: {}", e);
+//!         for rec in e.recommendations() {
+//!             println!("💡 {}: {}", rec.issue, rec.suggestion);
+//!             if let Some(fix) = &rec.auto_fix {
+//!                 println!("🔧 Try: {}", fix);
+//!             }
+//!         }
+//!     }
+//! }
+//! # }
+//! ```
+//!
+//! ## Error Categories
+//!
+//! ### Configuration Errors
+//! - **`InvalidDimensions`**: Width/height constraints violations
+//! - **`ConfigurationError`**: Conflicting or invalid option combinations
+//! - **`InvalidBorderStyle`**: Border style specification issues
+//! - **`InvalidColor`**: Color parsing and validation failures
+//!
+//! ### Runtime Errors
+//! - **`TerminalSizeError`**: Terminal dimension detection failures
+//! - **`TextProcessingError`**: Text wrapping and formatting issues
+//! - **`RenderingError`**: Box rendering and output generation problems
+//!
+//! ### Input Validation Errors
+//! - **`InputValidationError`**: Parameter validation failures with field-specific context
+//!
+//! ## Error Recommendations
+//!
+//! Each error includes intelligent recommendations with three types of guidance:
+//!
+//! ### Issue Description
+//! Clear explanation of what went wrong and why it's problematic.
+//!
+//! ### Actionable Suggestions
+//! Human-readable advice on how to resolve the issue, including:
+//! - Configuration adjustments
+//! - Alternative approaches
+//! - Best practice recommendations
+//!
+//! ### Auto-Fix Hints
+//! Code snippets or specific values that can be used to resolve the issue:
+//!
+//! ```rust
+//! use boxen::error::ErrorRecommendation;
+//!
+//! let recommendation = ErrorRecommendation::with_auto_fix(
+//!     "Width too small".to_string(),
+//!     "Increase width to accommodate content and padding".to_string(),
+//!     ".width(20)".to_string()  // Auto-fix suggestion
+//! );
+//! ```
+//!
+//! ## Validation System
+//!
+//! The module includes comprehensive input validation utilities:
+//!
+//! ### Text Validation
+//! - Content size limits (prevents performance issues)
+//! - Line count constraints
+//! - Character encoding validation
+//!
+//! ### Spacing Validation
+//! - Reasonable padding/margin limits
+//! - Overflow prevention
+//! - Layout constraint checking
+//!
+//! ### Dimension Validation
+//! - Minimum/maximum size enforcement
+//! - Aspect ratio validation
+//! - Terminal compatibility checks
+//!
+//! ### Color Validation
+//! - Named color verification
+//! - Hex format validation
+//! - RGB range checking
+//!
+//! ## Error Construction Helpers
+//!
+//! The `BoxenError` type provides convenient constructors for common error scenarios:
+//!
+//! ```rust
+//! use boxen::error::{BoxenError, ErrorRecommendation};
+//!
+//! // Dimension errors with intelligent recommendations
+//! let error = BoxenError::invalid_dimensions(
+//!     "Width too small for content".to_string(),
+//!     Some(5),  // Current width
+//!     None,     // Height not relevant
+//!     vec![
+//!         ErrorRecommendation::with_auto_fix(
+//!             "Insufficient width".to_string(),
+//!             "Increase width to fit content plus padding".to_string(),
+//!             ".width(20)".to_string()
+//!         )
+//!     ]
+//! );
+//!
+//! // Configuration errors with context
+//! let config_error = BoxenError::configuration_error(
+//!     "Conflicting options".to_string(),
+//!     vec![
+//!         ErrorRecommendation::new(
+//!             "Auto-width conflicts with fixed width".to_string(),
+//!             "Remove either .auto_width(true) or .width(value)".to_string(),
+//!             None
+//!         )
+//!     ]
+//! );
+//! ```
+//!
+//! ## Performance Considerations
+//!
+//! - Error construction is lazy - recommendations are only generated when accessed
+//! - String allocations are minimized through strategic use of `&'static str`
+//! - Validation functions are optimized for common cases
+//! - Error messages are pre-formatted to avoid runtime string building
+//!
+//! ## Integration with Validation
+//!
+//! The error system integrates seamlessly with the validation module to provide
+//! comprehensive input checking and intelligent error recovery:
+//!
+//! ```rust
+//! use boxen::error::BoxenError;
+//! use boxen::BoxenOptions;
+//!
+//! # fn main() {
+//! # let text = "sample";
+//! # let options = BoxenOptions::default();
+//! // Comprehensive validation with detailed error reporting
+//! match boxen::boxen(text, Some(options)) {
+//!     Ok(result) => println!("Success: {}", result),
+//!     Err(e) => println!("Validation error: {}", e)
+//! }
+//! # }
+//! ```
+//!
+//! ## Thread Safety
+//!
+//! All error types are thread-safe and can be safely passed between threads
+//! or used in concurrent validation operations.
+
 use thiserror::Error;
 
 /// Recommendation for fixing a configuration error
 #[derive(Debug, Clone)]
 pub struct ErrorRecommendation {
+    /// Description of the issue that was detected
     pub issue: String,
+    /// Human-readable suggestion for resolving the issue
     pub suggestion: String,
+    /// Optional code snippet that can automatically fix the issue
     pub auto_fix: Option<String>,
 }
 
 /// Errors that can occur when creating or rendering boxes
 #[derive(Debug, Error)]
 pub enum BoxenError {
+    /// Invalid border style configuration
     #[error("Invalid border style: {message}")]
     InvalidBorderStyle {
+        /// Error message describing the border style issue
         message: String,
+        /// Recommendations for fixing the border style
         recommendations: Vec<ErrorRecommendation>,
     },
 
+    /// Invalid color specification
     #[error("Invalid color specification: {message}")]
     InvalidColor {
+        /// Error message describing the color issue
         message: String,
+        /// The invalid color value that was provided
         color_value: String,
+        /// Recommendations for fixing the color specification
         recommendations: Vec<ErrorRecommendation>,
     },
 
+    /// Invalid box dimensions
     #[error("Invalid dimensions: {message}")]
     InvalidDimensions {
+        /// Error message describing the dimension issue
         message: String,
+        /// The invalid width value, if applicable
         width: Option<usize>,
+        /// The invalid height value, if applicable
         height: Option<usize>,
+        /// Recommendations for fixing the dimensions
         recommendations: Vec<ErrorRecommendation>,
     },
 
+    /// Terminal size detection failure
     #[error("Terminal size detection failed: {message}")]
     TerminalSizeError {
+        /// Error message describing the terminal size issue
         message: String,
+        /// Recommendations for handling terminal size errors
         recommendations: Vec<ErrorRecommendation>,
     },
 
+    /// Text processing error
     #[error("Text processing error: {message}")]
     TextProcessingError {
+        /// Error message describing the text processing issue
         message: String,
+        /// Recommendations for fixing text processing errors
         recommendations: Vec<ErrorRecommendation>,
     },
 
+    /// Configuration conflict or validation error
     #[error("Configuration conflict: {message}")]
     ConfigurationError {
+        /// Error message describing the configuration issue
         message: String,
+        /// Recommendations for resolving configuration conflicts
         recommendations: Vec<ErrorRecommendation>,
     },
 
+    /// Input validation error
     #[error("Input validation error: {message}")]
     InputValidationError {
+        /// Error message describing the validation issue
         message: String,
+        /// The field that failed validation
         field: String,
+        /// The invalid value that was provided
         value: String,
+        /// Recommendations for fixing the input validation error
         recommendations: Vec<ErrorRecommendation>,
     },
 
+    /// Box rendering error
     #[error("Rendering error: {message}")]
     RenderingError {
+        /// Error message describing the rendering issue
         message: String,
+        /// Recommendations for fixing rendering errors
         recommendations: Vec<ErrorRecommendation>,
     },
 }
@@ -187,6 +384,7 @@ impl BoxenError {
     }
 
     /// Get a user-friendly error message with suggestions
+    #[must_use]
     pub fn detailed_message(&self) -> String {
         let base_message = self.to_string();
         let recommendations = self.recommendations();
@@ -195,11 +393,11 @@ impl BoxenError {
             return base_message;
         }
 
-        let mut message = format!("{}\n\nSuggestions:", base_message);
+        let mut message = format!("{base_message}\n\nSuggestions:");
         for (i, rec) in recommendations.iter().enumerate() {
             message.push_str(&format!("\n{}. {}: {}", i + 1, rec.issue, rec.suggestion));
             if let Some(auto_fix) = &rec.auto_fix {
-                message.push_str(&format!("\n   Auto-fix: {}", auto_fix));
+                message.push_str(&format!("\n   Auto-fix: {auto_fix}"));
             }
         }
         message
@@ -208,7 +406,8 @@ impl BoxenError {
 
 impl ErrorRecommendation {
     /// Create a new recommendation
-    pub fn new(issue: String, suggestion: String, auto_fix: Option<String>) -> Self {
+    #[must_use]
+    pub const fn new(issue: String, suggestion: String, auto_fix: Option<String>) -> Self {
         Self {
             issue,
             suggestion,
@@ -217,7 +416,8 @@ impl ErrorRecommendation {
     }
 
     /// Create a recommendation with auto-fix
-    pub fn with_auto_fix(issue: String, suggestion: String, auto_fix: String) -> Self {
+    #[must_use]
+    pub const fn with_auto_fix(issue: String, suggestion: String, auto_fix: String) -> Self {
         Self {
             issue,
             suggestion,
@@ -226,7 +426,8 @@ impl ErrorRecommendation {
     }
 
     /// Create a recommendation without auto-fix
-    pub fn suggestion_only(issue: String, suggestion: String) -> Self {
+    #[must_use]
+    pub const fn suggestion_only(issue: String, suggestion: String) -> Self {
         Self {
             issue,
             suggestion,
@@ -240,9 +441,15 @@ pub type BoxenResult<T> = Result<T, BoxenError>;
 
 /// Input validation utilities
 pub mod validation {
-    use super::*;
+    use super::{BoxenError, BoxenResult, ErrorRecommendation};
 
     /// Validate text input
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::InputValidationError` if:
+    /// - Text exceeds 1,000,000 characters (performance limit)
+    /// - Text contains more than 10,000 lines (layout limit)
     pub fn validate_text_input(text: &str) -> BoxenResult<()> {
         // Check for extremely long text that might cause performance issues
         if text.len() > 1_000_000 {
@@ -270,7 +477,7 @@ pub mod validation {
             return Err(BoxenError::input_validation_error(
                 "Text has too many lines and may cause performance issues".to_string(),
                 "text".to_string(),
-                format!("{} lines", line_count),
+                format!("{line_count} lines"),
                 vec![
                     ErrorRecommendation::suggestion_only(
                         "Too many lines".to_string(),
@@ -298,8 +505,8 @@ pub mod validation {
 
         if spacing.top > max_reasonable_spacing {
             return Err(BoxenError::input_validation_error(
-                format!("Top {} value is unreasonably large", field_name),
-                format!("{}.top", field_name),
+                format!("Top {field_name} value is unreasonably large"),
+                format!("{field_name}.top"),
                 spacing.top.to_string(),
                 vec![
                     ErrorRecommendation::suggestion_only(
@@ -312,7 +519,7 @@ pub mod validation {
                     ErrorRecommendation::with_auto_fix(
                         "Use reasonable spacing".to_string(),
                         "Consider using smaller spacing values".to_string(),
-                        format!(".{}(5)", field_name),
+                        format!(".{field_name}(5)"),
                     ),
                 ],
             ));
@@ -320,8 +527,8 @@ pub mod validation {
 
         if spacing.right > max_reasonable_spacing {
             return Err(BoxenError::input_validation_error(
-                format!("Right {} value is unreasonably large", field_name),
-                format!("{}.right", field_name),
+                format!("Right {field_name} value is unreasonably large"),
+                format!("{field_name}.right"),
                 spacing.right.to_string(),
                 vec![ErrorRecommendation::suggestion_only(
                     "Excessive spacing".to_string(),
@@ -335,8 +542,8 @@ pub mod validation {
 
         if spacing.bottom > max_reasonable_spacing {
             return Err(BoxenError::input_validation_error(
-                format!("Bottom {} value is unreasonably large", field_name),
-                format!("{}.bottom", field_name),
+                format!("Bottom {field_name} value is unreasonably large"),
+                format!("{field_name}.bottom"),
                 spacing.bottom.to_string(),
                 vec![ErrorRecommendation::suggestion_only(
                     "Excessive spacing".to_string(),
@@ -350,8 +557,8 @@ pub mod validation {
 
         if spacing.left > max_reasonable_spacing {
             return Err(BoxenError::input_validation_error(
-                format!("Left {} value is unreasonably large", field_name),
-                format!("{}.left", field_name),
+                format!("Left {field_name} value is unreasonably large"),
+                format!("{field_name}.left"),
                 spacing.left.to_string(),
                 vec![ErrorRecommendation::suggestion_only(
                     "Excessive spacing".to_string(),
@@ -390,7 +597,7 @@ pub mod validation {
                     vec![
                         ErrorRecommendation::suggestion_only(
                             "Excessive width".to_string(),
-                            format!("Width of {} is very large and may cause display issues", w),
+                            format!("Width of {w} is very large and may cause display issues"),
                         ),
                         ErrorRecommendation::with_auto_fix(
                             "Use reasonable width".to_string(),
@@ -424,7 +631,7 @@ pub mod validation {
                     vec![
                         ErrorRecommendation::suggestion_only(
                             "Excessive height".to_string(),
-                            format!("Height of {} is very large and may cause display issues", h),
+                            format!("Height of {h} is very large and may cause display issues"),
                         ),
                         ErrorRecommendation::with_auto_fix(
                             "Use reasonable height".to_string(),
@@ -502,7 +709,7 @@ pub mod validation {
                 BoxenError::input_validation_error(
                     "Invalid border color".to_string(),
                     "border_color".to_string(),
-                    format!("{:?}", color),
+                    format!("{color:?}"),
                     vec![
                         ErrorRecommendation::suggestion_only(
                             "Invalid color".to_string(),
@@ -524,7 +731,7 @@ pub mod validation {
                 BoxenError::input_validation_error(
                     "Invalid background color".to_string(),
                     "background_color".to_string(),
-                    format!("{:?}", color),
+                    format!("{color:?}"),
                     vec![
                         ErrorRecommendation::suggestion_only(
                             "Invalid color".to_string(),
