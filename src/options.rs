@@ -68,7 +68,7 @@ pub struct BorderChars {
 }
 
 /// Spacing configuration for padding and margins
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Spacing {
     pub top: usize,
     pub right: usize,
@@ -135,7 +135,9 @@ pub enum Color {
 /// Fullscreen mode configuration
 #[derive(Debug, Clone)]
 pub enum FullscreenMode {
+    /// Automatically use terminal dimensions
     Auto,
+    /// Use custom function to calculate dimensions from terminal size
     Custom(fn(usize, usize) -> (usize, usize)),
 }
 
@@ -561,6 +563,150 @@ mod tests {
         assert!(result.is_err());
         matches!(result.unwrap_err(), BoxenError::ConfigurationError(_));
     }
+
+    #[test]
+    fn test_fullscreen_mode_auto() {
+        let options = BoxenOptions {
+            fullscreen: Some(FullscreenMode::Auto),
+            ..Default::default()
+        };
+
+        let constraints = options.calculate_constraints().unwrap();
+
+        // Should use terminal dimensions
+        assert_eq!(constraints.max_width, constraints.terminal_width);
+        assert_eq!(constraints.max_height, constraints.terminal_height);
+    }
+
+    #[test]
+    fn test_fullscreen_mode_auto_with_margins() {
+        let margin = Spacing::from(2);
+        println!(
+            "Margin: top={}, right={}, bottom={}, left={}",
+            margin.top, margin.right, margin.bottom, margin.left
+        );
+        println!("Horizontal margin: {}", margin.horizontal());
+
+        let expected_horizontal = margin.horizontal();
+        let expected_vertical = margin.vertical();
+
+        let options = BoxenOptions {
+            fullscreen: Some(FullscreenMode::Auto),
+            margin,
+            ..Default::default()
+        };
+
+        let constraints = options.calculate_constraints().unwrap();
+
+        // Should account for margins - Spacing::from(2) creates 12 horizontal (left=6, right=6), 4 vertical
+        assert_eq!(
+            constraints.max_width,
+            constraints.terminal_width - expected_horizontal
+        );
+        if let Some(terminal_height) = constraints.terminal_height {
+            assert_eq!(
+                constraints.max_height,
+                Some(terminal_height - expected_vertical)
+            );
+        }
+    }
+
+    #[test]
+    fn test_fullscreen_mode_custom() {
+        let custom_func = |width: usize, height: usize| -> (usize, usize) {
+            // Use 3/4 of dimensions to ensure we have enough space for borders and padding
+            (width * 3 / 4, height * 3 / 4)
+        };
+
+        let options = BoxenOptions {
+            fullscreen: Some(FullscreenMode::Custom(custom_func)),
+            ..Default::default()
+        };
+
+        let constraints = options.calculate_constraints().unwrap();
+
+        // Should use custom dimensions
+        assert_eq!(constraints.max_width, constraints.terminal_width * 3 / 4);
+        if let Some(terminal_height) = constraints.terminal_height {
+            assert_eq!(constraints.max_height, Some(terminal_height * 3 / 4));
+        }
+    }
+
+    #[test]
+    fn test_fullscreen_mode_with_padding() {
+        let options = BoxenOptions {
+            fullscreen: Some(FullscreenMode::Auto),
+            padding: Spacing::from(1), // 6 horizontal, 2 vertical
+            ..Default::default()
+        };
+
+        let max_content_width = options.calculate_max_content_width().unwrap();
+        let max_content_height = options.calculate_max_content_height().unwrap();
+
+        // Should account for borders and padding
+        let constraints = options.calculate_constraints().unwrap();
+        let expected_width = constraints.max_width - 2 - 6; // borders + padding horizontal
+        assert_eq!(max_content_width, expected_width);
+
+        if let Some(height) = max_content_height {
+            let expected_height = constraints.max_height.unwrap() - 2 - 2; // borders + padding vertical
+            assert_eq!(height, expected_height);
+        }
+    }
+
+    #[test]
+    fn test_fullscreen_mode_insufficient_space() {
+        // Create a scenario where fullscreen mode doesn't have enough space
+        let options = BoxenOptions {
+            fullscreen: Some(FullscreenMode::Custom(|_, _| (5, 3))), // Very small dimensions
+            padding: Spacing::from(3), // Large padding: 18 horizontal (9*2), 6 vertical (3*2)
+            ..Default::default()
+        };
+
+        let result = options.calculate_constraints();
+
+        // Should fail due to insufficient space (5 total width < 18 padding + 2 borders = 20)
+        assert!(result.is_err());
+        matches!(result.unwrap_err(), BoxenError::InvalidDimensions { .. });
+    }
+
+    #[test]
+    fn test_fullscreen_mode_overrides_width_height() {
+        let options = BoxenOptions {
+            fullscreen: Some(FullscreenMode::Auto),
+            width: Some(50),  // Should be ignored in fullscreen mode
+            height: Some(20), // Should be ignored in fullscreen mode
+            ..Default::default()
+        };
+
+        let constraints = options.calculate_constraints().unwrap();
+
+        // Should use terminal dimensions, not specified width/height
+        assert_eq!(constraints.max_width, constraints.terminal_width);
+        assert_eq!(constraints.max_height, constraints.terminal_height);
+    }
+
+    #[test]
+    fn test_fullscreen_layout_dimensions() {
+        let options = BoxenOptions {
+            fullscreen: Some(FullscreenMode::Auto),
+            padding: Spacing::from(1), // 6 horizontal, 2 vertical
+            margin: Spacing::from(1),  // 6 horizontal, 2 vertical
+            ..Default::default()
+        };
+
+        // Use small content that should be expanded to fill fullscreen
+        let layout = options.calculate_layout_dimensions(10, 3).unwrap();
+
+        // Content should be expanded to fill available space
+        let max_content_width = options.calculate_max_content_width().unwrap();
+        let max_content_height = options.calculate_max_content_height().unwrap();
+
+        assert_eq!(layout.content_width, max_content_width);
+        if let Some(expected_height) = max_content_height {
+            assert_eq!(layout.content_height, expected_height);
+        }
+    }
 }
 
 /// Dimension constraints for box calculation
@@ -607,6 +753,16 @@ impl BoxenOptions {
         let terminal_width = get_terminal_width();
         let terminal_height = get_terminal_height();
         let border_width = calculate_border_width(&self.border_style);
+
+        // Handle fullscreen mode first
+        if let Some(fullscreen_mode) = &self.fullscreen {
+            return self.calculate_fullscreen_constraints(
+                fullscreen_mode,
+                terminal_width,
+                terminal_height,
+                border_width,
+            );
+        }
 
         let _total_horizontal_overhead =
             border_width + self.padding.horizontal() + self.margin.horizontal();
@@ -675,9 +831,26 @@ impl BoxenOptions {
     ) -> BoxenResult<LayoutDimensions> {
         let constraints = self.calculate_constraints()?;
 
+        // In fullscreen mode, expand content to fill available space
+        let (final_content_width, final_content_height) = if self.fullscreen.is_some() {
+            let max_content_width = self.calculate_max_content_width()?;
+            let max_content_height = self.calculate_max_content_height()?;
+
+            let expanded_width = max_content_width;
+            let expanded_height = if let Some(max_height) = max_content_height {
+                max_height
+            } else {
+                content_height // Use original height if no height constraint
+            };
+
+            (expanded_width, expanded_height)
+        } else {
+            (content_width, content_height)
+        };
+
         // Calculate inner dimensions (content + padding)
-        let inner_width = content_width + self.padding.horizontal();
-        let inner_height = content_height + self.padding.vertical();
+        let inner_width = final_content_width + self.padding.horizontal();
+        let inner_height = final_content_height + self.padding.vertical();
 
         // Calculate box dimensions without margins (for constraint validation)
         let box_width = inner_width + constraints.border_width;
@@ -693,8 +866,10 @@ impl BoxenOptions {
         let total_height = box_height + self.margin.vertical();
 
         // Validate against constraints
-        // If a specific width was set, compare against that; otherwise use max_width
-        let width_limit = if let Some(specified_width) = self.width {
+        // In fullscreen mode, ignore specified width and use terminal width as limit
+        let width_limit = if self.fullscreen.is_some() {
+            constraints.terminal_width // In fullscreen mode, use terminal width as limit
+        } else if let Some(specified_width) = self.width {
             specified_width
         } else {
             constraints.max_width + self.margin.horizontal()
@@ -735,8 +910,8 @@ impl BoxenOptions {
         }
 
         Ok(LayoutDimensions {
-            content_width,
-            content_height,
+            content_width: final_content_width,
+            content_height: final_content_height,
             total_width,
             total_height,
             inner_width,
@@ -782,6 +957,82 @@ impl BoxenOptions {
         } else {
             Ok(None)
         }
+    }
+
+    /// Calculate constraints for fullscreen mode
+    fn calculate_fullscreen_constraints(
+        &self,
+        fullscreen_mode: &FullscreenMode,
+        terminal_width: usize,
+        terminal_height: Option<usize>,
+        border_width: usize,
+    ) -> BoxenResult<DimensionConstraints> {
+        let (target_width, target_height) = match fullscreen_mode {
+            FullscreenMode::Auto => {
+                // Use full terminal dimensions
+                (terminal_width, terminal_height)
+            }
+            FullscreenMode::Custom(func) => {
+                // Use custom function to calculate dimensions
+                let height = terminal_height.unwrap_or(24); // Fallback height
+                let (custom_width, custom_height) = func(terminal_width, height);
+                (custom_width, Some(custom_height))
+            }
+        };
+
+        // In fullscreen mode, the target dimensions represent the total box size
+        // We need to calculate the available space for content
+        let max_width = if target_width > self.margin.horizontal() {
+            target_width - self.margin.horizontal()
+        } else {
+            return Err(BoxenError::InvalidDimensions {
+                width: Some(target_width),
+                height: target_height,
+            });
+        };
+
+        let max_height = if let Some(height) = target_height {
+            if height > self.margin.vertical() {
+                Some(height - self.margin.vertical())
+            } else {
+                return Err(BoxenError::InvalidDimensions {
+                    width: Some(target_width),
+                    height: Some(height),
+                });
+            }
+        } else {
+            None
+        };
+
+        // Validate that we have enough space for borders and padding
+        if max_width < border_width + self.padding.horizontal() {
+            return Err(BoxenError::InvalidDimensions {
+                width: Some(target_width),
+                height: target_height,
+            });
+        }
+
+        if let Some(height) = max_height {
+            let vertical_border_overhead = if matches!(self.border_style, BorderStyle::None) {
+                0
+            } else {
+                2
+            };
+            if height < vertical_border_overhead + self.padding.vertical() {
+                return Err(BoxenError::InvalidDimensions {
+                    width: Some(target_width),
+                    height: Some(height + self.margin.vertical()),
+                });
+            }
+        }
+
+        Ok(DimensionConstraints {
+            max_width,
+            max_height,
+            terminal_width,
+            terminal_height,
+            border_width,
+        })
     }
 
     /// Validate that the current options are compatible with terminal constraints

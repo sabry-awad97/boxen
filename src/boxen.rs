@@ -54,11 +54,12 @@ fn process_content(text: &str, options: &BoxenOptions) -> BoxenResult<ProcessedC
         .max()
         .unwrap_or(0);
 
-    // Use the smaller of natural width or max width for better layout
-    // But if a specific width is set, use the max available content width
-    let target_width = if options.width.is_some() {
+    // Determine target width based on options
+    let target_width = if options.fullscreen.is_some() || options.width.is_some() {
+        // For fullscreen mode or specified width, use the maximum available content width
         max_content_width
     } else {
+        // For normal mode, use the smaller of natural width or max width for better layout
         natural_content_width.min(max_content_width)
     };
 
@@ -963,17 +964,258 @@ mod tests {
         let result = boxen("Hello", Some(options)).unwrap();
 
         // Verify the result has the expected structure
-        assert_eq!(result.lines().count(), 5); // top margin, top border, content, bottom border, bottom margin
+        assert_eq!(result.lines().count(), 5); // 1 top margin + 1 top border + 1 content + 1 bottom border + 1 bottom margin
+    }
 
-        // The box content lines should have the correct total width (70)
+    #[test]
+    fn test_fullscreen_mode_auto() {
+        let options = BoxenOptions {
+            fullscreen: Some(crate::options::FullscreenMode::Auto),
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should have borders
+        assert!(result.contains("┌"));
+        assert!(result.contains("┐"));
+        assert!(result.contains("└"));
+        assert!(result.contains("┘"));
+
+        // Should fill the terminal dimensions
+        let terminal_width = crate::terminal::get_terminal_width();
+        let terminal_height = crate::terminal::get_terminal_height().unwrap_or(24);
+
+        // Should have terminal height number of lines
+        assert_eq!(result.lines().count(), terminal_height);
+
+        // Each line should be the terminal width
+        for line in result.lines() {
+            assert_eq!(text_width(line), terminal_width);
+        }
+    }
+
+    #[test]
+    fn test_fullscreen_mode_with_margins() {
+        let options = BoxenOptions {
+            fullscreen: Some(crate::options::FullscreenMode::Auto),
+            margin: Spacing {
+                top: 1,
+                right: 2,
+                bottom: 1,
+                left: 2,
+            },
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        let terminal_width = crate::terminal::get_terminal_width();
+        let terminal_height = crate::terminal::get_terminal_height().unwrap_or(24);
+
+        // Should fill terminal height
+        assert_eq!(result.lines().count(), terminal_height);
+
         let lines: Vec<&str> = result.lines().collect();
-        assert_eq!(text_width(lines[1]), 70); // top border line
-        assert_eq!(text_width(lines[2]), 70); // content line  
-        assert_eq!(text_width(lines[3]), 70); // bottom border line
 
-        // Margin lines should be empty
-        assert_eq!(text_width(lines[0]), 0); // top margin
-        assert_eq!(text_width(lines[4]), 0); // bottom margin
+        // First and last lines should be empty (margins)
+        assert_eq!(lines[0], "");
+        assert_eq!(lines[terminal_height - 1], "");
+
+        // Box lines should have left margin (2 spaces) and total terminal width
+        for i in 1..(terminal_height - 1) {
+            assert!(lines[i].starts_with("  "));
+            assert_eq!(text_width(lines[i]), terminal_width);
+        }
+    }
+
+    #[test]
+    fn test_fullscreen_mode_with_padding() {
+        let options = BoxenOptions {
+            fullscreen: Some(crate::options::FullscreenMode::Auto),
+            padding: Spacing {
+                top: 1,
+                right: 1,
+                bottom: 1,
+                left: 1,
+            },
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        let terminal_width = crate::terminal::get_terminal_width();
+        let terminal_height = crate::terminal::get_terminal_height().unwrap_or(24);
+
+        // Should fill terminal height
+        assert_eq!(result.lines().count(), terminal_height);
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Each line should be the terminal width
+        for line in result.lines() {
+            assert_eq!(text_width(line), terminal_width);
+        }
+    }
+
+    #[test]
+    fn test_fullscreen_mode_custom() {
+        let custom_func =
+            |width: usize, height: usize| -> (usize, usize) { (width * 3 / 4, height * 3 / 4) };
+
+        let options = BoxenOptions {
+            fullscreen: Some(crate::options::FullscreenMode::Custom(custom_func)),
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should have borders
+        assert!(result.contains("┌"));
+        assert!(result.contains("┐"));
+
+        // Each line should be 3/4 the terminal width
+        let terminal_width = crate::terminal::get_terminal_width();
+        let terminal_height = crate::terminal::get_terminal_height().unwrap_or(24);
+        let expected_width = terminal_width * 3 / 4;
+        let expected_height = terminal_height * 3 / 4;
+
+        assert_eq!(result.lines().count(), expected_height);
+        for line in result.lines() {
+            assert_eq!(text_width(line), expected_width);
+        }
+    }
+
+    #[test]
+    fn test_fullscreen_mode_with_title() {
+        let options = BoxenOptions {
+            fullscreen: Some(crate::options::FullscreenMode::Auto),
+            title: Some("Test Title".to_string()),
+            title_alignment: crate::options::TitleAlignment::Center,
+            ..Default::default()
+        };
+
+        let result = boxen("Content", Some(options)).unwrap();
+
+        // Should contain both title and content
+        assert!(result.contains("Test Title"));
+        assert!(result.contains("Content"));
+
+        // Title should be in the top border
+        let lines: Vec<&str> = result.lines().collect();
+        let top_border = lines[0];
+        assert!(top_border.contains("Test Title"));
+
+        // Each line should be the terminal width
+        let terminal_width = crate::terminal::get_terminal_width();
+        for line in result.lines() {
+            assert_eq!(text_width(line), terminal_width);
+        }
+    }
+
+    #[test]
+    fn test_fullscreen_mode_multiline_content() {
+        let options = BoxenOptions {
+            fullscreen: Some(crate::options::FullscreenMode::Auto),
+            text_alignment: crate::options::TextAlignment::Center,
+            ..Default::default()
+        };
+
+        let result = boxen("Line 1\nLine 2\nLine 3", Some(options)).unwrap();
+
+        // Should contain all lines
+        assert!(result.contains("Line 1"));
+        assert!(result.contains("Line 2"));
+        assert!(result.contains("Line 3"));
+
+        let terminal_width = crate::terminal::get_terminal_width();
+        let terminal_height = crate::terminal::get_terminal_height().unwrap_or(24);
+
+        // Should fill terminal height
+        assert_eq!(result.lines().count(), terminal_height);
+
+        // Each line should be the terminal width
+        for line in result.lines() {
+            assert_eq!(text_width(line), terminal_width);
+        }
+    }
+
+    #[test]
+    fn test_fullscreen_mode_overrides_width() {
+        let options = BoxenOptions {
+            fullscreen: Some(crate::options::FullscreenMode::Auto),
+            width: Some(50), // Should be ignored
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        let terminal_width = crate::terminal::get_terminal_width();
+        let terminal_height = crate::terminal::get_terminal_height().unwrap_or(24);
+
+        // Should use terminal dimensions, not specified width
+        assert_eq!(result.lines().count(), terminal_height);
+        for line in result.lines() {
+            assert_eq!(text_width(line), terminal_width);
+        }
+    }
+
+    #[test]
+    fn test_fullscreen_mode_no_border() {
+        let options = BoxenOptions {
+            fullscreen: Some(crate::options::FullscreenMode::Auto),
+            border_style: BorderStyle::None,
+            ..Default::default()
+        };
+
+        let result = boxen("Hello", Some(options)).unwrap();
+
+        // Should contain the text
+        assert!(result.contains("Hello"));
+
+        // Should not contain border characters
+        assert!(!result.contains("┌"));
+        assert!(!result.contains("│"));
+
+        let terminal_width = crate::terminal::get_terminal_width();
+        let terminal_height = crate::terminal::get_terminal_height().unwrap_or(24);
+
+        // Should fill terminal height
+        assert_eq!(result.lines().count(), terminal_height);
+
+        // Each line should be the terminal width
+        for line in result.lines() {
+            assert_eq!(text_width(line), terminal_width);
+        }
+    }
+
+    #[test]
+    fn test_fullscreen_mode_with_height_constraint() {
+        let terminal_height = crate::terminal::get_terminal_height().unwrap_or(24);
+
+        let options = BoxenOptions {
+            fullscreen: Some(crate::options::FullscreenMode::Auto),
+            padding: Spacing::from(1), // 6 horizontal, 2 vertical
+            ..Default::default()
+        };
+
+        let result = boxen("Small content", Some(options)).unwrap();
+
+        // Should expand to fill terminal height
+        assert_eq!(result.lines().count(), terminal_height);
+
+        // Each line should be the terminal width
+        let terminal_width = crate::terminal::get_terminal_width();
+        for line in result.lines() {
+            assert_eq!(text_width(line), terminal_width);
+        }
     }
 
     #[test]
