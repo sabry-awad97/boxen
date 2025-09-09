@@ -14,116 +14,127 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
-  test:
-    name: Test Suite
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest]
-        rust: [stable, beta, 1.85.0] # MSRV
-
+  # All jobs disabled to reduce GitHub Actions usage
+  # Uncomment jobs below when ready to re-enable CI
+  
+  placeholder:
+    name: CI Disabled
+    runs-on: ubuntu-latest
+    if: false  # This job will never run
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Placeholder
+        run: echo "CI is disabled"
+  
+  # test:
+  #   name: Test Suite
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [windows-latest]
+  #       rust: [stable, beta, 1.85.0] # MSRV
+  #
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #
+  #   - name: Install Rust toolchain
+  #     uses: dtolnay/rust-toolchain@master
+  #     with:
+  #       toolchain: ${{ matrix.rust }}
+  #       components: rustfmt, clippy
+  #
+  #   - name: Cache dependencies
+  #     uses: Swatinem/rust-cache@v2
+  #     with:
+  #       key: ${{ matrix.os }}-${{ matrix.rust }}
+  #
+  #   - name: Check formatting
+  #     if: matrix.rust == 'stable' && matrix.os == 'windows-latest'
+  #     run: cargo fmt --all -- --check
+  #
+  #   - name: Run clippy
+  #     if: matrix.rust == 'stable'
+  #     run: cargo clippy --all-targets --all-features -- -D warnings
+  #
+  #   - name: Build
+  #     run: cargo build --verbose --all-features
+  #
+  #   - name: Run tests
+  #     run: cargo test --verbose --all-features
+  #
+  #   - name: Run examples
+  #     if: matrix.rust == 'stable'
+  #     run: |
+  #       cargo run --example basic_box
+  #       cargo run --example color_demo
+  #       cargo run --example custom_styles
+  #
+  #   - name: Test documentation
+  #     if: matrix.rust == 'stable' && matrix.os == 'windows-latest'
+  #     run: cargo doc --no-deps --all-features
 
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: ${{ matrix.rust }}
-        components: rustfmt, clippy
+  # coverage:
+  #   name: Code Coverage
+  #   runs-on: windows-latest
+  #   if: github.event_name == 'push' || github.event_name == 'pull_request'
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #
+  #   - name: Install Rust toolchain
+  #     uses: dtolnay/rust-toolchain@stable
+  #
+  #   - name: Cache dependencies
+  #     uses: Swatinem/rust-cache@v2
+  #
+  #   - name: Install cargo-tarpaulin
+  #     run: cargo install cargo-tarpaulin
+  #
+  #   - name: Generate code coverage
+  #     run: cargo tarpaulin --verbose --all-features --workspace --timeout 120 --out xml
+  #
+  #   - name: Upload coverage to Codecov
+  #     uses: codecov/codecov-action@v4
+  #     with:
+  #       file: ./cobertura.xml
+  #       fail_ci_if_error: false
 
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
-      with:
-        key: ${{ matrix.os }}-${{ matrix.rust }}
+  # check-dependencies:
+  #   name: Check Dependencies
+  #   runs-on: windows-latest
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #
+  #   - name: Install Rust toolchain
+  #     uses: dtolnay/rust-toolchain@stable
+  #
+  #   - name: Cache dependencies
+  #     uses: Swatinem/rust-cache@v2
+  #
+  #   - name: Check for unused dependencies
+  #     run: |
+  #       cargo install cargo-machete
+  #       cargo machete
+  #
+  #   - name: Check dependency tree
+  #     run: cargo tree --duplicates
 
-    - name: Check formatting
-      if: matrix.rust == 'stable' && matrix.os == 'windows-latest'
-      run: cargo fmt --all -- --check
-
-    - name: Run clippy
-      if: matrix.rust == 'stable'
-      run: cargo clippy --all-targets --all-features -- -D warnings
-
-    - name: Build
-      run: cargo build --verbose --all-features
-
-    - name: Run tests
-      run: cargo test --verbose --all-features
-
-    - name: Run examples
-      if: matrix.rust == 'stable'
-      run: |
-        cargo run --example basic_box
-        cargo run --example color_demo
-        cargo run --example custom_styles
-
-    - name: Test documentation
-      if: matrix.rust == 'stable' && matrix.os == 'windows-latest'
-      run: cargo doc --no-deps --all-features
-
-  coverage:
-    name: Code Coverage
-    runs-on: windows-latest
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
-
-    - name: Install cargo-tarpaulin
-      run: cargo install cargo-tarpaulin
-
-    - name: Generate code coverage
-      run: cargo tarpaulin --verbose --all-features --workspace --timeout 120 --out xml
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./cobertura.xml
-        fail_ci_if_error: false
-
-  check-dependencies:
-    name: Check Dependencies
-    runs-on: windows-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
-
-    - name: Check for unused dependencies
-      run: |
-        cargo install cargo-machete
-        cargo machete
-
-    - name: Check dependency tree
-      run: cargo tree --duplicates
-
-  msrv-check:
-    name: MSRV Check
-    runs-on: windows-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Install MSRV toolchain
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
-
-    - name: Check MSRV compatibility
-      run: cargo check --all-features
+  # msrv-check:
+  #   name: MSRV Check
+  #   runs-on: windows-latest
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #
+  #   - name: Install MSRV toolchain
+  #     uses: dtolnay/rust-toolchain@stable
+  #
+  #   - name: Cache dependencies
+  #     uses: Swatinem/rust-cache@v2
+  #
+  #   - name: Check MSRV compatibility
+  #     run: cargo check --all-features
