@@ -20,7 +20,7 @@ textwrap = "0.16.2"
 thiserror = "2.0.16"
 
 [dev-dependencies]
-chrono = "0.4.41"
+chrono = "0.4.43"
 ctrlc = "3.5.0"
 
 # Performance optimizations
