@@ -4,9 +4,9 @@ This directory contains performance and allocation benchmarks for the boxen libr
 
 ## Available Benchmarks
 
-### allocation_benchmarks.rs
+### 1. allocation_benchmarks.rs (Custom Harness)
 
-Comprehensive benchmark suite that measures both performance and memory allocation patterns.
+Comprehensive benchmark suite that measures both performance and memory allocation patterns using a custom global allocator.
 
 **Features**:
 
@@ -19,7 +19,81 @@ Comprehensive benchmark suite that measures both performance and memory allocati
   - Allocations per operation
   - Bytes allocated per operation
 
-**Benchmark Scenarios**:
+**Run with**:
+
+```bash
+cargo bench --bench allocation_benchmarks
+```
+
+**Documentation**: See this README for details.
+
+### 2. criterion_benchmarks.rs (Criterion Framework)
+
+Sophisticated statistical benchmarks using the Criterion framework for regression detection and performance analysis.
+
+**Features**:
+
+- Statistical analysis with confidence intervals
+- Automatic regression detection
+- HTML reports with plots and graphs
+- Comparison across runs
+- 5 benchmark groups covering all aspects of the library
+
+**Run with**:
+
+```bash
+cargo bench --bench criterion_benchmarks
+```
+
+**Documentation**: See [CRITERION_README.md](./CRITERION_README.md) for detailed usage.
+
+**CI/CD Integration**: See [CI_INTEGRATION.md](./CI_INTEGRATION.md) for automated testing.
+
+## Quick Start
+
+### Run All Benchmarks
+
+```bash
+# Run custom allocation benchmarks
+cargo bench --bench allocation_benchmarks
+
+# Run criterion benchmarks
+cargo bench --bench criterion_benchmarks
+```
+
+### Run Specific Benchmark Groups
+
+```bash
+# Run only basic criterion benchmarks
+cargo bench --bench criterion_benchmarks -- basic_benches
+
+# Run only unicode benchmarks
+cargo bench --bench criterion_benchmarks -- unicode
+```
+
+### Quick Test (CI Mode)
+
+```bash
+# Fast test mode for CI/CD
+cargo bench --bench criterion_benchmarks -- --test
+```
+
+## Benchmark Comparison
+
+| Feature                  | Allocation Benchmarks | Criterion Benchmarks   |
+| ------------------------ | --------------------- | ---------------------- |
+| **Framework**            | Custom harness        | Criterion.rs           |
+| **Allocation Tracking**  | ✅ Detailed           | ❌ Not included        |
+| **Statistical Analysis** | ❌ Basic              | ✅ Advanced            |
+| **Regression Detection** | ❌ Manual             | ✅ Automatic           |
+| **HTML Reports**         | ❌ No                 | ✅ Yes                 |
+| **CI/CD Integration**    | ⚠️ Manual             | ✅ Built-in            |
+| **Execution Time**       | ~30 seconds           | ~10-20 minutes         |
+| **Best For**             | Memory optimization   | Performance regression |
+
+## Allocation Benchmarks Details
+
+### Benchmark Scenarios
 
 1. Simple Box (80x24) - Basic rendering
 2. Box with Options - Custom configuration
@@ -31,26 +105,6 @@ Comprehensive benchmark suite that measures both performance and memory allocati
 8. Batch Rendering - 100 boxes in sequence
 9. Border Style Variations - Different border styles
 10. Text Alignment Variations - Left, center, right alignment
-
-## Running Benchmarks
-
-### Run all benchmarks
-
-```bash
-cargo bench --bench allocation_benchmarks
-```
-
-### Run with output to file
-
-```bash
-cargo bench --bench allocation_benchmarks > benchmark_results.txt
-```
-
-### Build without running
-
-```bash
-cargo bench --bench allocation_benchmarks --no-run
-```
 
 ## Understanding Results
 

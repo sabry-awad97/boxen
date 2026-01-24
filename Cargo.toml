@@ -22,9 +22,14 @@ thiserror = "2.0.18"
 [dev-dependencies]
 chrono = "0.4.43"
 ctrlc = "3.5.1"
+criterion = { version = "0.8.1", features = ["html_reports"] }
 
 [[bench]]
 name = "allocation_benchmarks"
+harness = false
+
+[[bench]]
+name = "criterion_benchmarks"
 harness = false
 
 # Performance optimizations
