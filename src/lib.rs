@@ -101,6 +101,7 @@ pub mod borders;
 pub mod boxen;
 pub mod color;
 pub mod error;
+pub mod memory;
 pub mod options;
 pub mod terminal;
 pub mod text;

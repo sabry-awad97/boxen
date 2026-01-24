@@ -111,7 +111,7 @@ fn benchmark_complex_configuration() {
         let start = Instant::now();
 
         for i in 0..iter_count {
-            let result = builder()
+            if let Err(err) = builder()
                 .border_style(BorderStyle::Double)
                 .padding(2)
                 .margin(1)
@@ -123,10 +123,9 @@ fn benchmark_complex_configuration() {
                 .border_color("red")
                 .background_color("#ffffff")
                 .dim_border(true)
-                .render("This is a complex configuration test\nwith multiple features enabled\nto measure performance impact");
-
-            if result.is_err() {
-                println!("  Error in iteration {}: {}", i, result.unwrap_err());
+                .render("This is a complex configuration test\nwith multiple features enabled\nto measure performance impact")
+            {
+                println!("  Error in iteration {}: {}", i, err);
                 break;
             }
         }
@@ -217,9 +216,8 @@ fn benchmark_repeated_rendering() {
         let start = Instant::now();
 
         for _ in 0..100 {
-            let result = boxen(content, Some(config.clone()));
-            if result.is_err() {
-                println!("  {}: Error - {}", desc, result.unwrap_err());
+            if let Err(err) = boxen(content, Some(config.clone())) {
+                println!("  {}: Error - {}", desc, err);
                 break;
             }
         }

@@ -1,4 +1,5 @@
 use crate::error::BoxenError;
+use crate::memory::pool::with_pooled_string;
 use crate::text::measurement::{strip_ansi_codes, text_width};
 use textwrap::{Options, WordSeparator, WordSplitter, wrap};
 
@@ -65,56 +66,68 @@ pub fn wrap_line(line: &str, width: usize) -> Vec<String> {
 /// Wrap a line containing ANSI escape sequences
 fn wrap_line_with_ansi(line: &str, width: usize) -> Vec<String> {
     let mut result = Vec::new();
-    let mut current_line = String::new();
-    let mut current_width = 0;
-    let mut chars = line.chars().peekable();
-    let mut active_styles = String::new(); // Track active ANSI styles
 
-    while let Some(ch) = chars.next() {
-        if ch == '\x1b' && chars.peek() == Some(&'[') {
-            // Handle ANSI escape sequence
-            let mut escape_seq = String::from("\x1b");
-            escape_seq.push(chars.next().unwrap()); // consume '['
+    with_pooled_string(|current_line| {
+        with_pooled_string(|active_styles| {
+            // Reserve capacity for typical line length
+            current_line.reserve(width);
+            active_styles.reserve(50); // Typical ANSI sequence length
 
-            // Collect the full escape sequence
-            for escape_char in chars.by_ref() {
-                escape_seq.push(escape_char);
-                if escape_char.is_ascii_alphabetic() {
-                    break;
-                }
-            }
+            let mut current_width = 0;
+            let mut chars = line.chars().peekable();
 
-            // Add to current line without affecting width
-            current_line.push_str(&escape_seq);
+            while let Some(ch) = chars.next() {
+                if ch == '\x1b' && chars.peek() == Some(&'[') {
+                    // Handle ANSI escape sequence - use pooled buffer
+                    with_pooled_string(|escape_seq| {
+                        // Reserve capacity for typical ANSI escape sequence (e.g., "\x1b[31m" = 5 chars)
+                        escape_seq.reserve(20); // Reserve for longer sequences like "\x1b[1;32m"
+                        escape_seq.push('\x1b');
+                        escape_seq.push(chars.next().unwrap()); // consume '['
 
-            // Track styles for line continuation
-            if escape_seq.ends_with('m') {
-                if escape_seq == "\x1b[0m" {
-                    active_styles.clear(); // Reset
+                        // Collect the full escape sequence
+                        for escape_char in chars.by_ref() {
+                            escape_seq.push(escape_char);
+                            if escape_char.is_ascii_alphabetic() {
+                                break;
+                            }
+                        }
+
+                        // Add to current line without affecting width
+                        current_line.push_str(escape_seq.as_str());
+
+                        // Track styles for line continuation
+                        if escape_seq.ends_with("m") {
+                            if escape_seq.as_str() == "\x1b[0m" {
+                                active_styles.clear(); // Reset
+                            } else {
+                                active_styles.push_str(escape_seq.as_str());
+                            }
+                        }
+                    });
                 } else {
-                    active_styles.push_str(&escape_seq);
+                    // Regular character
+                    let char_width = unicode_width::UnicodeWidthChar::width(ch).unwrap_or(0);
+
+                    if current_width + char_width > width && !current_line.is_empty() {
+                        // Need to wrap - finish current line and start new one
+                        result.push(current_line.as_str().to_string());
+                        current_line.clear();
+                        current_line.push_str(active_styles.as_str()); // Start new line with active styles
+                        current_width = 0;
+                    }
+
+                    current_line.push(ch);
+                    current_width += char_width;
                 }
             }
-        } else {
-            // Regular character
-            let char_width = unicode_width::UnicodeWidthChar::width(ch).unwrap_or(0);
 
-            if current_width + char_width > width && !current_line.is_empty() {
-                // Need to wrap - finish current line and start new one
-                result.push(current_line);
-                current_line = active_styles.clone(); // Start new line with active styles
-                current_width = 0;
+            // Add the last line if it has content
+            if !current_line.is_empty() || result.is_empty() {
+                result.push(current_line.as_str().to_string());
             }
-
-            current_line.push(ch);
-            current_width += char_width;
-        }
-    }
-
-    // Add the last line if it has content
-    if !current_line.is_empty() || result.is_empty() {
-        result.push(current_line);
-    }
+        });
+    });
 
     result
 }

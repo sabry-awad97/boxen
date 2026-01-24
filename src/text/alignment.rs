@@ -1,4 +1,5 @@
 /// Text alignment functionality
+use crate::memory::pool::with_pooled_string;
 use crate::options::{Spacing, TextAlignment};
 use crate::text::measurement::text_width;
 
@@ -16,28 +17,31 @@ pub fn align_line(line: &str, alignment: TextAlignment, width: usize) -> String 
 
     let padding_needed = width - line_width;
 
-    // Pre-allocate string with exact capacity needed
-    let mut result = String::with_capacity(width);
+    // Use pooled buffer for result
+    with_pooled_string(|result| {
+        // Reserve capacity upfront to avoid reallocations
+        result.reserve(width);
 
-    match alignment {
-        TextAlignment::Left => {
-            result.push_str(line);
-            result.extend(std::iter::repeat_n(' ', padding_needed));
+        match alignment {
+            TextAlignment::Left => {
+                result.push_str(line);
+                result.extend(std::iter::repeat_n(' ', padding_needed));
+            }
+            TextAlignment::Right => {
+                result.extend(std::iter::repeat_n(' ', padding_needed));
+                result.push_str(line);
+            }
+            TextAlignment::Center => {
+                let left_padding = padding_needed / 2;
+                let right_padding = padding_needed - left_padding;
+                result.extend(std::iter::repeat_n(' ', left_padding));
+                result.push_str(line);
+                result.extend(std::iter::repeat_n(' ', right_padding));
+            }
         }
-        TextAlignment::Right => {
-            result.extend(std::iter::repeat_n(' ', padding_needed));
-            result.push_str(line);
-        }
-        TextAlignment::Center => {
-            let left_padding = padding_needed / 2;
-            let right_padding = padding_needed - left_padding;
-            result.extend(std::iter::repeat_n(' ', left_padding));
-            result.push_str(line);
-            result.extend(std::iter::repeat_n(' ', right_padding));
-        }
-    }
 
-    result
+        result.as_str().to_string()
+    })
 }
 
 /// Align multiple lines of text within a given width.

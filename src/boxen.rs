@@ -302,10 +302,12 @@
 
 use crate::color::{apply_color_with_dim, apply_colors};
 use crate::error::BoxenResult;
+use crate::memory::pool::with_pooled_string;
 use crate::options::{BoxenOptions, TitleAlignment};
 use crate::text::text_width;
 use crate::text::wrapping::wrap_text;
 use std::fmt::Write;
+use unicode_width::UnicodeWidthChar;
 
 /// Main boxen function that renders text within a styled box.
 ///
@@ -594,33 +596,39 @@ fn render_top_border(
     options: &BoxenOptions,
     inner_width: usize,
 ) -> BoxenResult<String> {
-    let mut border = String::new();
+    with_pooled_string(|border| {
+        // Reserve capacity upfront
+        border.reserve(inner_width + 2);
 
-    // Start with left corner
-    border.push(border_chars.top_left);
+        // Start with left corner
+        border.push(border_chars.top_left);
 
-    if let Some(title) = &options.title {
-        render_top_border_with_title(&mut border, title, border_chars, options, inner_width)?;
-    } else {
-        // No title - just fill with horizontal border chars
-        for _ in 0..inner_width {
-            border.push(border_chars.top);
+        if let Some(title) = &options.title {
+            render_top_border_with_title(border, title, border_chars, options, inner_width)?;
+        } else {
+            // No title - just fill with horizontal border chars
+            for _ in 0..inner_width {
+                border.push(border_chars.top);
+            }
         }
-    }
 
-    // End with right corner
-    border.push(border_chars.top_right);
+        // End with right corner
+        border.push(border_chars.top_right);
 
-    // Apply border color and dim styling
-    let styled_border =
-        apply_color_with_dim(&border, options.border_color.as_ref(), options.dim_border)?;
+        // Apply border color and dim styling
+        let styled_border = apply_color_with_dim(
+            border.as_str(),
+            options.border_color.as_ref(),
+            options.dim_border,
+        )?;
 
-    Ok(styled_border.to_string())
+        Ok(styled_border.to_string())
+    })
 }
 
 /// Render top border with embedded title
 fn render_top_border_with_title(
-    border: &mut String,
+    border: &mut impl Write,
     title: &str,
     border_chars: &crate::options::BorderChars,
     options: &BoxenOptions,
@@ -630,18 +638,21 @@ fn render_top_border_with_title(
 
     // If title is too long, truncate it
     let effective_title = if title_width > inner_width {
-        // Truncate title to fit
-        let mut truncated = String::new();
-        let mut current_width = 0;
-        for ch in title.chars() {
-            let char_width = text_width(&ch.to_string());
-            if current_width + char_width > inner_width {
-                break;
+        // Truncate title to fit - use pooled buffer for truncation
+        with_pooled_string(|truncated| {
+            truncated.reserve(inner_width);
+            let mut current_width = 0;
+            for ch in title.chars() {
+                // Calculate char width directly without allocation
+                let char_width = UnicodeWidthChar::width(ch).unwrap_or(1);
+                if current_width + char_width > inner_width {
+                    break;
+                }
+                truncated.push(ch);
+                current_width += char_width;
             }
-            truncated.push(ch);
-            current_width += char_width;
-        }
-        truncated
+            truncated.as_str().to_string()
+        })
     } else {
         title.to_string()
     };
@@ -651,27 +662,62 @@ fn render_top_border_with_title(
 
     match options.title_alignment {
         TitleAlignment::Left => {
-            border.push_str(&effective_title);
+            write!(border, "{}", effective_title).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write title: {}", e),
+                    vec![],
+                )
+            })?;
             for _ in 0..remaining_width {
-                border.push(border_chars.top);
+                write!(border, "{}", border_chars.top).map_err(|e| {
+                    crate::error::BoxenError::rendering_error(
+                        format!("Failed to write border: {}", e),
+                        vec![],
+                    )
+                })?;
             }
         }
         TitleAlignment::Right => {
             for _ in 0..remaining_width {
-                border.push(border_chars.top);
+                write!(border, "{}", border_chars.top).map_err(|e| {
+                    crate::error::BoxenError::rendering_error(
+                        format!("Failed to write border: {}", e),
+                        vec![],
+                    )
+                })?;
             }
-            border.push_str(&effective_title);
+            write!(border, "{}", effective_title).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write title: {}", e),
+                    vec![],
+                )
+            })?;
         }
         TitleAlignment::Center => {
             let left_padding = remaining_width / 2;
             let right_padding = remaining_width - left_padding;
 
             for _ in 0..left_padding {
-                border.push(border_chars.top);
+                write!(border, "{}", border_chars.top).map_err(|e| {
+                    crate::error::BoxenError::rendering_error(
+                        format!("Failed to write border: {}", e),
+                        vec![],
+                    )
+                })?;
             }
-            border.push_str(&effective_title);
+            write!(border, "{}", effective_title).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write title: {}", e),
+                    vec![],
+                )
+            })?;
             for _ in 0..right_padding {
-                border.push(border_chars.top);
+                write!(border, "{}", border_chars.top).map_err(|e| {
+                    crate::error::BoxenError::rendering_error(
+                        format!("Failed to write border: {}", e),
+                        vec![],
+                    )
+                })?;
             }
         }
     }
@@ -685,19 +731,25 @@ fn render_bottom_border(
     inner_width: usize,
     options: &BoxenOptions,
 ) -> BoxenResult<String> {
-    let mut border = String::new();
+    with_pooled_string(|border| {
+        // Reserve capacity upfront
+        border.reserve(inner_width + 2);
 
-    border.push(border_chars.bottom_left);
-    for _ in 0..inner_width {
-        border.push(border_chars.bottom);
-    }
-    border.push(border_chars.bottom_right);
+        border.push(border_chars.bottom_left);
+        for _ in 0..inner_width {
+            border.push(border_chars.bottom);
+        }
+        border.push(border_chars.bottom_right);
 
-    // Apply border color and dim styling
-    let styled_border =
-        apply_color_with_dim(&border, options.border_color.as_ref(), options.dim_border)?;
+        // Apply border color and dim styling
+        let styled_border = apply_color_with_dim(
+            border.as_str(),
+            options.border_color.as_ref(),
+            options.dim_border,
+        )?;
 
-    Ok(styled_border.to_string())
+        Ok(styled_border.to_string())
+    })
 }
 
 /// Render content lines with left and right borders and padding
@@ -755,12 +807,21 @@ fn render_content_without_borders(
 
     // Render content lines with padding
     for line in &content.lines {
-        let padded_line = format!(
-            "{}{}{}",
-            " ".repeat(options.padding.left),
-            line,
-            " ".repeat(options.padding.right)
-        );
+        let padded_line = with_pooled_string(|buffer| {
+            // Reserve capacity upfront
+            buffer.reserve(options.padding.left + line.len() + options.padding.right);
+
+            // Build padded line using write! macro
+            for _ in 0..options.padding.left {
+                buffer.push(' ');
+            }
+            buffer.push_str(line);
+            for _ in 0..options.padding.right {
+                buffer.push(' ');
+            }
+
+            buffer.as_str().to_string()
+        });
         let styled_line = if let Some(bg_color) = &options.background_color {
             apply_colors(&padded_line, None, Some(bg_color))?.to_string()
         } else {
@@ -790,50 +851,59 @@ fn render_content_line(
     options: &BoxenOptions,
     inner_width: usize,
 ) -> BoxenResult<String> {
-    // Build the content area (padding + content)
-    let mut content_area = String::new();
+    with_pooled_string(|content_area| {
+        // Reserve capacity upfront for the entire line
+        content_area.reserve(inner_width);
 
-    // Left padding
-    for _ in 0..options.padding.left {
-        content_area.push(' ');
-    }
+        // Left padding
+        for _ in 0..options.padding.left {
+            content_area.push(' ');
+        }
 
-    // Content
-    content_area.push_str(line);
+        // Content
+        content_area.push_str(line);
 
-    // Right padding (fill to inner width)
-    let current_content_width = text_width(&content_area);
-    let remaining_width = inner_width - current_content_width;
-    for _ in 0..remaining_width {
-        content_area.push(' ');
-    }
+        // Right padding (fill to inner width)
+        let current_content_width = text_width(content_area.as_str());
+        let remaining_width = inner_width - current_content_width;
+        for _ in 0..remaining_width {
+            content_area.push(' ');
+        }
 
-    // Apply background color to content area if specified
-    let styled_content = if let Some(bg_color) = &options.background_color {
-        apply_colors(&content_area, None, Some(bg_color))?.to_string()
-    } else {
-        content_area
-    };
+        // Apply background color to content area if specified
+        let styled_content = if let Some(bg_color) = &options.background_color {
+            apply_colors(content_area.as_str(), None, Some(bg_color))?.to_string()
+        } else {
+            content_area.as_str().to_string()
+        };
 
-    // Build borders separately and apply border styling
-    let left_border = apply_color_with_dim(
-        &border_chars.left.to_string(),
-        options.border_color.as_ref(),
-        options.dim_border,
-    )?
-    .to_string();
+        // Build borders separately and apply border styling
+        let left_border = apply_color_with_dim(
+            &border_chars.left.to_string(),
+            options.border_color.as_ref(),
+            options.dim_border,
+        )?
+        .to_string();
 
-    let right_border = apply_color_with_dim(
-        &border_chars.right.to_string(),
-        options.border_color.as_ref(),
-        options.dim_border,
-    )?
-    .to_string();
+        let right_border = apply_color_with_dim(
+            &border_chars.right.to_string(),
+            options.border_color.as_ref(),
+            options.dim_border,
+        )?
+        .to_string();
 
-    // Combine borders and content
-    let content_line = format!("{}{}{}", left_border, styled_content, right_border);
-
-    Ok(content_line)
+        // Combine borders and content using write! macro with pooled buffer
+        with_pooled_string(|result| {
+            result.reserve(left_border.len() + styled_content.len() + right_border.len());
+            write!(result, "{}{}{}", left_border, styled_content, right_border).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write content line: {}", e),
+                    vec![],
+                )
+            })?;
+            Ok(result.as_str().to_string())
+        })
+    })
 }
 
 /// Render an empty line with borders and padding (for top/bottom padding)
@@ -842,35 +912,49 @@ fn render_padded_empty_line(
     inner_width: usize,
     options: &BoxenOptions,
 ) -> BoxenResult<String> {
-    // Build the content area (all spaces)
-    let content_area = " ".repeat(inner_width);
+    with_pooled_string(|content_area| {
+        // Reserve capacity upfront
+        content_area.reserve(inner_width);
 
-    // Apply background color to content area if specified
-    let styled_content = if let Some(bg_color) = &options.background_color {
-        apply_colors(&content_area, None, Some(bg_color))?.to_string()
-    } else {
-        content_area
-    };
+        // Build the content area (all spaces)
+        for _ in 0..inner_width {
+            content_area.push(' ');
+        }
 
-    // Build borders separately and apply border styling
-    let left_border = apply_color_with_dim(
-        &border_chars.left.to_string(),
-        options.border_color.as_ref(),
-        options.dim_border,
-    )?
-    .to_string();
+        // Apply background color to content area if specified
+        let styled_content = if let Some(bg_color) = &options.background_color {
+            apply_colors(content_area.as_str(), None, Some(bg_color))?.to_string()
+        } else {
+            content_area.as_str().to_string()
+        };
 
-    let right_border = apply_color_with_dim(
-        &border_chars.right.to_string(),
-        options.border_color.as_ref(),
-        options.dim_border,
-    )?
-    .to_string();
+        // Build borders separately and apply border styling
+        let left_border = apply_color_with_dim(
+            &border_chars.left.to_string(),
+            options.border_color.as_ref(),
+            options.dim_border,
+        )?
+        .to_string();
 
-    // Combine borders and content
-    let line = format!("{}{}{}", left_border, styled_content, right_border);
+        let right_border = apply_color_with_dim(
+            &border_chars.right.to_string(),
+            options.border_color.as_ref(),
+            options.dim_border,
+        )?
+        .to_string();
 
-    Ok(line)
+        // Combine borders and content using write! macro with pooled buffer
+        with_pooled_string(|result| {
+            result.reserve(left_border.len() + styled_content.len() + right_border.len());
+            write!(result, "{}{}{}", left_border, styled_content, right_border).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write padded line: {}", e),
+                    vec![],
+                )
+            })?;
+            Ok(result.as_str().to_string())
+        })
+    })
 }
 
 /// Render title without border (for BorderStyle::None)
@@ -881,20 +965,22 @@ fn render_title_without_border(
 ) -> BoxenResult<String> {
     let title_width = text_width(title);
 
-    // If title is too long, truncate it
+    // If title is too long, truncate it - use pooled buffer for pre-allocation
     let effective_title = if title_width > inner_width {
-        // Truncate title to fit
-        let mut truncated = String::new();
-        let mut current_width = 0;
-        for ch in title.chars() {
-            let char_width = text_width(&ch.to_string());
-            if current_width + char_width > inner_width {
-                break;
+        with_pooled_string(|truncated| {
+            truncated.reserve(inner_width);
+            let mut current_width = 0;
+            for ch in title.chars() {
+                // Calculate char width directly without allocation
+                let char_width = UnicodeWidthChar::width(ch).unwrap_or(1);
+                if current_width + char_width > inner_width {
+                    break;
+                }
+                truncated.push(ch);
+                current_width += char_width;
             }
-            truncated.push(ch);
-            current_width += char_width;
-        }
-        truncated
+            truncated.as_str().to_string()
+        })
     } else {
         title.to_string()
     };
@@ -902,24 +988,50 @@ fn render_title_without_border(
     let effective_title_width = text_width(&effective_title);
     let remaining_width = inner_width - effective_title_width;
 
-    let title_line = match options.title_alignment {
-        TitleAlignment::Left => {
-            format!("{}{}", effective_title, " ".repeat(remaining_width))
+    let title_line = with_pooled_string(|buffer| {
+        buffer.reserve(inner_width);
+        match options.title_alignment {
+            TitleAlignment::Left => {
+                write!(buffer, "{}", effective_title).map_err(|e| {
+                    crate::error::BoxenError::rendering_error(
+                        format!("Failed to write title: {}", e),
+                        vec![],
+                    )
+                })?;
+                for _ in 0..remaining_width {
+                    buffer.push(' ');
+                }
+            }
+            TitleAlignment::Right => {
+                for _ in 0..remaining_width {
+                    buffer.push(' ');
+                }
+                write!(buffer, "{}", effective_title).map_err(|e| {
+                    crate::error::BoxenError::rendering_error(
+                        format!("Failed to write title: {}", e),
+                        vec![],
+                    )
+                })?;
+            }
+            TitleAlignment::Center => {
+                let left_padding = remaining_width / 2;
+                let right_padding = remaining_width - left_padding;
+                for _ in 0..left_padding {
+                    buffer.push(' ');
+                }
+                write!(buffer, "{}", effective_title).map_err(|e| {
+                    crate::error::BoxenError::rendering_error(
+                        format!("Failed to write title: {}", e),
+                        vec![],
+                    )
+                })?;
+                for _ in 0..right_padding {
+                    buffer.push(' ');
+                }
+            }
         }
-        TitleAlignment::Right => {
-            format!("{}{}", " ".repeat(remaining_width), effective_title)
-        }
-        TitleAlignment::Center => {
-            let left_padding = remaining_width / 2;
-            let right_padding = remaining_width - left_padding;
-            format!(
-                "{}{}{}",
-                " ".repeat(left_padding),
-                effective_title,
-                " ".repeat(right_padding)
-            )
-        }
-    };
+        Ok::<String, crate::error::BoxenError>(buffer.as_str().to_string())
+    })?;
 
     // Apply background color if specified
     let styled_title = if let Some(bg_color) = &options.background_color {
