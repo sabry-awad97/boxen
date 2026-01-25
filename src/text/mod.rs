@@ -227,6 +227,8 @@
 pub mod alignment;
 /// Text measurement and width calculation
 pub mod measurement;
+/// Unicode width caching for performance
+pub mod width_cache;
 /// Text wrapping and line breaking
 pub mod wrapping;
 
@@ -235,4 +237,8 @@ pub use alignment::{
     calculate_content_width, process_text_alignment, process_text_with_height_constraints,
 };
 pub use measurement::*;
+pub use width_cache::cached_unicode_width;
 pub use wrapping::*;
+
+#[cfg(feature = "width-cache")]
+pub use width_cache::{cache_stats, clear_cache, set_cache_size};

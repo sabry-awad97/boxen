@@ -18,11 +18,21 @@ colored = "3.1.1"
 unicode-width = "0.2.2"
 textwrap = "0.16.2"
 thiserror = "2.0.18"
+lru = { version = "0.12", optional = true }
+ahash = { version = "0.8", optional = true }
+signal-hook = { version = "0.3", optional = true }
+dhat = { version = "0.3", optional = true }
 
 [dev-dependencies]
 chrono = "0.4.43"
 ctrlc = "3.5.1"
 criterion = { version = "0.8.1", features = ["html_reports"] }
+
+[features]
+default = []
+dhat-heap = ["dhat"]
+width-cache = ["lru", "ahash"]
+terminal-cache = ["signal-hook"]
 
 [[bench]]
 name = "allocation_benchmarks"

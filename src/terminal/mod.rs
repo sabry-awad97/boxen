@@ -185,5 +185,13 @@
 //! making testing and development predictable across different environments.
 
 pub mod dimensions;
+/// Terminal size caching for performance
+pub mod size_cache;
 
 pub use dimensions::*;
+pub use size_cache::cached_terminal_size;
+
+#[cfg(feature = "terminal-cache")]
+pub use size_cache::{
+    cache_stats, clear_cache, invalidate_cache, set_cache_ttl, setup_sigwinch_handler,
+};

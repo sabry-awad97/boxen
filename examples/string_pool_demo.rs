@@ -37,8 +37,8 @@ fn main() {
         for _ in 0..20 {
             write!(buffer, "─").unwrap();
         }
-        write!(buffer, "┐\n").unwrap();
-        write!(buffer, "│ Pooled String Demo │\n").unwrap();
+        writeln!(buffer, "┐").unwrap();
+        writeln!(buffer, "│ Pooled String Demo │").unwrap();
         write!(buffer, "└").unwrap();
         for _ in 0..20 {
             write!(buffer, "─").unwrap();
