@@ -98,11 +98,11 @@
 //! and helpful recommendations for fixing common issues.
 
 pub mod borders;
-pub mod boxen;
 pub mod color;
 pub mod error;
 pub mod memory;
 pub mod options;
+pub mod render;
 pub mod terminal;
 pub mod text;
 pub mod validation;
@@ -111,12 +111,12 @@ pub mod validation;
 mod error_tests;
 
 // Re-export main types and functions for public API
-pub use boxen::boxen;
 pub use error::{BoxenError, BoxenResult, ErrorRecommendation};
 pub use options::{
     BorderChars, BorderStyle, BoxenBuilder, BoxenOptions, Color, DimensionConstraints, Float,
     FullscreenMode, LayoutDimensions, Spacing, TextAlignment, TitleAlignment,
 };
+pub use render::boxen;
 pub use validation::{
     MinimumDimensions, ValidationResult, auto_adjust_options, calculate_minimum_dimensions,
     suggest_optimal_dimensions, validate_configuration,

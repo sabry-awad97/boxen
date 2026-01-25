@@ -3,7 +3,9 @@
 /// This module provides a TTL-based cache for terminal dimensions to avoid
 /// expensive system calls. The cache automatically expires after a configurable
 /// duration and can be invalidated by SIGWINCH signals on Unix systems.
+#[cfg(feature = "terminal-cache")]
 use std::cell::RefCell;
+#[cfg(feature = "terminal-cache")]
 use std::time::{Duration, Instant};
 use terminal_size::{Height, Width, terminal_size};
 
