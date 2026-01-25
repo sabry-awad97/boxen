@@ -143,7 +143,7 @@ thread_local! {
 /// # Examples
 ///
 /// ```
-/// use boxen::terminal::size_cache::cached_terminal_size;
+/// use ::boxen::terminal::size_cache::cached_terminal_size;
 ///
 /// if let Some((width, height)) = cached_terminal_size() {
 ///     println!("Terminal: {}x{}", width, height);
@@ -183,7 +183,7 @@ pub fn cached_terminal_size() -> Option<(u16, u16)> {
 /// # Examples
 ///
 /// ```
-/// use boxen::terminal::size_cache::invalidate_cache;
+/// use ::boxen::terminal::size_cache::invalidate_cache;
 ///
 /// // Manually invalidate cache after terminal resize
 /// invalidate_cache();
@@ -203,7 +203,7 @@ pub fn invalidate_cache() {
 /// # Examples
 ///
 /// ```
-/// use boxen::terminal::size_cache::cache_stats;
+/// use ::boxen::terminal::size_cache::cache_stats;
 ///
 /// let stats = cache_stats();
 /// println!("Hit rate: {:.2}%", stats.hit_rate());
@@ -234,7 +234,7 @@ pub fn clear_cache() {
 /// # Examples
 ///
 /// ```
-/// use boxen::terminal::size_cache::set_cache_ttl;
+/// use ::boxen::terminal::size_cache::set_cache_ttl;
 ///
 /// // Set cache to expire after 200ms
 /// set_cache_ttl(200);
@@ -260,7 +260,7 @@ pub fn set_cache_ttl(ttl_ms: u64) {
 /// # Examples
 ///
 /// ```no_run
-/// use boxen::terminal::size_cache::setup_sigwinch_handler;
+/// use ::boxen::terminal::size_cache::setup_sigwinch_handler;
 ///
 /// // Setup handler at application startup
 /// setup_sigwinch_handler();
@@ -307,7 +307,7 @@ pub fn setup_sigwinch_handler() {
 /// # Examples
 ///
 /// ```no_run
-/// use boxen::terminal::size_cache::setup_sigwinch_handler;
+/// use ::boxen::terminal::size_cache::setup_sigwinch_handler;
 ///
 /// // Setup handler at application startup
 /// setup_sigwinch_handler();

@@ -14,8 +14,8 @@
 //! ## Usage Examples
 //!
 //! ```rust
-//! use boxen::terminal::dimensions::{get_terminal_size, calculate_max_content_width};
-//! use boxen::BorderStyle;
+//! use ::boxen::terminal::dimensions::{get_terminal_size, calculate_max_content_width};
+//! use ::boxen::BorderStyle;
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Get terminal dimensions

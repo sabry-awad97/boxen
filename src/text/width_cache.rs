@@ -2,7 +2,6 @@
 ///
 /// This module provides an LRU cache for Unicode width calculations to avoid
 /// redundant expensive operations. The cache is thread-local for lock-free access.
-
 #[cfg(feature = "width-cache")]
 use ahash::AHasher;
 #[cfg(feature = "width-cache")]
@@ -116,7 +115,7 @@ thread_local! {
 /// # Examples
 ///
 /// ```
-/// use boxen::text::width_cache::cached_unicode_width;
+/// use ::boxen::text::width_cache::cached_unicode_width;
 ///
 /// let width = cached_unicode_width("Hello, 世界!");
 /// assert!(width > 0);

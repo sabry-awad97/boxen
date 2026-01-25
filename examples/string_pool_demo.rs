@@ -3,7 +3,7 @@
 //! This example shows how the StringPool reduces allocations by reusing
 //! string buffers across multiple operations.
 
-use boxen::memory::pool::with_pooled_string;
+use ::boxen::memory::pool::with_pooled_string;
 use std::fmt::Write;
 
 fn main() {

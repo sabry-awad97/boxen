@@ -13,7 +13,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use boxen::error::{BoxenError, ErrorRecommendation};
+//! use ::boxen::error::{BoxenError, ErrorRecommendation};
 //!
 //! # fn main() {
 //! // Handle errors with recommendations
@@ -65,7 +65,7 @@
 //! Code snippets or specific values that can be used to resolve the issue:
 //!
 //! ```rust
-//! use boxen::error::ErrorRecommendation;
+//! use ::boxen::error::ErrorRecommendation;
 //!
 //! let recommendation = ErrorRecommendation::with_auto_fix(
 //!     "Width too small".to_string(),
@@ -103,7 +103,7 @@
 //! The `BoxenError` type provides convenient constructors for common error scenarios:
 //!
 //! ```rust
-//! use boxen::error::{BoxenError, ErrorRecommendation};
+//! use ::boxen::error::{BoxenError, ErrorRecommendation};
 //!
 //! // Dimension errors with intelligent recommendations
 //! let error = BoxenError::invalid_dimensions(
@@ -145,8 +145,8 @@
 //! comprehensive input checking and intelligent error recovery:
 //!
 //! ```rust
-//! use boxen::error::BoxenError;
-//! use boxen::BoxenOptions;
+//! use ::boxen::error::BoxenError;
+//! use ::boxen::BoxenOptions;
 //!
 //! # fn main() {
 //! # let text = "sample";

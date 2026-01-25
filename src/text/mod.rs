@@ -31,8 +31,8 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use boxen::text::{wrap_text, align_lines, text_width};
-//! use boxen::TextAlignment;
+//! use ::boxen::text::{wrap_text, align_lines, text_width};
+//! use ::boxen::TextAlignment;
 //!
 //! // Wrap text to fit within width constraints
 //! let wrapped = wrap_text("Long text that needs wrapping", 20).unwrap();
@@ -56,7 +56,7 @@
 //! - **Emoji Support**: Correctly measures emoji width
 //!
 //! ```rust
-//! use boxen::text::text_width;
+//! use ::boxen::text::text_width;
 //!
 //! // Accurate width calculation for various text types
 //! assert_eq!(text_width("Hello"), 5);
@@ -68,7 +68,7 @@
 //! Analyzes text blocks to determine optimal layout:
 //!
 //! ```rust
-//! use boxen::text::{max_line_width, line_widths};
+//! use ::boxen::text::{max_line_width, line_widths};
 //!
 //! let text = "Line 1\nLonger line 2\nShort";
 //! let lines: Vec<&str> = text.lines().collect();
@@ -87,8 +87,8 @@
 //! - **Right**: Text aligned to the right edge
 //!
 //! ```rust
-//! use boxen::text::align_line;
-//! use boxen::TextAlignment;
+//! use ::boxen::text::align_line;
+//! use ::boxen::TextAlignment;
 //!
 //! let line = "Centered text";
 //! let width = 20;
@@ -102,7 +102,7 @@
 //! Controls text positioning within height constraints:
 //!
 //! ```rust
-//! use boxen::text::apply_height_constraints;
+//! use ::boxen::text::apply_height_constraints;
 //!
 //! let lines = vec!["Line 1".to_string(), "Line 2".to_string()];
 //! let constrained = apply_height_constraints(&lines, 5); // Pad to 5 lines
@@ -112,8 +112,8 @@
 //! Applies consistent spacing around text content:
 //!
 //! ```rust
-//! use boxen::text::apply_padding;
-//! use boxen::Spacing;
+//! use ::boxen::text::apply_padding;
+//! use ::boxen::Spacing;
 //!
 //! let lines = vec!["Content".to_string()];
 //! let padding = Spacing::from((1, 2, 1, 2)); // top, right, bottom, left
@@ -144,7 +144,7 @@
 //! Ensures text fits within specified bounds while maintaining readability:
 //!
 //! ```rust
-//! use boxen::text::wrap_text_preserve_words;
+//! use ::boxen::text::wrap_text_preserve_words;
 //!
 //! // Advanced wrapping with word preservation
 //! let wrapped = wrap_text_preserve_words(
@@ -178,7 +178,7 @@
 //! - **Resource Limits**: When text exceeds reasonable size limits
 //!
 //! ```rust
-//! use boxen::text::wrap_text;
+//! use ::boxen::text::wrap_text;
 //!
 //! match wrap_text("Content", 0) {
 //!     Ok(lines) => println!("Wrapped: {:?}", lines),
@@ -194,8 +194,8 @@
 //! Text is automatically processed during box rendering:
 //!
 //! ```rust
-//! use boxen::BoxenBuilder;
-//! use boxen::TextAlignment;
+//! use ::boxen::BoxenBuilder;
+//! use ::boxen::TextAlignment;
 //!
 //! // Text is automatically measured, wrapped, and aligned
 //! let result = BoxenBuilder::new()
@@ -209,8 +209,8 @@
 //! Advanced users can access text processing functions directly:
 //!
 //! ```rust
-//! use boxen::text::{wrap_text, align_lines, apply_padding};
-//! use boxen::{TextAlignment, Spacing};
+//! use ::boxen::text::{wrap_text, align_lines, apply_padding};
+//! use ::boxen::{TextAlignment, Spacing};
 //!
 //! // Manual text processing pipeline
 //! let wrapped = wrap_text("Custom processing", 20).unwrap();

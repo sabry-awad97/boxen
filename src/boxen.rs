@@ -46,7 +46,7 @@
 //!
 //! ### Custom Styling
 //! ```rust
-//! use boxen::{BoxenOptions, BorderStyle, TextAlignment, Spacing, Color};
+//! use ::boxen::{BoxenOptions, BorderStyle, TextAlignment, Spacing, Color};
 //!
 //! # fn main() {
 //! let options = BoxenOptions {
@@ -66,7 +66,7 @@
 //!
 //! ### Dynamic Sizing
 //! ```rust
-//! use boxen::{BoxenOptions, Spacing};
+//! use ::boxen::{BoxenOptions, Spacing};
 //!
 //! # fn main() {
 //! // Auto-size to terminal width with margins
@@ -83,7 +83,7 @@
 //!
 //! ### Layout Control
 //! ```rust
-//! use boxen::{BoxenOptions, Float, Spacing};
+//! use ::boxen::{BoxenOptions, Float, Spacing};
 //!
 //! # fn main() {
 //! let options = BoxenOptions {
@@ -102,7 +102,7 @@
 //!
 //! ### Multiline Content
 //! ```rust
-//! use boxen::{BoxenOptions, TextAlignment, Spacing};
+//! use ::boxen::{BoxenOptions, TextAlignment, Spacing};
 //!
 //! # fn main() {
 //! let content = "Line 1\nLine 2\nLine 3\nLonger line of text";
@@ -124,7 +124,7 @@
 //!
 //! ### Validation Errors
 //! ```rust
-//! use boxen::{BoxenOptions, Spacing};
+//! use ::boxen::{BoxenOptions, Spacing};
 //!
 //! # fn main() {
 //! let options = BoxenOptions {
@@ -152,7 +152,7 @@
 //!
 //! ### Automatic Recovery
 //! ```rust
-//! use boxen::BoxenOptions;
+//! use ::boxen::BoxenOptions;
 //!
 //! # fn main() {
 //! let options = BoxenOptions {
@@ -238,7 +238,7 @@
 //!
 //! ### Terminal Size Detection
 //! ```rust
-//! use boxen::{BoxenOptions, Spacing};
+//! use ::boxen::{BoxenOptions, Spacing};
 //!
 //! # fn main() {
 //! // Automatically respects terminal dimensions
@@ -253,7 +253,7 @@
 //!
 //! ### Color Support Detection
 //! ```rust
-//! use boxen::{BoxenOptions, Color};
+//! use ::boxen::{BoxenOptions, Color};
 //!
 //! # fn main() {
 //! let options = BoxenOptions {

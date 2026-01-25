@@ -28,8 +28,8 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use boxen::terminal::{get_terminal_width, get_terminal_height, calculate_border_width};
-//! use boxen::BorderStyle;
+//! use ::boxen::terminal::{get_terminal_width, get_terminal_height, calculate_border_width};
+//! use ::boxen::BorderStyle;
 //!
 //! // Get current terminal dimensions
 //! let width = get_terminal_width();
@@ -56,7 +56,7 @@
 //! - **Cross-Platform**: Graceful degradation ensures functionality everywhere
 //!
 //! ```rust
-//! use boxen::terminal::{get_terminal_width, get_terminal_height};
+//! use ::boxen::terminal::{get_terminal_width, get_terminal_height};
 //!
 //! // Safe terminal size detection
 //! let width = get_terminal_width();
@@ -74,8 +74,8 @@
 //! Different border styles require different amounts of horizontal space:
 //!
 //! ```rust
-//! use boxen::terminal::calculate_border_width;
-//! use boxen::BorderStyle;
+//! use ::boxen::terminal::calculate_border_width;
+//! use ::boxen::BorderStyle;
 //!
 //! // Calculate border overhead for different styles
 //! let single_width = calculate_border_width(&BorderStyle::Single); // 2 chars
@@ -87,8 +87,8 @@
 //! Determine available space for text content after accounting for borders and spacing:
 //!
 //! ```rust
-//! use boxen::terminal::{get_terminal_width, calculate_border_width};
-//! use boxen::{BorderStyle, Spacing};
+//! use ::boxen::terminal::{get_terminal_width, calculate_border_width};
+//! use ::boxen::{BorderStyle, Spacing};
 //!
 //! let terminal_width = get_terminal_width();
 //! let border_width = calculate_border_width(&BorderStyle::Single);
@@ -111,7 +111,7 @@
 //!
 //! ### Graceful Degradation
 //! ```rust
-//! use boxen::terminal::get_terminal_width;
+//! use ::boxen::terminal::get_terminal_width;
 //!
 //! // Always provides a usable width
 //! let width = get_terminal_width();
@@ -140,7 +140,7 @@
 //! Terminal dimensions are used to validate configuration options:
 //!
 //! ```rust
-//! use boxen::BoxenBuilder;
+//! use ::boxen::BoxenBuilder;
 //!
 //! // Width is validated against terminal size
 //! let result = BoxenBuilder::new()
@@ -162,7 +162,7 @@
 //!
 //! ```rust
 //! use std::thread;
-//! use boxen::terminal::get_terminal_width;
+//! use ::boxen::terminal::get_terminal_width;
 //!
 //! // Safe to call from multiple threads
 //! let handles: Vec<_> = (0..4)

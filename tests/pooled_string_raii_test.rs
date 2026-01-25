@@ -1,6 +1,6 @@
 //! Integration test to verify PooledString RAII behavior
 
-use boxen::memory::pool::with_pooled_string;
+use ::boxen::memory::pool::with_pooled_string;
 use std::fmt::Write;
 
 #[test]

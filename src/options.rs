@@ -15,7 +15,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use boxen::{BoxenBuilder, BorderStyle, TextAlignment, Color, TitleAlignment};
+//! use ::boxen::{BoxenBuilder, BorderStyle, TextAlignment, Color, TitleAlignment};
 //!
 //! // Simple box with basic styling
 //! let result = BoxenBuilder::new()
@@ -61,7 +61,7 @@
 //! The recommended way to create configurations is through the builder pattern:
 //!
 //! ```rust
-//! use boxen::{BoxenBuilder, BorderStyle, TextAlignment, Float};
+//! use ::boxen::{BoxenBuilder, BorderStyle, TextAlignment, Float};
 //!
 //! let config = BoxenBuilder::new()
 //!     .border_style(BorderStyle::Bold)
@@ -79,7 +79,7 @@
 //! For advanced use cases, you can construct `BoxenOptions` directly:
 //!
 //! ```rust
-//! use boxen::{BoxenOptions, BorderStyle, TextAlignment, Spacing, Color};
+//! use ::boxen::{BoxenOptions, BorderStyle, TextAlignment, Spacing, Color};
 //!
 //! let options = BoxenOptions {
 //!     border_style: BorderStyle::Double,
@@ -99,19 +99,19 @@
 //!
 //! ### Uniform Spacing
 //! ```rust
-//! use boxen::Spacing;
+//! use ::boxen::Spacing;
 //! let spacing = Spacing::from(2); // 2 units on all sides
 //! ```
 //!
 //! ### Individual Control
 //! ```rust
-//! use boxen::Spacing;
+//! use ::boxen::Spacing;
 //! let spacing = Spacing::from((1, 2, 1, 2)); // top, right, bottom, left
 //! ```
 //!
 //! ### Direct Field Access
 //! ```rust
-//! use boxen::Spacing;
+//! use ::boxen::Spacing;
 //! let spacing = Spacing {
 //!     top: 2,
 //!     right: 3,
@@ -126,21 +126,21 @@
 //!
 //! ### Named Colors
 //! ```rust
-//! use boxen::{BoxenBuilder, Color};
+//! use ::boxen::{BoxenBuilder, Color};
 //!
 //! let result = BoxenBuilder::new().border_color(Color::Named("red".to_string()));
 //! ```
 //!
 //! ### RGB Values
 //! ```rust
-//! use boxen::{BoxenBuilder, Color};
+//! use ::boxen::{BoxenBuilder, Color};
 //!
 //! let result = BoxenBuilder::new().border_color(Color::Rgb(255, 128, 0));
 //! ```
 //!
 //! ### Hex Strings
 //! ```rust
-//! use boxen::{BoxenBuilder, Color};
+//! use ::boxen::{BoxenBuilder, Color};
 //!
 //! let result = BoxenBuilder::new().border_color(Color::Hex("#FF8000".to_string()));
 //! ```
@@ -150,7 +150,7 @@
 //! Fullscreen mode provides several behaviors for terminal-wide boxes:
 //!
 //! ```rust
-//! use boxen::{BoxenBuilder, FullscreenMode};
+//! use ::boxen::{BoxenBuilder, FullscreenMode};
 //!
 //! // Automatically use terminal dimensions
 //! let result = BoxenBuilder::new().fullscreen(FullscreenMode::Auto);
@@ -166,7 +166,7 @@
 //! All configuration options are validated before rendering:
 //!
 //! ```rust
-//! use boxen::BoxenBuilder;
+//! use ::boxen::BoxenBuilder;
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     match BoxenBuilder::new().width(0).render("Invalid") {

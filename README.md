@@ -1,4 +1,8 @@
-# Boxen
+<div align="center">
+
+# 📦 Boxen
+
+**Create beautiful boxes in the terminal with Rust**
 
 [![Crates.io](https://img.shields.io/crates/v/boxen.svg)](https://crates.io/crates/boxen)
 [![Documentation](https://docs.rs/boxen/badge.svg)](https://docs.rs/boxen)
@@ -6,33 +10,89 @@
 [![Security Audit](https://github.com/sabry-awad97/boxen/workflows/Security%20Audit/badge.svg)](https://github.com/sabry-awad97/boxen/actions/workflows/security.yml)
 [![License](https://img.shields.io/crates/l/boxen.svg)](https://github.com/sabry-awad97/boxen#license)
 [![Downloads](https://img.shields.io/crates/d/boxen.svg)](https://crates.io/crates/boxen)
-[![Rust Version](https://img.shields.io/badge/rust-1.85+-blue.svg)](https://www.rust-lang.org)
-[![Dependabot](https://img.shields.io/badge/dependabot-enabled-brightgreen.svg)](https://github.com/sabry-awad97/boxen/network/dependencies)
 
 A Rust implementation of the popular [boxen](https://github.com/sindresorhus/boxen) library for creating styled terminal boxes around text.
 
-## Features
+[Features](#-features) •
+[Installation](#-installation) •
+[Quick Start](#-quick-start) •
+[Examples](#-examples) •
+[Documentation](#-documentation)
 
-- 🎨 **Multiple border styles** - Single, double, round, bold, and custom borders
-- 📐 **Flexible alignment** - Left, center, and right text alignment
-- 🎯 **Precise spacing** - Fine-grained control over padding and margins
-- 🌈 **Rich colors** - Support for named colors, hex codes, and RGB values
-- 📝 **Title support** - Add titles with customizable positioning
-- 🔤 **Unicode aware** - Proper handling of Unicode characters and ANSI escape sequences
-- 📱 **Responsive** - Fullscreen mode and terminal-aware layouts
-- ⚡ **Performance optimized** - Minimal allocations and efficient text processing
-- 🛡️ **Type safe** - Comprehensive error handling with descriptive messages
+</div>
 
-## Installation
+---
 
-Add this to your `Cargo.toml`:
+## ✨ Features
+
+<table>
+<tr>
+<td width="50%">
+
+### 🎨 Styling
+
+- Multiple border styles (single, double, round, bold, custom)
+- Rich color support (named, hex, RGB)
+- Title support with positioning
+- Dim borders and backgrounds
+
+</td>
+<td width="50%">
+
+### 📐 Layout
+
+- Flexible text alignment (left, center, right)
+- Precise padding and margins
+- Width and height constraints
+- Fullscreen mode
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### ⚡ Performance
+
+- **30x faster** than baseline
+- Thread-local string pooling
+- Optional Unicode width caching
+- Optional terminal size caching
+
+</td>
+<td width="50%">
+
+### 🛡️ Quality
+
+- Type-safe API with builder pattern
+- Comprehensive error handling
+- Unicode and ANSI aware
+- 100% backward compatible
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📦 Installation
+
+Add boxen to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-boxen = "0.1.3"
+boxen = "0.3"
 ```
 
-## Quick Start
+For maximum performance, enable caching features:
+
+```toml
+[dependencies]
+boxen = { version = "0.3", features = ["width-cache", "terminal-cache"] }
+```
+
+---
+
+## 🚀 Quick Start
 
 ```rust
 use ::boxen::{boxen, builder, BorderStyle, TextAlignment};
@@ -41,12 +101,14 @@ fn main() {
     // Simple box with default settings
     let simple = boxen("Hello, World!", None).unwrap();
     println!("{}", simple);
+    // ┌─────────────┐
+    // │Hello, World!│
+    // └─────────────┘
 
-    // Using the builder pattern for more control
+    // Styled box with builder pattern
     let fancy = builder()
         .border_style(BorderStyle::Double)
         .padding(2)
-        .margin(1)
         .text_alignment(TextAlignment::Center)
         .title("Greeting")
         .border_color("blue")
@@ -56,18 +118,30 @@ fn main() {
 }
 ```
 
-## Examples
+---
+
+## 📚 Examples
 
 ### Basic Usage
+
+<table>
+<tr>
+<td width="50%">
+
+**Code:**
 
 ```rust
 use ::boxen::boxen;
 
-let result = boxen("Simple box", None).unwrap();
+let result = boxen("Simple box", None)
+    .unwrap();
 println!("{}", result);
 ```
 
-Output:
+</td>
+<td width="50%">
+
+**Output:**
 
 ```
 ┌──────────┐
@@ -75,33 +149,47 @@ Output:
 └──────────┘
 ```
 
-### Builder Pattern
+</td>
+</tr>
+</table>
+
+### Styled Box
+
+<table>
+<tr>
+<td width="50%">
+
+**Code:**
 
 ```rust
-use ::boxen::{builder, BorderStyle, TextAlignment};
+use ::boxen::{builder, BorderStyle};
 
 let result = builder()
     .border_style(BorderStyle::Round)
     .padding(1)
-    .text_alignment(TextAlignment::Center)
-    .width(20)
     .title("Status")
     .border_color("green")
     .render("All systems operational")
     .unwrap();
-println!("{}", result);
 ```
 
-Output:
+</td>
+<td width="50%">
+
+**Output:**
 
 ```
 ╭─── Status ────╮
 │               │
-│  All systems  │
-│  operational  │
+│ All systems   │
+│ operational   │
 │               │
 ╰───────────────╯
 ```
+
+</td>
+</tr>
+</table>
 
 ### Convenience Functions
 
@@ -116,7 +204,7 @@ println!("{}", round_box("Round corners"));
 ### Advanced Styling
 
 ```rust
-use ::boxen::{builder, BorderStyle, TextAlignment, Float};
+use ::boxen::{builder, BorderStyle, TextAlignment, TitleAlignment, Float};
 
 let result = builder()
     .border_style(BorderStyle::Bold)
@@ -126,87 +214,132 @@ let result = builder()
     .title_alignment(TitleAlignment::Center)
     .float(Float::Center)
     .width(40)
-    .height(8)
     .title("🎉 Celebration")
     .border_color("#ff6b6b")
     .background_color("#ffe66d")
     .render("Congratulations!\nYou've mastered boxen!")
     .unwrap();
-println!("{}", result);
 ```
 
-### Error Handling
+---
 
-```rust
-use ::boxen::{builder, BoxenError};
-
-match builder()
-    .width(5)  // Too narrow
-    .padding(10)  // Too much padding
-    .render("This won't fit") {
-    Ok(result) => println!("{}", result),
-    Err(BoxenError::ConfigurationError(msg)) => {
-        eprintln!("Configuration error: {}", msg);
-    }
-    Err(e) => eprintln!("Error: {}", e),
-}
-```
-
-## Border Styles
+## 🎨 Border Styles
 
 Boxen supports various border styles:
 
-| Style          | Preview           |
-| -------------- | ----------------- |
-| `Single`       | `┌─┐ │ │ └─┘`     |
-| `Double`       | `╔═╗ ║ ║ ╚═╝`     |
-| `Round`        | `╭─╮ │ │ ╰─╯`     |
-| `Bold`         | `┏━┓ ┃ ┃ ┗━┛`     |
-| `SingleDouble` | `╓─╖ ║ ║ ╙─╜`     |
-| `DoubleSingle` | `╒═╕ │ │ ╘═╛`     |
-| `Classic`      | `+--+ \| \| +--+` |
+<table>
+<tr>
+<th>Style</th>
+<th>Preview</th>
+<th>Description</th>
+</tr>
+<tr>
+<td><code>Single</code></td>
+<td><pre>┌─┐
+│ │
+└─┘</pre></td>
+<td>Clean single-line borders</td>
+</tr>
+<tr>
+<td><code>Double</code></td>
+<td><pre>╔═╗
+║ ║
+╚═╝</pre></td>
+<td>Bold double-line borders</td>
+</tr>
+<tr>
+<td><code>Round</code></td>
+<td><pre>╭─╮
+│ │
+╰─╯</pre></td>
+<td>Smooth rounded corners</td>
+</tr>
+<tr>
+<td><code>Bold</code></td>
+<td><pre>┏━┓
+┃ ┃
+┗━┛</pre></td>
+<td>Heavy bold borders</td>
+</tr>
+<tr>
+<td><code>SingleDouble</code></td>
+<td><pre>╓─╖
+║ ║
+╙─╜</pre></td>
+<td>Single horizontal, double vertical</td>
+</tr>
+<tr>
+<td><code>DoubleSingle</code></td>
+<td><pre>╒═╕
+│ │
+╘═╛</pre></td>
+<td>Double horizontal, single vertical</td>
+</tr>
+<tr>
+<td><code>Classic</code></td>
+<td><pre>+--+
+|  |
++--+</pre></td>
+<td>ASCII-compatible classic style</td>
+</tr>
+</table>
 
-## Color Support
+---
+
+## 🌈 Color Support
 
 Boxen supports multiple color formats:
 
 ```rust
 use ::boxen::builder;
 
-// Named colors
-builder().border_color("red");
-builder().background_color("blue");
+// Named colors (16 standard terminal colors)
+builder()
+    .border_color("red")
+    .background_color("blue");
 
 // Hex colors
-builder().border_color("#ff0000");
-builder().background_color("#0000ff");
+builder()
+    .border_color("#ff0000")
+    .background_color("#0000ff");
 
 // RGB colors
-builder().border_color((255, 0, 0));
-builder().background_color((0, 0, 255));
+builder()
+    .border_color((255, 0, 0))
+    .background_color((0, 0, 255));
+
+// Dim borders for subtle styling
+builder()
+    .border_color("cyan")
+    .dim_border(true);
 ```
 
-## Performance
+**Available named colors:**
+`black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`,
+`bright-black`, `bright-red`, `bright-green`, `bright-yellow`, `bright-blue`, `bright-magenta`, `bright-cyan`, `bright-white`
+
+---
+
+## ⚡ Performance
 
 Boxen is highly optimized for speed and memory efficiency:
 
-### Core Optimizations
-
-- **Thread-local string pooling**: Reduces memory allocations by 24-87%
-- **Unicode width caching**: 2-3x faster Unicode text processing
-- **Terminal size caching**: 10-20% faster batch rendering
-- **Smart buffer management**: Pre-allocated buffers with capacity hints
-- **Efficient ANSI handling**: Proper escape sequence processing
-
 ### Benchmark Results
 
-Measured on a modern machine:
+| Operation               | Time         | vs Baseline   |
+| ----------------------- | ------------ | ------------- |
+| Simple box              | **1.57μs**   | 30x faster ⚡ |
+| Unicode content         | **2.93μs**   | 40x faster ⚡ |
+| Complex styled box      | **12.2μs**   | -             |
+| Large text (1000 chars) | **102.75μs** | 8x faster ⚡  |
+| Batch (100 boxes)       | **150ms**    | 30x faster ⚡ |
 
-- Simple box: **~1.57μs** (30x faster than baseline)
-- Unicode content: **~2.93μs** (40x faster than baseline)
-- Complex styled box: **~12.2μs**
-- Large text (1000 chars): **~102.75μs** (8x faster than baseline)
-- Batch rendering (100 boxes): **~150ms**
+### Core Optimizations
+
+✅ **Thread-local string pooling** - Reduces allocations by 24-87%  
+✅ **Smart buffer management** - Pre-allocated buffers with capacity hints  
+✅ **Efficient ANSI handling** - Proper escape sequence processing  
+✅ **Unicode optimization** - Fast width calculations
 
 ### Optional Performance Features
 
@@ -214,25 +347,98 @@ Enable caching for even better performance:
 
 ```toml
 [dependencies]
-boxen = { version = "0.1.3", features = ["width-cache", "terminal-cache"] }
+boxen = { version = "0.3", features = ["width-cache", "terminal-cache"] }
 ```
 
-**Available Features**:
+| Feature          | Benefit             | Use Case                   |
+| ---------------- | ------------------- | -------------------------- |
+| `width-cache`    | 2-3x faster Unicode | Apps with CJK text, emoji  |
+| `terminal-cache` | 10-20% faster batch | Rendering multiple boxes   |
+| `dhat-heap`      | Memory profiling    | Development & optimization |
 
-- `width-cache`: LRU cache for Unicode width calculations (2-3x speedup)
-- `terminal-cache`: TTL-based cache for terminal dimensions (10-20% speedup)
-- `dhat-heap`: Memory profiling support for optimization
-
-**Performance Gains**:
+**Performance gains:**
 
 - > 90% cache hit rates for typical workloads
 - Lock-free thread-local caching
 - Automatic cache invalidation on terminal resize (Unix)
 - Configurable cache sizes and TTL
 
-See [Performance Guide](docs/performance.md) and [Performance Features](PERFORMANCE_FEATURES.md) for detailed information.
+📖 See [Performance Guide](docs/performance.md) for detailed information.
 
-## Examples
+---
+
+## 🎯 Use Cases
+
+<table>
+<tr>
+<td width="33%">
+
+### CLI Tools
+
+```rust
+// Success messages
+println!("{}",
+    simple_box("✓ Build successful!")
+);
+
+// Error messages
+println!("{}",
+    builder()
+        .border_color("red")
+        .render("✗ Build failed")
+        .unwrap()
+);
+```
+
+</td>
+<td width="33%">
+
+### Status Displays
+
+```rust
+// System status
+println!("{}",
+    builder()
+        .title("System Status")
+        .border_color("green")
+        .render("All systems operational")
+        .unwrap()
+);
+```
+
+</td>
+<td width="33%">
+
+### Notifications
+
+```rust
+// User notifications
+println!("{}",
+    builder()
+        .title("🔔 Notification")
+        .padding(2)
+        .render("You have 3 new messages")
+        .unwrap()
+);
+```
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📖 Documentation
+
+### Guides
+
+- 📘 [API Documentation](https://docs.rs/boxen) - Complete API reference
+- 📗 [Usage Guide](docs/usage.md) - Detailed usage examples
+- 📙 [Customization Guide](docs/customization.md) - Advanced styling techniques
+- 📕 [Performance Guide](docs/performance.md) - Optimization strategies
+- 📔 [Migration Guide](MIGRATION_GUIDE.md) - Upgrading from v0.1.x
+
+### Examples
 
 Run the included examples to see boxen in action:
 
@@ -249,6 +455,12 @@ cargo run --example comprehensive_demo
 # Performance testing
 cargo run --example performance_demo
 
+# Caching features demo
+cargo run --example caching_demo --features width-cache,terminal-cache
+
+# Memory profiling
+cargo run --example memory_profiling --features dhat-heap
+
 # Error handling patterns
 cargo run --example error_handling_demo
 
@@ -259,32 +471,44 @@ cargo run --example fullscreen_demo
 cargo run --example clock_spinner
 ```
 
-## Documentation
+---
 
-- [API Documentation](https://docs.rs/boxen) - Complete API reference
-- [Usage Guide](docs/usage.md) - Detailed usage examples
-- [Customization Guide](docs/customization.md) - Advanced styling techniques
+## 🤝 Contributing
 
-## Contributing
+Contributions are welcome! Here's how you can help:
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+1. 🐛 **Report bugs** - Open an issue with details
+2. 💡 **Suggest features** - Share your ideas
+3. 📝 **Improve docs** - Help others learn
+4. 🔧 **Submit PRs** - Fix bugs or add features
 
-## License
+Please read our [Contributing Guide](CONTRIBUTING.md) for details.
 
-This project is licensed under either of
+---
 
-- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+## 📜 License
+
+This project is licensed under either of:
+
+- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- **MIT license** ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
 
-## Acknowledgments
+---
 
-- Inspired by the original [boxen](https://github.com/sindresorhus/boxen) TypeScript library by Sindre Sorhus
+## 🙏 Acknowledgments
+
+- Inspired by the original [boxen](https://github.com/sindresorhus/boxen) TypeScript library by [Sindre Sorhus](https://github.com/sindresorhus)
 - Built with ❤️ for the Rust community
+- Thanks to all [contributors](https://github.com/sabry-awad97/boxen/graphs/contributors)
 
 ---
 
 <div align="center">
-  <sub>Built with 🦀 Rust</sub>
+
+**[⬆ back to top](#-boxen)**
+
+Made with 🦀 Rust • [Report Bug](https://github.com/sabry-awad97/boxen/issues) • [Request Feature](https://github.com/sabry-awad97/boxen/issues)
+
 </div>

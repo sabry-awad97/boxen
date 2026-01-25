@@ -148,7 +148,7 @@ impl Drop for PooledString {
 /// # Examples
 ///
 /// ```
-/// use boxen::memory::pool::with_pooled_string;
+/// use ::boxen::memory::pool::with_pooled_string;
 /// use std::fmt::Write;
 ///
 /// let result = with_pooled_string(|buffer| {

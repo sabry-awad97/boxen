@@ -35,8 +35,8 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use boxen::validation::{validate_configuration, auto_adjust_options};
-//! use boxen::BoxenOptions;
+//! use ::boxen::validation::{validate_configuration, auto_adjust_options};
+//! use ::boxen::BoxenOptions;
 //!
 //! let mut options = BoxenOptions::default();
 //! options.width = Some(10); // Potentially too small
@@ -79,8 +79,8 @@
 //! Validates that boxes will fit within terminal constraints:
 //!
 //! ```rust
-//! use boxen::validation::validate_configuration;
-//! use boxen::BoxenOptions;
+//! use ::boxen::validation::validate_configuration;
+//! use ::boxen::BoxenOptions;
 //!
 //! let mut options = BoxenOptions::default();
 //! options.width = Some(200);  // Might exceed terminal width
@@ -100,8 +100,8 @@
 //! Identifies potentially problematic but valid configurations:
 //!
 //! ```rust
-//! use boxen::validation::validate_configuration;
-//! use boxen::{BoxenOptions, Spacing};
+//! use ::boxen::validation::validate_configuration;
+//! use ::boxen::{BoxenOptions, Spacing};
 //!
 //! let mut options = BoxenOptions::default();
 //! options.padding = Spacing::from(25); // Excessive padding
@@ -123,8 +123,8 @@
 //! Fixes common configuration problems without user intervention:
 //!
 //! ```rust
-//! use boxen::validation::auto_adjust_options;
-//! use boxen::BoxenOptions;
+//! use ::boxen::validation::auto_adjust_options;
+//! use ::boxen::BoxenOptions;
 //!
 //! let mut problematic_options = BoxenOptions::default();
 //! problematic_options.width = Some(5);   // Too small
@@ -142,8 +142,8 @@
 //! The recovery system applies multiple strategies in order of preference:
 //!
 //! ```rust
-//! use boxen::validation::recovery::smart_recovery;
-//! use boxen::{BoxenOptions, Spacing};
+//! use ::boxen::validation::recovery::smart_recovery;
+//! use ::boxen::{BoxenOptions, Spacing};
 //!
 //! let mut options = BoxenOptions::default();
 //! options.width = Some(300);  // Exceeds terminal
@@ -220,8 +220,8 @@
 //! Each validation error includes specific recommendations for resolution:
 //!
 //! ```rust
-//! use boxen::validation::validate_configuration;
-//! use boxen::BoxenOptions;
+//! use ::boxen::validation::validate_configuration;
+//! use ::boxen::BoxenOptions;
 //!
 //! let mut options = BoxenOptions::default();
 //! options.width = Some(3); // Too small
@@ -247,8 +247,8 @@
 //!
 //! ### Optimal Dimension Calculation
 //! ```rust
-//! use boxen::validation::suggest_optimal_dimensions;
-//! use boxen::BoxenOptions;
+//! use ::boxen::validation::suggest_optimal_dimensions;
+//! use ::boxen::BoxenOptions;
 //!
 //! let options = BoxenOptions::default();
 //! let text = "Sample content that needs optimal sizing";
@@ -263,8 +263,8 @@
 //!
 //! ### Minimum Dimension Analysis
 //! ```rust
-//! use boxen::validation::{MinimumDimensions, calculate_minimum_dimensions};
-//! use boxen::{BoxenOptions, Spacing};
+//! use ::boxen::validation::{MinimumDimensions, calculate_minimum_dimensions};
+//! use ::boxen::{BoxenOptions, Spacing};
 //!
 //! let mut options = BoxenOptions::default();
 //! options.padding = Spacing::from(2);
@@ -285,8 +285,8 @@
 //!
 //! ### Error Types and Recovery
 //! ```rust
-//! use boxen::validation::validate_configuration;
-//! use boxen::{BoxenOptions, BoxenError};
+//! use ::boxen::validation::validate_configuration;
+//! use ::boxen::{BoxenOptions, BoxenError};
 //!
 //! let mut options = BoxenOptions::default();
 //! options.width = Some(1); // Invalid

@@ -14,8 +14,8 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use boxen::color::{parse_color, apply_colors, validate_color};
-//! use boxen::Color;
+//! use ::boxen::color::{parse_color, apply_colors, validate_color};
+//! use ::boxen::Color;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Named colors
@@ -56,7 +56,7 @@
 //!
 //! ### 6-Digit Format
 //! ```rust
-//! use boxen::Color;
+//! use ::boxen::Color;
 //!
 //! let red = Color::Hex("#FF0000".to_string());
 //! let green = Color::Hex("#00FF00".to_string());
@@ -65,7 +65,7 @@
 //!
 //! ### 3-Digit Format (Shorthand)
 //! ```rust
-//! use boxen::Color;
+//! use ::boxen::Color;
 //!
 //! let red = Color::Hex("#F00".to_string());    // Expands to #FF0000
 //! let green = Color::Hex("#0F0".to_string());  // Expands to #00FF00
@@ -74,7 +74,7 @@
 //!
 //! ### Optional Hash Prefix
 //! ```rust
-//! use boxen::Color;
+//! use ::boxen::Color;
 //!
 //! let with_hash = Color::Hex("#FF0000".to_string());
 //! let without_hash = Color::Hex("FF0000".to_string());  // Also valid
@@ -83,7 +83,7 @@
 //! ## RGB Color Format
 //!
 //! ```rust
-//! use boxen::Color;
+//! use ::boxen::Color;
 //!
 //! let red = Color::Rgb(255, 0, 0);
 //! let green = Color::Rgb(0, 255, 0);
@@ -96,8 +96,8 @@
 //!
 //! ### Foreground Colors
 //! ```rust
-//! use boxen::color::apply_foreground_color;
-//! use boxen::Color;
+//! use ::boxen::color::apply_foreground_color;
+//! use ::boxen::Color;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let red_text = apply_foreground_color("Error", &Color::Named("red".to_string()))?;
@@ -107,8 +107,8 @@
 //!
 //! ### Background Colors
 //! ```rust
-//! use boxen::color::apply_background_color;
-//! use boxen::Color;
+//! use ::boxen::color::apply_background_color;
+//! use ::boxen::Color;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let highlighted = apply_background_color("Important", &Color::Named("yellow".to_string()))?;
@@ -118,8 +118,8 @@
 //!
 //! ### Combined Colors
 //! ```rust
-//! use boxen::color::apply_colors;
-//! use boxen::Color;
+//! use ::boxen::color::apply_colors;
+//! use ::boxen::Color;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let fg = Color::Named("white".to_string());
@@ -131,8 +131,8 @@
 //!
 //! ### Dim Styling
 //! ```rust
-//! use boxen::color::{apply_dim, apply_color_with_dim};
-//! use boxen::Color;
+//! use ::boxen::color::{apply_dim, apply_color_with_dim};
+//! use ::boxen::Color;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Apply only dim effect
@@ -153,8 +153,8 @@
 //! The color system provides detailed error messages with actionable recommendations:
 //!
 //! ```rust
-//! use boxen::color::validate_color;
-//! use boxen::Color;
+//! use ::boxen::color::validate_color;
+//! use ::boxen::Color;
 //!
 //! # fn main() {
 //! let invalid = Color::Named("invalid_color".to_string());
