@@ -8,9 +8,11 @@ use std::time::{Duration, Instant};
 use terminal_size::{Height, Width, terminal_size};
 
 /// Default cache TTL (time-to-live) in milliseconds
+#[cfg(feature = "terminal-cache")]
 const DEFAULT_TTL_MS: u64 = 100;
 
 /// Cached terminal size with expiration
+#[cfg(feature = "terminal-cache")]
 #[derive(Debug, Clone)]
 struct CachedSize {
     width: u16,
@@ -18,6 +20,7 @@ struct CachedSize {
     timestamp: Instant,
 }
 
+#[cfg(feature = "terminal-cache")]
 impl CachedSize {
     fn new(width: u16, height: u16) -> Self {
         Self {
@@ -66,12 +69,14 @@ impl CacheStats {
 }
 
 /// Terminal size cache with TTL
+#[cfg(feature = "terminal-cache")]
 struct TerminalSizeCache {
     cached: Option<CachedSize>,
     ttl: Duration,
     stats: CacheStats,
 }
 
+#[cfg(feature = "terminal-cache")]
 impl TerminalSizeCache {
     fn new(ttl_ms: u64) -> Self {
         Self {
@@ -120,6 +125,7 @@ impl TerminalSizeCache {
     }
 }
 
+#[cfg(feature = "terminal-cache")]
 thread_local! {
     static SIZE_CACHE: RefCell<TerminalSizeCache> = RefCell::new(TerminalSizeCache::new(DEFAULT_TTL_MS));
 }

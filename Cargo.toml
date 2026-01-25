@@ -1,10 +1,10 @@
 [package]
 name = "boxen"
-version = "0.1.3"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.85.0"
 authors = ["Boxen Contributors"]
-description = "A Rust library for creating styled terminal boxes around text"
+description = "A Rust library for creating styled terminal boxes around text with performance optimizations"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/sabry-awad97/boxen"
 documentation = "https://docs.rs/boxen"
@@ -40,6 +40,10 @@ harness = false
 
 [[bench]]
 name = "criterion_benchmarks"
+harness = false
+
+[[bench]]
+name = "performance_benchmarks"
 harness = false
 
 # Performance optimizations
