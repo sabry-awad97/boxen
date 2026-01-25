@@ -95,7 +95,7 @@ boxen = { version = "0.3", features = ["width-cache", "terminal-cache"] }
 ## 🚀 Quick Start
 
 ```rust
-use ::boxen::{boxen, builder, BorderStyle, TextAlignment};
+use boxen::{boxen, builder, BorderStyle, TextAlignment};
 
 fn main() {
     // Simple box with default settings
@@ -131,7 +131,7 @@ fn main() {
 **Code:**
 
 ```rust
-use ::boxen::boxen;
+use boxen::boxen;
 
 let result = boxen("Simple box", None)
     .unwrap();
@@ -162,7 +162,7 @@ println!("{}", result);
 **Code:**
 
 ```rust
-use ::boxen::{builder, BorderStyle};
+use boxen::{builder, BorderStyle};
 
 let result = builder()
     .border_style(BorderStyle::Round)
@@ -194,7 +194,7 @@ let result = builder()
 ### Convenience Functions
 
 ```rust
-use ::boxen::{simple_box, double_box, round_box};
+use boxen::{simple_box, double_box, round_box};
 
 println!("{}", simple_box("Default style"));
 println!("{}", double_box("Double border"));
@@ -204,7 +204,7 @@ println!("{}", round_box("Round corners"));
 ### Advanced Styling
 
 ```rust
-use ::boxen::{builder, BorderStyle, TextAlignment, TitleAlignment, Float};
+use boxen::{builder, BorderStyle, TextAlignment, TitleAlignment, Float};
 
 let result = builder()
     .border_style(BorderStyle::Bold)
@@ -291,7 +291,7 @@ Boxen supports various border styles:
 Boxen supports multiple color formats:
 
 ```rust
-use ::boxen::builder;
+use boxen::builder;
 
 // Named colors (16 standard terminal colors)
 builder()
@@ -433,10 +433,6 @@ println!("{}",
 ### Guides
 
 - 📘 [API Documentation](https://docs.rs/boxen) - Complete API reference
-- 📗 [Usage Guide](docs/usage.md) - Detailed usage examples
-- 📙 [Customization Guide](docs/customization.md) - Advanced styling techniques
-- 📕 [Performance Guide](docs/performance.md) - Optimization strategies
-- 📔 [Migration Guide](MIGRATION_GUIDE.md) - Upgrading from v0.1.x
 
 ### Examples
 
