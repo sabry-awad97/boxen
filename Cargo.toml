@@ -25,7 +25,7 @@ dhat = { version = "0.3.3", optional = true }
 
 [dev-dependencies]
 chrono = "0.4.43"
-ctrlc = "3.5.1"
+ctrlc = "3.5.2"
 criterion = { version = "0.8.1", features = ["html_reports"] }
 
 [features]
