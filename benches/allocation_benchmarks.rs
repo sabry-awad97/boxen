@@ -248,7 +248,7 @@ fn main() {
             let _ = boxen(
                 "Style test",
                 Some(BoxenOptions {
-                    border_style: style.clone(),
+                    border_style: *style,
                     ..Default::default()
                 }),
             );

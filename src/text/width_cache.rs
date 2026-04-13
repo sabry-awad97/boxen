@@ -33,6 +33,7 @@ pub struct CacheStats {
 #[cfg(feature = "width-cache")]
 impl CacheStats {
     /// Calculate cache hit rate as a percentage
+    #[must_use]
     pub fn hit_rate(&self) -> f64 {
         let total = self.hits + self.misses;
         if total == 0 {
@@ -121,6 +122,7 @@ thread_local! {
 /// assert!(width > 0);
 /// ```
 #[cfg(feature = "width-cache")]
+#[must_use]
 pub fn cached_unicode_width(s: &str) -> usize {
     WIDTH_CACHE.with(|cache| {
         let mut cache = cache.borrow_mut();
@@ -136,6 +138,7 @@ pub fn cached_unicode_width(s: &str) -> usize {
 
 /// Calculate Unicode width without caching (fallback)
 #[cfg(not(feature = "width-cache"))]
+#[must_use]
 pub fn cached_unicode_width(s: &str) -> usize {
     s.width()
 }
@@ -145,6 +148,7 @@ pub fn cached_unicode_width(s: &str) -> usize {
 /// Returns hit/miss/eviction counts for monitoring cache performance.
 /// Only available when the `width-cache` feature is enabled.
 #[cfg(feature = "width-cache")]
+#[must_use]
 pub fn cache_stats() -> CacheStats {
     WIDTH_CACHE.with(|cache| cache.borrow().stats())
 }

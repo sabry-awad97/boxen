@@ -84,6 +84,7 @@ static CACHED_TERMINAL_SIZE: OnceLock<(usize, Option<usize>)> = OnceLock::new();
 /// let width = get_terminal_width();
 /// assert!(width > 0);
 /// ```
+#[must_use]
 pub fn get_terminal_width() -> usize {
     get_terminal_size().0
 }
@@ -101,6 +102,7 @@ pub fn get_terminal_width() -> usize {
 /// let height = get_terminal_height();
 /// // Height may be None if terminal size cannot be detected
 /// ```
+#[must_use]
 pub fn get_terminal_height() -> Option<usize> {
     get_terminal_size().1
 }
@@ -178,6 +180,7 @@ pub fn clear_terminal_cache() {
 /// let no_border_width = calculate_border_width(&BorderStyle::None);
 /// assert_eq!(no_border_width, 0);
 /// ```
+#[must_use]
 pub fn calculate_border_width(border_style: &BorderStyle) -> usize {
     match border_style {
         BorderStyle::None => 0,

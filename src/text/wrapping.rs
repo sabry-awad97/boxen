@@ -37,6 +37,7 @@ pub fn wrap_text(text: &str, width: usize) -> Result<Vec<String>, BoxenError> {
 
 /// Wrap a single line of text, handling ANSI escape sequences properly
 /// Optimized version with fast path for lines that don't need wrapping
+#[must_use]
 pub fn wrap_line(line: &str, width: usize) -> Vec<String> {
     if width == 0 {
         return vec![line.to_string()];
@@ -180,6 +181,7 @@ pub fn wrap_text_preserve_words(text: &str, width: usize) -> Result<Vec<String>,
 }
 
 /// Calculate the minimum width needed to wrap text without breaking words
+#[must_use]
 pub fn minimum_wrap_width(text: &str) -> usize {
     text.lines()
         .flat_map(|line| {

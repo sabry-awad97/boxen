@@ -117,7 +117,7 @@ fn test_typescript_title_alignment_behavior() {
     for (alignment, _expected_pattern) in alignments.iter() {
         let options = BoxenOptions {
             title: Some(title.to_string()),
-            title_alignment: alignment.clone(),
+            title_alignment: *alignment,
             width: Some(20),
             ..Default::default()
         };
@@ -329,7 +329,7 @@ fn test_typescript_float_positioning() {
 
     for float_pos in floats.iter() {
         let options = BoxenOptions {
-            float: float_pos.clone(),
+            float: *float_pos,
             width: Some(20),
             ..Default::default()
         };

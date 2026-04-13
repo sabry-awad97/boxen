@@ -7,6 +7,7 @@ use crate::text::measurement::text_width;
 ///
 /// Optimized version that pre-allocates string capacity and uses efficient
 /// string building to minimize allocations.
+#[must_use]
 pub fn align_line(line: &str, alignment: TextAlignment, width: usize) -> String {
     let line_width = text_width(line);
 
@@ -47,6 +48,7 @@ pub fn align_line(line: &str, alignment: TextAlignment, width: usize) -> String 
 /// Align multiple lines of text within a given width.
 ///
 /// Optimized version that pre-allocates the result vector to avoid reallocations.
+#[must_use]
 pub fn align_lines(lines: &[String], alignment: TextAlignment, width: usize) -> Vec<String> {
     let mut result = Vec::with_capacity(lines.len());
 
@@ -58,6 +60,7 @@ pub fn align_lines(lines: &[String], alignment: TextAlignment, width: usize) -> 
 }
 
 /// Apply padding to text content
+#[must_use]
 pub fn apply_padding(lines: &[String], padding: &Spacing, content_width: usize) -> Vec<String> {
     let mut result = Vec::new();
 
@@ -94,6 +97,7 @@ pub fn apply_padding(lines: &[String], padding: &Spacing, content_width: usize) 
 }
 
 /// Calculate the content width needed for text with padding
+#[must_use]
 pub fn calculate_content_width(text_lines: &[String], padding: &Spacing) -> usize {
     let max_text_width = text_lines
         .iter()
@@ -105,11 +109,13 @@ pub fn calculate_content_width(text_lines: &[String], padding: &Spacing) -> usiz
 }
 
 /// Calculate the content height needed for text with padding
+#[must_use]
 pub fn calculate_content_height(text_lines: &[String], padding: &Spacing) -> usize {
     text_lines.len() + padding.top + padding.bottom
 }
 
 /// Process text with alignment and padding
+#[must_use]
 pub fn process_text_alignment(
     text: &str,
     alignment: TextAlignment,
@@ -146,6 +152,7 @@ pub fn process_text_alignment(
 }
 
 /// Process text with alignment, padding, and height constraints
+#[must_use]
 pub fn process_text_with_height_constraints(
     text: &str,
     alignment: TextAlignment,
@@ -190,6 +197,7 @@ pub fn process_text_with_height_constraints(
 }
 
 /// Apply height constraints to text lines - truncate or pad as needed
+#[must_use]
 pub fn apply_height_constraints(lines: &[String], max_height: usize) -> Vec<String> {
     if max_height == 0 {
         // If max height is 0, return empty content

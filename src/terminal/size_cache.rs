@@ -52,6 +52,7 @@ pub struct CacheStats {
 
 impl CacheStats {
     /// Calculate cache hit rate as a percentage
+    #[must_use]
     pub fn hit_rate(&self) -> f64 {
         let total = self.hits + self.misses;
         if total == 0 {
@@ -151,6 +152,7 @@ thread_local! {
 /// }
 /// ```
 #[cfg(feature = "terminal-cache")]
+#[must_use]
 pub fn cached_terminal_size() -> Option<(u16, u16)> {
     SIZE_CACHE.with(|cache| {
         let mut cache = cache.borrow_mut();
@@ -172,6 +174,7 @@ pub fn cached_terminal_size() -> Option<(u16, u16)> {
 
 /// Get terminal size without caching (fallback)
 #[cfg(not(feature = "terminal-cache"))]
+#[must_use]
 pub fn cached_terminal_size() -> Option<(u16, u16)> {
     terminal_size().map(|(Width(w), Height(h))| (w, h))
 }
@@ -210,6 +213,7 @@ pub fn invalidate_cache() {
 /// println!("Hit rate: {:.2}%", stats.hit_rate());
 /// ```
 #[cfg(feature = "terminal-cache")]
+#[must_use]
 pub fn cache_stats() -> CacheStats {
     SIZE_CACHE.with(|cache| cache.borrow().stats())
 }

@@ -3,6 +3,7 @@ use unicode_width::UnicodeWidthStr;
 
 /// Calculate the display width of text, handling Unicode and ANSI escape sequences
 /// Optimized version that avoids allocation when no ANSI codes are present
+#[must_use]
 pub fn text_width(text: &str) -> usize {
     // Fast path: if no ANSI codes, measure directly
     if !text.contains('\x1b') {
@@ -16,6 +17,7 @@ pub fn text_width(text: &str) -> usize {
 
 /// Strip ANSI escape sequences from text
 /// Optimized version that pre-allocates capacity and uses efficient iteration
+#[must_use]
 pub fn strip_ansi_codes(text: &str) -> String {
     // Quick check: if no escape sequences, return clone to avoid allocation
     if !text.contains('\x1b') {
@@ -51,6 +53,7 @@ pub fn strip_ansi_codes(text: &str) -> String {
 }
 
 /// Calculate the maximum width of multiple lines of text
+#[must_use]
 pub fn max_line_width(lines: &[&str]) -> usize {
     lines.iter().map(|line| text_width(line)).max().unwrap_or(0)
 }

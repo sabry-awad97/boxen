@@ -2694,7 +2694,7 @@ mod tests {
 
         for style in border_styles {
             let options = BoxenOptions {
-                border_style: style.clone(),
+                border_style: style,
                 border_color: Some(Color::Named("green".to_string())),
                 background_color: Some(Color::Named("black".to_string())),
                 ..Default::default()

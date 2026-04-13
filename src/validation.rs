@@ -383,6 +383,7 @@ pub struct ValidationResult {
 
 impl ValidationResult {
     /// Create a new valid validation result with no warnings or errors
+    #[must_use]
     pub fn valid() -> Self {
         Self {
             is_valid: true,
@@ -393,6 +394,7 @@ impl ValidationResult {
     }
 
     /// Create a validation result with warnings but no errors
+    #[must_use]
     pub fn with_warnings(warnings: Vec<ErrorRecommendation>) -> Self {
         Self {
             is_valid: true,
@@ -403,6 +405,7 @@ impl ValidationResult {
     }
 
     /// Create a validation result with errors (automatically marks as invalid)
+    #[must_use]
     pub fn with_errors(errors: Vec<BoxenError>) -> Self {
         Self {
             is_valid: false,
@@ -425,6 +428,7 @@ impl ValidationResult {
 }
 
 /// Calculate minimum dimensions required for given text and options
+#[must_use]
 pub fn calculate_minimum_dimensions(text: &str, options: &BoxenOptions) -> MinimumDimensions {
     let lines: Vec<&str> = text.lines().collect();
     let content_height = if lines.is_empty() { 1 } else { lines.len() };

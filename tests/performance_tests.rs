@@ -228,7 +228,7 @@ fn test_performance_different_border_styles() {
             let result = boxen(
                 text,
                 Some(BoxenOptions {
-                    border_style: style.clone(),
+                    border_style: *style,
                     ..Default::default()
                 }),
             );
