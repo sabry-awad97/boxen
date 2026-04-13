@@ -700,6 +700,7 @@ impl BoxenBuilder {
     /// // Horizontal and vertical
     /// let result3 = builder().padding((3, 1)).render("Text").unwrap();
     /// ```
+    #[must_use]
     pub fn padding<T: Into<Spacing>>(mut self, padding: T) -> Self {
         self.options.padding = padding.into();
         self
@@ -979,6 +980,7 @@ impl BoxenBuilder {
     }
 
     /// Convenience method to set both padding and margin to the same value
+    #[must_use]
     pub fn spacing<T: Into<Spacing>>(mut self, spacing: T) -> Self {
         let spacing_value = spacing.into();
         self.options.padding = spacing_value;
@@ -987,6 +989,7 @@ impl BoxenBuilder {
     }
 
     /// Convenience method to set both border and background color
+    #[must_use]
     pub fn colors<C1: Into<Color>, C2: Into<Color>>(mut self, border: C1, background: C2) -> Self {
         self.options.border_color = Some(border.into());
         self.options.background_color = Some(background.into());

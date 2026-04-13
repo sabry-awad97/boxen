@@ -440,7 +440,7 @@ use unicode_width::UnicodeWidthChar;
 /// - Title exceeds 200 characters
 /// - Padding or margin values exceed 100 (unreasonably large)
 /// - Width or height is 0 or exceeds reasonable limits
-/// - Invalid color specifications in border_color or background_color
+/// - Invalid color specifications in `border_color` or `background_color`
 ///
 /// Returns `BoxenError::InvalidDimensions` if:
 /// - Specified width is too small for borders, padding, and margins
@@ -989,7 +989,7 @@ fn render_padded_empty_line(
     })
 }
 
-/// Render title without border (for BorderStyle::None)
+/// Render title without border (for `BorderStyle::None`)
 fn render_title_without_border(
     title: &str,
     options: &BoxenOptions,

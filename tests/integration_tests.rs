@@ -426,7 +426,7 @@ fn test_all_border_styles_with_content() {
 
     for style in border_styles.iter() {
         let options = BoxenOptions {
-            border_style: style.clone(),
+            border_style: *style,
             ..Default::default()
         };
         let result = boxen(test_content, Some(options));
@@ -490,7 +490,7 @@ fn test_all_float_positions_with_different_widths() {
     for float_pos in floats.iter() {
         for &width in widths.iter() {
             let options = BoxenOptions {
-                float: float_pos.clone(),
+                float: *float_pos,
                 width: Some(width),
                 ..Default::default()
             };
@@ -611,7 +611,7 @@ fn test_title_combinations_comprehensive() {
             for &width in widths.iter() {
                 let options = BoxenOptions {
                     title: Some(title.to_string()),
-                    title_alignment: alignment.clone(),
+                    title_alignment: *alignment,
                     width: Some(width),
                     ..Default::default()
                 };

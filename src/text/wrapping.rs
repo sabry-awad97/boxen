@@ -198,7 +198,7 @@ pub fn minimum_wrap_width(text: &str) -> usize {
             let clean_line = strip_ansi_codes(line);
             clean_line
                 .split_whitespace()
-                .map(|s| s.to_string())
+                .map(std::string::ToString::to_string)
                 .collect::<Vec<_>>()
         })
         .map(|word| text_width(&word))

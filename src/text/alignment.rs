@@ -126,7 +126,7 @@ pub fn process_text_alignment(
     let lines: Vec<String> = if text.is_empty() {
         vec![String::new()]
     } else {
-        text.lines().map(|s| s.to_string()).collect()
+        text.lines().map(std::string::ToString::to_string).collect()
     };
 
     // Calculate dimensions
@@ -164,7 +164,7 @@ pub fn process_text_with_height_constraints(
     let lines: Vec<String> = if text.is_empty() {
         vec![String::new()]
     } else {
-        text.lines().map(|s| s.to_string()).collect()
+        text.lines().map(std::string::ToString::to_string).collect()
     };
 
     // Calculate dimensions

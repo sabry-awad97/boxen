@@ -458,14 +458,12 @@ pub fn calculate_minimum_dimensions(text: &str, options: &BoxenOptions) -> Minim
     }
 }
 
-/// Validate a boxen configuration and provide intelligent recommendations
-#[must_use]
-pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationResult {
-    let mut result = ValidationResult::valid();
-    let min_dims = calculate_minimum_dimensions(text, options);
-    result.minimum_dimensions = Some(min_dims.clone());
-
-    // Check width constraints
+/// Validate width constraints
+fn validate_width_constraints(
+    result: &mut ValidationResult,
+    options: &BoxenOptions,
+    min_dims: &MinimumDimensions,
+) {
     if let Some(specified_width) = options.width {
         if specified_width < min_dims.width {
             let recommendations = vec![
@@ -506,8 +504,14 @@ pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationR
             ));
         }
     }
+}
 
-    // Check height constraints
+/// Validate height constraints
+fn validate_height_constraints(
+    result: &mut ValidationResult,
+    options: &BoxenOptions,
+    min_dims: &MinimumDimensions,
+) {
     if let Some(specified_height) = options.height {
         if specified_height < min_dims.height {
             let recommendations = vec![
@@ -548,8 +552,14 @@ pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationR
             ));
         }
     }
+}
 
-    // Check terminal size constraints
+/// Validate terminal size constraints
+fn validate_terminal_constraints(
+    result: &mut ValidationResult,
+    options: &BoxenOptions,
+    min_dims: &MinimumDimensions,
+) {
     let terminal_width: usize = get_terminal_width();
     let terminal_height: Option<usize> = get_terminal_height();
 
@@ -578,9 +588,7 @@ pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationR
         ];
 
         result.add_error(BoxenError::configuration_error(
-            format!(
-                "Box width ({total_width}) exceeds terminal width ({terminal_width})"
-            ),
+            format!("Box width ({total_width}) exceeds terminal width ({terminal_width})"),
             recommendations,
         ));
     }
@@ -608,15 +616,19 @@ pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationR
             ];
 
             result.add_error(BoxenError::configuration_error(
-                format!(
-                    "Box height ({total_height}) exceeds terminal height ({term_height})"
-                ),
+                format!("Box height ({total_height}) exceeds terminal height ({term_height})"),
                 recommendations,
             ));
         }
     }
+}
 
-    // Add warnings for potentially problematic configurations
+/// Collect warnings for potentially problematic configurations
+fn collect_configuration_warnings(
+    result: &mut ValidationResult,
+    text: &str,
+    options: &BoxenOptions,
+) {
     if options.padding.horizontal() > 20 {
         result.add_warning(ErrorRecommendation::suggestion_only(
             "Large horizontal padding".to_string(),
@@ -643,6 +655,19 @@ pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationR
             "Text has many lines, consider using height constraints or text wrapping".to_string(),
         ));
     }
+}
+
+/// Validate a boxen configuration and provide intelligent recommendations
+#[must_use]
+pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationResult {
+    let mut result = ValidationResult::valid();
+    let min_dims = calculate_minimum_dimensions(text, options);
+    result.minimum_dimensions = Some(min_dims.clone());
+
+    validate_width_constraints(&mut result, options, &min_dims);
+    validate_height_constraints(&mut result, options, &min_dims);
+    validate_terminal_constraints(&mut result, options, &min_dims);
+    collect_configuration_warnings(&mut result, text, options);
 
     result
 }

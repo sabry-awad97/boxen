@@ -58,7 +58,14 @@ impl CacheStats {
         if total == 0 {
             0.0
         } else {
-            (self.hits as f64 / total as f64) * 100.0
+            // Allow precision loss: Cache hit rates are informational statistics
+            // where slight precision loss at extreme values (>2^52 cache operations)
+            // is acceptable. In practice, cache sizes are much smaller and precision
+            // loss will never occur in real-world usage.
+            #[allow(clippy::cast_precision_loss)]
+            {
+                (self.hits as f64 / total as f64) * 100.0
+            }
         }
     }
 
