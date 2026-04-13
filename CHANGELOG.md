@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-04-14
+
+### Changed
+
+- **Code Quality Improvements**: Comprehensive code quality enhancements with zero clippy warnings at pedantic level
+  - Added `Copy` trait to 4 small types (`TitleAlignment`, `Float`, `BorderChars`, `BorderStyle`) for better performance
+  - Added `#[must_use]` attributes to 29 functions that return values that should not be ignored
+  - Added `# Errors` documentation to all 18 Result-returning functions for better API clarity
+  - Converted 30 format strings to use inline syntax for improved readability
+  - Refactored 170-line validation function into 5 focused functions (91% size reduction)
+  - Added explanatory comments for 4 intentional cast precision loss cases in cache statistics
+  - Fixed 9 additional pedantic warnings (documentation backticks, redundant closures)
+- All 594 tests pass with no breaking changes
+
 ## [0.3.1] - 2026-01-25
 
 ### Fixed
@@ -58,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial stable release with core functionality.
 
+[0.3.2]: https://github.com/sabry-awad97/boxen/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/sabry-awad97/boxen/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/sabry-awad97/boxen/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/sabry-awad97/boxen/releases/tag/v0.2.0
