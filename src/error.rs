@@ -264,7 +264,8 @@ pub enum BoxenError {
 }
 
 impl BoxenError {
-    /// Create an InvalidDimensions error with intelligent recommendations
+    /// Create an `InvalidDimensions` error with intelligent recommendations
+    #[must_use]
     pub fn invalid_dimensions(
         message: String,
         width: Option<usize>,
@@ -279,7 +280,8 @@ impl BoxenError {
         }
     }
 
-    /// Create a ConfigurationError with recommendations
+    /// Create a `ConfigurationError` with recommendations
+    #[must_use]
     pub fn configuration_error(message: String, recommendations: Vec<ErrorRecommendation>) -> Self {
         Self::ConfigurationError {
             message,
@@ -287,7 +289,8 @@ impl BoxenError {
         }
     }
 
-    /// Create an InvalidColor error with recommendations
+    /// Create an `InvalidColor` error with recommendations
+    #[must_use]
     pub fn invalid_color(
         message: String,
         color_value: String,
@@ -300,7 +303,8 @@ impl BoxenError {
         }
     }
 
-    /// Create an InvalidBorderStyle error with recommendations
+    /// Create an `InvalidBorderStyle` error with recommendations
+    #[must_use]
     pub fn invalid_border_style(
         message: String,
         recommendations: Vec<ErrorRecommendation>,
@@ -311,7 +315,8 @@ impl BoxenError {
         }
     }
 
-    /// Create a TerminalSizeError with recommendations
+    /// Create a `TerminalSizeError` with recommendations
+    #[must_use]
     pub fn terminal_size_error(message: String, recommendations: Vec<ErrorRecommendation>) -> Self {
         Self::TerminalSizeError {
             message,
@@ -319,7 +324,8 @@ impl BoxenError {
         }
     }
 
-    /// Create a TextProcessingError with recommendations
+    /// Create a `TextProcessingError` with recommendations
+    #[must_use]
     pub fn text_processing_error(
         message: String,
         recommendations: Vec<ErrorRecommendation>,
@@ -330,7 +336,8 @@ impl BoxenError {
         }
     }
 
-    /// Create an InputValidationError with recommendations
+    /// Create an `InputValidationError` with recommendations
+    #[must_use]
     pub fn input_validation_error(
         message: String,
         field: String,
@@ -345,7 +352,8 @@ impl BoxenError {
         }
     }
 
-    /// Create a RenderingError with recommendations
+    /// Create a `RenderingError` with recommendations
+    #[must_use]
     pub fn rendering_error(message: String, recommendations: Vec<ErrorRecommendation>) -> Self {
         Self::RenderingError {
             message,
@@ -354,30 +362,31 @@ impl BoxenError {
     }
 
     /// Get recommendations for fixing this error
+    #[must_use]
     pub fn recommendations(&self) -> Vec<ErrorRecommendation> {
         match self {
             Self::InvalidBorderStyle {
                 recommendations, ..
-            } => recommendations.clone(),
-            Self::InvalidColor {
+            }
+            | Self::InvalidColor {
                 recommendations, ..
-            } => recommendations.clone(),
-            Self::InvalidDimensions {
+            }
+            | Self::InvalidDimensions {
                 recommendations, ..
-            } => recommendations.clone(),
-            Self::TerminalSizeError {
+            }
+            | Self::TerminalSizeError {
                 recommendations, ..
-            } => recommendations.clone(),
-            Self::TextProcessingError {
+            }
+            | Self::TextProcessingError {
                 recommendations, ..
-            } => recommendations.clone(),
-            Self::ConfigurationError {
+            }
+            | Self::ConfigurationError {
                 recommendations, ..
-            } => recommendations.clone(),
-            Self::InputValidationError {
+            }
+            | Self::InputValidationError {
                 recommendations, ..
-            } => recommendations.clone(),
-            Self::RenderingError {
+            }
+            | Self::RenderingError {
                 recommendations, ..
             } => recommendations.clone(),
         }
@@ -395,9 +404,10 @@ impl BoxenError {
 
         let mut message = format!("{base_message}\n\nSuggestions:");
         for (i, rec) in recommendations.iter().enumerate() {
-            message.push_str(&format!("\n{}. {}: {}", i + 1, rec.issue, rec.suggestion));
+            use std::fmt::Write;
+            let _ = write!(message, "\n{}. {}: {}", i + 1, rec.issue, rec.suggestion);
             if let Some(auto_fix) = &rec.auto_fix {
-                message.push_str(&format!("\n   Auto-fix: {auto_fix}"));
+                let _ = write!(message, "\n   Auto-fix: {auto_fix}");
             }
         }
         message

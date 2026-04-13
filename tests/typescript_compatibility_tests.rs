@@ -151,7 +151,7 @@ fn test_typescript_text_alignment_behavior() {
 
     for alignment in alignments.iter() {
         let options = BoxenOptions {
-            text_alignment: alignment.clone(),
+            text_alignment: *alignment,
             width: Some(20),
             ..Default::default()
         };

@@ -28,6 +28,7 @@ impl StringPool {
     /// - Initial capacity: 8 buffers
     /// - Maximum buffers: 16
     /// - Maximum buffer size: 1MB
+    #[must_use]
     pub fn new() -> Self {
         Self {
             buffers: Vec::with_capacity(8),
@@ -76,6 +77,7 @@ pub struct PooledString {
 
 impl PooledString {
     /// Returns a string slice of the buffer's contents.
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.buffer
     }
@@ -83,6 +85,7 @@ impl PooledString {
     /// Consumes the `PooledString` and returns the underlying `String`.
     ///
     /// Note: This prevents the buffer from being returned to the pool.
+    #[must_use]
     pub fn into_string(mut self) -> String {
         std::mem::take(&mut self.buffer)
     }
@@ -108,6 +111,7 @@ impl PooledString {
     }
 
     /// Returns true if the buffer is empty.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.buffer.is_empty()
     }
@@ -118,6 +122,7 @@ impl PooledString {
     }
 
     /// Returns true if the buffer ends with the given string.
+    #[must_use]
     pub fn ends_with(&self, pat: &str) -> bool {
         self.buffer.ends_with(pat)
     }

@@ -5,7 +5,6 @@
 ///
 /// Run with: cargo run --example memory_profiling --features dhat-heap
 /// Then view the output with: dh_view.py dhat-heap.json
-
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]
 static ALLOC: dhat::Alloc = dhat::Alloc;

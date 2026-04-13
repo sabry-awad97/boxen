@@ -33,7 +33,8 @@
 use crate::options::BorderChars;
 
 impl BorderChars {
-    /// Create a new BorderChars with all characters set to the same value
+    /// Create a new `BorderChars` with all characters set to the same value
+    #[must_use]
     pub fn uniform(ch: char) -> Self {
         Self {
             top_left: ch,
@@ -47,7 +48,8 @@ impl BorderChars {
         }
     }
 
-    /// Create BorderChars for single-line box drawing
+    /// Create `BorderChars` for single-line box drawing
+    #[must_use]
     pub fn single() -> Self {
         Self {
             top_left: '┌',
@@ -61,7 +63,8 @@ impl BorderChars {
         }
     }
 
-    /// Create BorderChars for double-line box drawing
+    /// Create `BorderChars` for double-line box drawing
+    #[must_use]
     pub fn double() -> Self {
         Self {
             top_left: '╔',
@@ -75,7 +78,8 @@ impl BorderChars {
         }
     }
 
-    /// Create BorderChars for rounded corners
+    /// Create `BorderChars` for rounded corners
+    #[must_use]
     pub fn round() -> Self {
         Self {
             top_left: '╭',
@@ -89,7 +93,8 @@ impl BorderChars {
         }
     }
 
-    /// Create BorderChars for bold/thick lines
+    /// Create `BorderChars` for bold/thick lines
+    #[must_use]
     pub fn bold() -> Self {
         Self {
             top_left: '┏',
@@ -103,7 +108,8 @@ impl BorderChars {
         }
     }
 
-    /// Create BorderChars for single horizontal, double vertical
+    /// Create `BorderChars` for single horizontal, double vertical
+    #[must_use]
     pub fn single_double() -> Self {
         Self {
             top_left: '╓',
@@ -117,7 +123,8 @@ impl BorderChars {
         }
     }
 
-    /// Create BorderChars for double horizontal, single vertical
+    /// Create `BorderChars` for double horizontal, single vertical
+    #[must_use]
     pub fn double_single() -> Self {
         Self {
             top_left: '╒',
@@ -131,7 +138,8 @@ impl BorderChars {
         }
     }
 
-    /// Create BorderChars for classic ASCII-style borders
+    /// Create `BorderChars` for classic ASCII-style borders
+    #[must_use]
     pub fn classic() -> Self {
         Self {
             top_left: '+',
@@ -146,6 +154,10 @@ impl BorderChars {
     }
 
     /// Validate that all border characters are printable and not whitespace
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any border character is whitespace or not printable.
     pub fn validate(&self) -> Result<(), String> {
         let chars = [
             ("top_left", self.top_left),
@@ -158,14 +170,13 @@ impl BorderChars {
             ("bottom", self.bottom),
         ];
 
-        for (name, ch) in chars.iter() {
+        for (name, ch) in &chars {
             if ch.is_whitespace() {
-                return Err(format!("Border character '{}' cannot be whitespace", name));
+                return Err(format!("Border character '{name}' cannot be whitespace"));
             }
             if !ch.is_ascii_graphic() && !is_box_drawing_char(*ch) {
                 return Err(format!(
-                    "Border character '{}' must be printable (got '{}')",
-                    name, ch
+                    "Border character '{name}' must be printable (got '{ch}')"
                 ));
             }
         }
@@ -174,7 +185,8 @@ impl BorderChars {
     }
 
     /// Get the width of the border (always 1 for single characters)
-    pub fn border_width(&self) -> usize {
+    #[must_use]
+    pub const fn border_width(&self) -> usize {
         1
     }
 }

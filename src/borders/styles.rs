@@ -6,8 +6,8 @@
 //!
 //! ## Available Operations
 //!
-//! - **Style Conversion**: Convert between string names and BorderStyle enums
-//! - **Character Retrieval**: Get the appropriate BorderChars for each style
+//! - **Style Conversion**: Convert between string names and `BorderStyle` enums
+//! - **Character Retrieval**: Get the appropriate `BorderChars` for each style
 //! - **Validation**: Validate custom border styles and characters
 //! - **Comparison**: Compare border styles for equality
 //! - **Preview**: Generate visual previews of border styles
@@ -34,7 +34,11 @@ use crate::error::BoxenError;
 use crate::options::{BorderChars, BorderStyle};
 
 impl BorderStyle {
-    /// Get the BorderChars for this style
+    /// Get the `BorderChars` for this style
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the border style is custom and contains invalid characters.
     pub fn get_chars(&self) -> Result<BorderChars, BoxenError> {
         match self {
             BorderStyle::None => Ok(BorderChars::uniform(' ')),
@@ -48,7 +52,7 @@ impl BorderStyle {
             BorderStyle::Custom(chars) => {
                 chars.validate().map_err(|msg| {
                     BoxenError::invalid_border_style(
-                        format!("Custom border validation failed: {}", msg),
+                        format!("Custom border validation failed: {msg}"),
                         vec![crate::error::ErrorRecommendation::suggestion_only(
                             "Border validation failed".to_string(),
                             "Check that all border characters are valid and visible".to_string(),
@@ -61,11 +65,13 @@ impl BorderStyle {
     }
 
     /// Check if this border style is visible (not None)
+    #[must_use]
     pub fn is_visible(&self) -> bool {
         !matches!(self, BorderStyle::None)
     }
 
     /// Get the display name of this border style
+    #[must_use]
     pub fn name(&self) -> &'static str {
         match self {
             BorderStyle::None => "none",
@@ -81,6 +87,10 @@ impl BorderStyle {
     }
 
     /// Parse a border style from a string name
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the style name is not recognized.
     pub fn from_name(name: &str) -> Result<BorderStyle, BoxenError> {
         match name.to_lowercase().as_str() {
             "none" => Ok(BorderStyle::None),
@@ -93,8 +103,7 @@ impl BorderStyle {
             "classic" => Ok(BorderStyle::Classic),
             _ => Err(BoxenError::invalid_border_style(
                 format!(
-                    "Unknown border style: '{}'. Valid styles are: none, single, double, round, bold, singleDouble, doubleSingle, classic",
-                    name
+                    "Unknown border style: '{name}'. Valid styles are: none, single, double, round, bold, singleDouble, doubleSingle, classic"
                 ),
                 vec![
                     crate::error::ErrorRecommendation::suggestion_only(
@@ -113,6 +122,7 @@ impl BorderStyle {
     }
 
     /// Get all available predefined border style names
+    #[must_use]
     pub fn available_styles() -> Vec<&'static str> {
         vec![
             "none",
@@ -127,10 +137,14 @@ impl BorderStyle {
     }
 
     /// Create a custom border style with validation
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the border characters are invalid.
     pub fn custom(chars: BorderChars) -> Result<BorderStyle, BoxenError> {
         chars.validate().map_err(|msg| {
             BoxenError::invalid_border_style(
-                format!("Custom border validation failed: {}", msg),
+                format!("Custom border validation failed: {msg}"),
                 vec![crate::error::ErrorRecommendation::suggestion_only(
                     "Border validation failed".to_string(),
                     "Ensure all border characters are valid and visible".to_string(),
@@ -146,6 +160,7 @@ pub struct BorderStyleUtils;
 
 impl BorderStyleUtils {
     /// Get the effective border width for a style (0 for None, 1 for others)
+    #[must_use]
     pub fn get_border_width(style: &BorderStyle) -> usize {
         match style {
             BorderStyle::None => 0,
@@ -154,16 +169,17 @@ impl BorderStyleUtils {
     }
 
     /// Check if two border styles are equivalent
+    #[must_use]
     pub fn styles_equal(a: &BorderStyle, b: &BorderStyle) -> bool {
         match (a, b) {
-            (BorderStyle::None, BorderStyle::None) => true,
-            (BorderStyle::Single, BorderStyle::Single) => true,
-            (BorderStyle::Double, BorderStyle::Double) => true,
-            (BorderStyle::Round, BorderStyle::Round) => true,
-            (BorderStyle::Bold, BorderStyle::Bold) => true,
-            (BorderStyle::SingleDouble, BorderStyle::SingleDouble) => true,
-            (BorderStyle::DoubleSingle, BorderStyle::DoubleSingle) => true,
-            (BorderStyle::Classic, BorderStyle::Classic) => true,
+            (BorderStyle::None, BorderStyle::None)
+            | (BorderStyle::Single, BorderStyle::Single)
+            | (BorderStyle::Double, BorderStyle::Double)
+            | (BorderStyle::Round, BorderStyle::Round)
+            | (BorderStyle::Bold, BorderStyle::Bold)
+            | (BorderStyle::SingleDouble, BorderStyle::SingleDouble)
+            | (BorderStyle::DoubleSingle, BorderStyle::DoubleSingle)
+            | (BorderStyle::Classic, BorderStyle::Classic) => true,
             (BorderStyle::Custom(a_chars), BorderStyle::Custom(b_chars)) => {
                 a_chars.top_left == b_chars.top_left
                     && a_chars.top_right == b_chars.top_right
@@ -179,6 +195,10 @@ impl BorderStyleUtils {
     }
 
     /// Get a preview string showing what the border style looks like
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the border style contains invalid characters.
     pub fn preview(style: &BorderStyle) -> Result<String, BoxenError> {
         let chars = style.get_chars()?;
         if matches!(style, BorderStyle::None) {

@@ -296,7 +296,7 @@ fn test_performance_text_alignment_variations() {
             let result = boxen(
                 multiline_text,
                 Some(BoxenOptions {
-                    text_alignment: alignment.clone(),
+                    text_alignment: *alignment,
                     width: Some(*width),
                     ..Default::default()
                 }),

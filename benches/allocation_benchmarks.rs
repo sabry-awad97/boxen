@@ -267,7 +267,7 @@ fn main() {
             let _ = boxen(
                 "Alignment test",
                 Some(BoxenOptions {
-                    text_alignment: alignment.clone(),
+                    text_alignment: *alignment,
                     width: Some(40),
                     ..Default::default()
                 }),

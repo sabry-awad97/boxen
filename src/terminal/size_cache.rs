@@ -93,10 +93,9 @@ impl TerminalSizeCache {
             if !cached.is_expired(self.ttl) {
                 self.stats.hits += 1;
                 return Some((cached.width, cached.height));
-            } else {
-                self.stats.expirations += 1;
-                self.cached = None;
             }
+            self.stats.expirations += 1;
+            self.cached = None;
         }
         self.stats.misses += 1;
         None

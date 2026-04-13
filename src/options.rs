@@ -477,7 +477,7 @@ impl From<(usize, usize, usize, usize)> for Spacing {
 }
 
 /// Text alignment within the box
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum TextAlignment {
     /// Align text to the left side of the box
     Left,
@@ -529,7 +529,7 @@ pub enum FullscreenMode {
     Custom(fn(usize, usize) -> (usize, usize)),
 }
 
-/// Builder pattern for creating BoxenOptions with a fluent interface.
+/// Builder pattern for creating `BoxenOptions` with a fluent interface.
 ///
 /// The `BoxenBuilder` provides a convenient and type-safe way to configure box styling
 /// options using method chaining. This is the recommended approach for creating boxes
@@ -649,6 +649,7 @@ impl BoxenBuilder {
     /// let builder = BoxenBuilder::new();
     /// let result = builder.render("Hello").unwrap();
     /// ```
+    #[must_use]
     pub fn new() -> Self {
         Self {
             options: BoxenOptions::default(),
@@ -671,6 +672,7 @@ impl BoxenBuilder {
     ///     .render("Double border")
     ///     .unwrap();
     /// ```
+    #[must_use]
     pub fn border_style(mut self, style: BorderStyle) -> Self {
         self.options.border_style = style;
         self
@@ -717,72 +719,84 @@ impl BoxenBuilder {
     ///     .render("Text with margin")
     ///     .unwrap();
     /// ```
+    #[must_use]
     pub fn margin<T: Into<Spacing>>(mut self, margin: T) -> Self {
         self.options.margin = margin.into();
         self
     }
 
     /// Set text alignment
+    #[must_use]
     pub fn text_alignment(mut self, alignment: TextAlignment) -> Self {
         self.options.text_alignment = alignment;
         self
     }
 
     /// Set title text
+    #[must_use]
     pub fn title<S: Into<String>>(mut self, title: S) -> Self {
         self.options.title = Some(title.into());
         self
     }
 
     /// Set title alignment
+    #[must_use]
     pub fn title_alignment(mut self, alignment: TitleAlignment) -> Self {
         self.options.title_alignment = alignment;
         self
     }
 
     /// Set float positioning
+    #[must_use]
     pub fn float(mut self, float: Float) -> Self {
         self.options.float = float;
         self
     }
 
     /// Set box width
+    #[must_use]
     pub fn width(mut self, width: usize) -> Self {
         self.options.width = Some(width);
         self
     }
 
     /// Set box height
+    #[must_use]
     pub fn height(mut self, height: usize) -> Self {
         self.options.height = Some(height);
         self
     }
 
     /// Set border color
+    #[must_use]
     pub fn border_color<C: Into<Color>>(mut self, color: C) -> Self {
         self.options.border_color = Some(color.into());
         self
     }
 
     /// Set background color
+    #[must_use]
     pub fn background_color<C: Into<Color>>(mut self, color: C) -> Self {
         self.options.background_color = Some(color.into());
         self
     }
 
     /// Enable dim border
+    #[must_use]
     pub fn dim_border(mut self, dim: bool) -> Self {
         self.options.dim_border = dim;
         self
     }
 
     /// Set fullscreen mode
+    #[must_use]
     pub fn fullscreen(mut self, mode: FullscreenMode) -> Self {
         self.options.fullscreen = Some(mode);
         self
     }
 
     /// Build the final options
+    #[must_use]
     pub fn build(self) -> BoxenOptions {
         self.options
     }
@@ -852,21 +866,25 @@ impl BoxenBuilder {
     }
 
     /// Validate configuration with intelligent recommendations
+    #[must_use]
     pub fn validate_with_suggestions(&self, text: &str) -> crate::validation::ValidationResult {
         crate::validation::validate_configuration(text, &self.options)
     }
 
     /// Calculate minimum dimensions required for the given text
+    #[must_use]
     pub fn minimum_dimensions(&self, text: &str) -> crate::validation::MinimumDimensions {
         crate::validation::calculate_minimum_dimensions(text, &self.options)
     }
 
     /// Suggest optimal dimensions for the given text
+    #[must_use]
     pub fn suggest_dimensions(&self, text: &str) -> (usize, usize) {
         crate::validation::suggest_optimal_dimensions(text, &self.options)
     }
 
     /// Auto-adjust configuration to fix common issues
+    #[must_use]
     pub fn auto_adjust(mut self, text: &str) -> Self {
         self.options = crate::validation::auto_adjust_options(text, self.options);
         self
@@ -877,57 +895,53 @@ impl BoxenBuilder {
         let text_ref = text.as_ref();
 
         // Try comprehensive validation first
-        match crate::error::validation::validate_all_options(text_ref, &self.options) {
-            Ok(_) => {
-                // Input validation passed, try configuration validation
-                let validation = crate::validation::validate_configuration(text_ref, &self.options);
-                if validation.is_valid {
-                    // Configuration is valid, proceed with normal render
-                    self.render(text_ref)
-                } else {
-                    // Auto-adjust and try again
-                    self.options =
-                        crate::validation::recovery::smart_recovery(text_ref, self.options);
-                    self.render(text_ref)
-                }
-            }
-            Err(_) => {
-                // Input validation failed, try smart recovery
+        if let Ok(()) = crate::error::validation::validate_all_options(text_ref, &self.options) {
+            // Input validation passed, try configuration validation
+            let validation = crate::validation::validate_configuration(text_ref, &self.options);
+            if validation.is_valid {
+                // Configuration is valid, proceed with normal render
+                self.render(text_ref)
+            } else {
+                // Auto-adjust and try again
                 self.options = crate::validation::recovery::smart_recovery(text_ref, self.options);
                 self.render(text_ref)
             }
+        } else {
+            // Input validation failed, try smart recovery
+            self.options = crate::validation::recovery::smart_recovery(text_ref, self.options);
+            self.render(text_ref)
         }
     }
 
     /// Get detailed validation information with recommendations
+    #[must_use]
     pub fn check_configuration(&self, text: &str) -> String {
+        use std::fmt::Write;
         let validation = self.validate_with_suggestions(text);
         let min_dims = self.minimum_dimensions(text);
         let (opt_width, opt_height) = self.suggest_dimensions(text);
 
-        let mut message = format!("Configuration Analysis for text: {:?}\n", text);
-        message.push_str(&format!(
-            "Minimum required: {}×{}\n",
+        let mut message = format!("Configuration Analysis for text: {text:?}\n");
+        let _ = writeln!(
+            message,
+            "Minimum required: {}×{}",
             min_dims.width, min_dims.height
-        ));
-        message.push_str(&format!(
-            "Suggested optimal: {}×{}\n",
-            opt_width, opt_height
-        ));
+        );
+        let _ = writeln!(message, "Suggested optimal: {opt_width}×{opt_height}");
 
         if validation.is_valid {
             message.push_str("✓ Configuration is valid\n");
         } else {
             message.push_str("✗ Configuration has errors:\n");
             for error in &validation.errors {
-                message.push_str(&format!("  - {}\n", error.detailed_message()));
+                let _ = writeln!(message, "  - {}", error.detailed_message());
             }
         }
 
         if !validation.warnings.is_empty() {
             message.push_str("⚠ Warnings:\n");
             for warning in &validation.warnings {
-                message.push_str(&format!("  - {}: {}\n", warning.issue, warning.suggestion));
+                let _ = writeln!(message, "  - {}: {}", warning.issue, warning.suggestion);
             }
         }
 
@@ -950,6 +964,7 @@ impl BoxenBuilder {
     }
 
     /// Convenience method to set both width and height
+    #[must_use]
     pub fn size(mut self, width: usize, height: usize) -> Self {
         self.options.width = Some(width);
         self.options.height = Some(height);
@@ -957,6 +972,7 @@ impl BoxenBuilder {
     }
 
     /// Convenience method to center align both text and title
+    #[must_use]
     pub fn center_all(mut self) -> Self {
         self.options.text_alignment = TextAlignment::Center;
         self.options.title_alignment = TitleAlignment::Center;
@@ -1971,6 +1987,7 @@ impl Spacing {
     /// let spacing = Spacing::from((1, 2, 3, 4));  // top, right, bottom, left
     /// assert_eq!(spacing.horizontal(), 6);  // right + left = 2 + 4
     /// ```
+    #[must_use]
     pub fn horizontal(&self) -> usize {
         self.left + self.right
     }
@@ -1985,6 +2002,7 @@ impl Spacing {
     /// let spacing = Spacing::from((1, 2, 3, 4));  // top, right, bottom, left
     /// assert_eq!(spacing.vertical(), 4);  // top + bottom = 1 + 3
     /// ```
+    #[must_use]
     pub fn vertical(&self) -> usize {
         self.top + self.bottom
     }
@@ -2002,6 +2020,7 @@ impl Spacing {
     /// let non_empty = Spacing::from(1);
     /// assert!(!non_empty.is_empty());
     /// ```
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.top == 0 && self.right == 0 && self.bottom == 0 && self.left == 0
     }
@@ -2019,6 +2038,7 @@ impl Spacing {
     /// assert_eq!(uniform.bottom, 2);
     /// assert_eq!(uniform.left, 2);
     /// ```
+    #[must_use]
     pub fn uniform(value: usize) -> Self {
         Self {
             top: value,
@@ -2041,6 +2061,7 @@ impl Spacing {
     /// assert_eq!(spacing.bottom, 1);
     /// assert_eq!(spacing.left, 3);
     /// ```
+    #[must_use]
     pub fn symmetric(horizontal: usize, vertical: usize) -> Self {
         Self {
             top: vertical,
@@ -2052,7 +2073,7 @@ impl Spacing {
 }
 
 impl BoxenOptions {
-    /// Helper to create InvalidDimensions error with basic recommendations
+    /// Helper to create `InvalidDimensions` error with basic recommendations
     fn invalid_dimensions_error(
         message: String,
         width: Option<usize>,
@@ -2065,21 +2086,21 @@ impl BoxenOptions {
         if let Some(w) = width {
             recommendations.push(ErrorRecommendation::suggestion_only(
                 "Width too small".to_string(),
-                format!("Consider increasing width from {}", w),
+                format!("Consider increasing width from {w}"),
             ));
         }
 
         if let Some(h) = height {
             recommendations.push(ErrorRecommendation::suggestion_only(
                 "Height too small".to_string(),
-                format!("Consider increasing height from {}", h),
+                format!("Consider increasing height from {h}"),
             ));
         }
 
         BoxenError::invalid_dimensions(message, width, height, recommendations)
     }
 
-    /// Helper to create ConfigurationError with basic recommendations
+    /// Helper to create `ConfigurationError` with basic recommendations
     fn configuration_error(message: String) -> crate::error::BoxenError {
         use crate::error::{BoxenError, ErrorRecommendation};
 
@@ -2130,10 +2151,7 @@ impl BoxenOptions {
             // Validate that we have enough space for borders and padding
             if available_width_for_content < border_width + self.padding.horizontal() {
                 return Err(Self::invalid_dimensions_error(
-                    format!(
-                        "Width {} is too small for borders and padding",
-                        specified_width
-                    ),
+                    format!("Width {specified_width} is too small for borders and padding"),
                     Some(specified_width),
                     self.height,
                 ));
@@ -2247,8 +2265,7 @@ impl BoxenOptions {
 
         if total_width > width_limit {
             return Err(Self::configuration_error(format!(
-                "Calculated box width ({}) exceeds maximum available width ({})",
-                total_width, width_limit
+                "Calculated box width ({total_width}) exceeds maximum available width ({width_limit})"
             )));
         }
 
@@ -2256,8 +2273,7 @@ impl BoxenOptions {
         if let Some(max_height) = constraints.max_height {
             if box_height > max_height {
                 return Err(Self::configuration_error(format!(
-                    "Calculated box height ({}) exceeds maximum available height ({})",
-                    box_height, max_height
+                    "Calculated box height ({box_height}) exceeds maximum available height ({max_height})"
                 )));
             }
         }
@@ -2273,8 +2289,7 @@ impl BoxenOptions {
         if let Some(terminal_height) = constraints.terminal_height {
             if total_height > terminal_height {
                 return Err(Self::configuration_error(format!(
-                    "Box height ({}) exceeds terminal height ({})",
-                    total_height, terminal_height
+                    "Box height ({total_height}) exceeds terminal height ({terminal_height})"
                 )));
             }
         }
@@ -2322,7 +2337,7 @@ impl BoxenOptions {
 
             if max_height < vertical_overhead {
                 return Err(Self::invalid_dimensions_error(
-                    format!("Height {} is too small for borders and padding", max_height),
+                    format!("Height {max_height} is too small for borders and padding"),
                     None,
                     Some(max_height),
                 ));
@@ -2361,7 +2376,7 @@ impl BoxenOptions {
             target_width - self.margin.horizontal()
         } else {
             return Err(Self::invalid_dimensions_error(
-                format!("Target width {} is too small for margins", target_width),
+                format!("Target width {target_width} is too small for margins"),
                 Some(target_width),
                 target_height,
             ));
@@ -2372,7 +2387,7 @@ impl BoxenOptions {
                 Some(height - self.margin.vertical())
             } else {
                 return Err(Self::invalid_dimensions_error(
-                    format!("Target height {} is too small for margins", height),
+                    format!("Target height {height} is too small for margins"),
                     Some(target_width),
                     Some(height),
                 ));

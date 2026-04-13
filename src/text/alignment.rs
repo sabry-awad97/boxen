@@ -51,7 +51,7 @@ pub fn align_lines(lines: &[String], alignment: TextAlignment, width: usize) -> 
     let mut result = Vec::with_capacity(lines.len());
 
     for line in lines {
-        result.push(align_line(line, alignment.clone(), width));
+        result.push(align_line(line, alignment, width));
     }
 
     result

@@ -468,7 +468,7 @@ fn test_all_text_alignments_with_multiline() {
 
     for alignment in alignments.iter() {
         let options = BoxenOptions {
-            text_alignment: alignment.clone(),
+            text_alignment: *alignment,
             width: Some(30),
             ..Default::default()
         };

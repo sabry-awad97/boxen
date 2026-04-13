@@ -438,7 +438,7 @@ pub fn boxen<S: AsRef<str>>(text: S, options: Option<BoxenOptions>) -> BoxenResu
     // Comprehensive input validation
     crate::error::validation::validate_all_options(text, &options).map_err(|e| {
         crate::error::BoxenError::rendering_error(
-            format!("Input validation failed: {}", e),
+            format!("Input validation failed: {e}"),
             e.recommendations(),
         )
     })?;
@@ -446,7 +446,7 @@ pub fn boxen<S: AsRef<str>>(text: S, options: Option<BoxenOptions>) -> BoxenResu
     // Process the text content
     let processed_content = process_content(text, &options).map_err(|e| {
         crate::error::BoxenError::rendering_error(
-            format!("Text processing failed: {}", e),
+            format!("Text processing failed: {e}"),
             vec![crate::error::ErrorRecommendation::suggestion_only(
                 "Text processing error".to_string(),
                 "Check your text content and box dimensions".to_string(),
@@ -462,7 +462,7 @@ pub fn boxen<S: AsRef<str>>(text: S, options: Option<BoxenOptions>) -> BoxenResu
         )
         .map_err(|e| {
             crate::error::BoxenError::rendering_error(
-                format!("Layout calculation failed: {}", e),
+                format!("Layout calculation failed: {e}"),
                 e.recommendations(),
             )
         })?;
@@ -470,7 +470,7 @@ pub fn boxen<S: AsRef<str>>(text: S, options: Option<BoxenOptions>) -> BoxenResu
     // Render the box
     render_box(&processed_content, &options, &layout).map_err(|e| {
         crate::error::BoxenError::rendering_error(
-            format!("Box rendering failed: {}", e),
+            format!("Box rendering failed: {e}"),
             vec![crate::error::ErrorRecommendation::suggestion_only(
                 "Rendering error".to_string(),
                 "Check your configuration and try reducing complexity".to_string(),
@@ -528,7 +528,7 @@ fn process_content(text: &str, options: &BoxenOptions) -> BoxenResult<ProcessedC
     // Apply text alignment without padding (padding will be applied during rendering)
     let aligned_lines = crate::text::align_lines(
         &height_constrained_lines,
-        options.text_alignment.clone(),
+        options.text_alignment,
         target_width,
     );
 

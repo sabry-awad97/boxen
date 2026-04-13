@@ -194,7 +194,7 @@ fn bench_text_alignment(c: &mut Criterion) {
                     let _ = boxen(
                         black_box(content),
                         Some(BoxenOptions {
-                            text_alignment: alignment.clone(),
+                            text_alignment: *alignment,
                             width: Some(50),
                             ..Default::default()
                         }),

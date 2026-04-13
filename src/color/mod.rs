@@ -199,6 +199,10 @@ use crate::options::Color;
 use colored::{ColoredString, Colorize};
 
 /// Parse and validate a color specification
+///
+/// # Errors
+///
+/// Returns an error if the color specification is invalid.
 pub fn parse_color(color: &Color) -> BoxenResult<colored::Color> {
     match color {
         Color::Named(name) => parse_named_color(name),
@@ -212,6 +216,10 @@ pub fn parse_color(color: &Color) -> BoxenResult<colored::Color> {
 }
 
 /// Parse a named color into a `colored::Color`
+///
+/// # Errors
+///
+/// Returns an error if the color name is not recognized.
 pub fn parse_named_color(name: &str) -> BoxenResult<colored::Color> {
     let normalized = name.to_lowercase();
     match normalized.as_str() {
@@ -238,7 +246,7 @@ pub fn parse_named_color(name: &str) -> BoxenResult<colored::Color> {
         "bright_white" | "brightwhite" => Ok(colored::Color::BrightWhite),
 
         _ => Err(BoxenError::invalid_color(
-            format!("Unknown color name: {}", name),
+            format!("Unknown color name: {name}"),
             name.to_string(),
             vec![
                 ErrorRecommendation::suggestion_only(
@@ -260,15 +268,20 @@ pub fn parse_named_color(name: &str) -> BoxenResult<colored::Color> {
     }
 }
 
-/// Parse a hex color string into a colored::Color
+/// Parse a hex color string into a `colored::Color`
+///
+/// # Errors
+///
+/// Returns an error if the hex color format is invalid.
+#[allow(clippy::too_many_lines)]
 pub fn parse_hex_color(hex: &str) -> BoxenResult<colored::Color> {
     let hex = hex.trim_start_matches('#');
 
     // Validate hex string length
     if hex.len() != 3 && hex.len() != 6 {
         return Err(BoxenError::invalid_color(
-            format!("Invalid hex color format: #{}", hex),
-            format!("#{}", hex),
+            format!("Invalid hex color format: #{hex}"),
+            format!("#{hex}"),
             vec![
                 ErrorRecommendation::suggestion_only(
                     "Invalid hex length".to_string(),
@@ -286,8 +299,8 @@ pub fn parse_hex_color(hex: &str) -> BoxenResult<colored::Color> {
     // Validate hex characters
     if !hex.chars().all(|c| c.is_ascii_hexdigit()) {
         return Err(BoxenError::invalid_color(
-            format!("Invalid hex color format: #{}", hex),
-            format!("#{}", hex),
+            format!("Invalid hex color format: #{hex}"),
+            format!("#{hex}"),
             vec![
                 ErrorRecommendation::suggestion_only(
                     "Invalid hex characters".to_string(),
@@ -306,8 +319,8 @@ pub fn parse_hex_color(hex: &str) -> BoxenResult<colored::Color> {
         // Short format: #RGB -> #RRGGBB
         let r = u8::from_str_radix(&hex[0..1].repeat(2), 16).map_err(|_| {
             BoxenError::invalid_color(
-                format!("Invalid hex color: #{}", hex),
-                format!("#{}", hex),
+                format!("Invalid hex color: #{hex}"),
+                format!("#{hex}"),
                 vec![ErrorRecommendation::with_auto_fix(
                     "Invalid hex format".to_string(),
                     "Use a valid 3-digit hex color".to_string(),
@@ -317,8 +330,8 @@ pub fn parse_hex_color(hex: &str) -> BoxenResult<colored::Color> {
         })?;
         let g = u8::from_str_radix(&hex[1..2].repeat(2), 16).map_err(|_| {
             BoxenError::invalid_color(
-                format!("Invalid hex color: #{}", hex),
-                format!("#{}", hex),
+                format!("Invalid hex color: #{hex}"),
+                format!("#{hex}"),
                 vec![ErrorRecommendation::with_auto_fix(
                     "Invalid hex format".to_string(),
                     "Use a valid 3-digit hex color".to_string(),
@@ -328,8 +341,8 @@ pub fn parse_hex_color(hex: &str) -> BoxenResult<colored::Color> {
         })?;
         let b = u8::from_str_radix(&hex[2..3].repeat(2), 16).map_err(|_| {
             BoxenError::invalid_color(
-                format!("Invalid hex color: #{}", hex),
-                format!("#{}", hex),
+                format!("Invalid hex color: #{hex}"),
+                format!("#{hex}"),
                 vec![ErrorRecommendation::with_auto_fix(
                     "Invalid hex format".to_string(),
                     "Use a valid 3-digit hex color".to_string(),
@@ -342,8 +355,8 @@ pub fn parse_hex_color(hex: &str) -> BoxenResult<colored::Color> {
         // Long format: #RRGGBB
         let r = u8::from_str_radix(&hex[0..2], 16).map_err(|_| {
             BoxenError::invalid_color(
-                format!("Invalid hex color: #{}", hex),
-                format!("#{}", hex),
+                format!("Invalid hex color: #{hex}"),
+                format!("#{hex}"),
                 vec![ErrorRecommendation::with_auto_fix(
                     "Invalid hex format".to_string(),
                     "Use a valid 6-digit hex color".to_string(),
@@ -353,8 +366,8 @@ pub fn parse_hex_color(hex: &str) -> BoxenResult<colored::Color> {
         })?;
         let g = u8::from_str_radix(&hex[2..4], 16).map_err(|_| {
             BoxenError::invalid_color(
-                format!("Invalid hex color: #{}", hex),
-                format!("#{}", hex),
+                format!("Invalid hex color: #{hex}"),
+                format!("#{hex}"),
                 vec![ErrorRecommendation::with_auto_fix(
                     "Invalid hex format".to_string(),
                     "Use a valid 6-digit hex color".to_string(),
@@ -364,8 +377,8 @@ pub fn parse_hex_color(hex: &str) -> BoxenResult<colored::Color> {
         })?;
         let b = u8::from_str_radix(&hex[4..6], 16).map_err(|_| {
             BoxenError::invalid_color(
-                format!("Invalid hex color: #{}", hex),
-                format!("#{}", hex),
+                format!("Invalid hex color: #{hex}"),
+                format!("#{hex}"),
                 vec![ErrorRecommendation::with_auto_fix(
                     "Invalid hex format".to_string(),
                     "Use a valid 6-digit hex color".to_string(),
@@ -380,23 +393,39 @@ pub fn parse_hex_color(hex: &str) -> BoxenResult<colored::Color> {
 }
 
 /// Validate that a color specification is valid
+///
+/// # Errors
+///
+/// Returns an error if the color specification is invalid.
 pub fn validate_color(color: &Color) -> BoxenResult<()> {
     parse_color(color).map(|_| ())
 }
 
 /// Apply foreground color to text
+///
+/// # Errors
+///
+/// Returns an error if the color specification is invalid.
 pub fn apply_foreground_color(text: &str, color: &Color) -> BoxenResult<ColoredString> {
     let parsed_color = parse_color(color)?;
     Ok(text.color(parsed_color))
 }
 
 /// Apply background color to text
+///
+/// # Errors
+///
+/// Returns an error if the color specification is invalid.
 pub fn apply_background_color(text: &str, color: &Color) -> BoxenResult<ColoredString> {
     let parsed_color = parse_color(color)?;
     Ok(text.on_color(parsed_color))
 }
 
 /// Apply both foreground and background colors to text
+///
+/// # Errors
+///
+/// Returns an error if any color specification is invalid.
 pub fn apply_colors(
     text: &str,
     fg_color: Option<&Color>,
@@ -424,6 +453,10 @@ pub fn apply_dim(text: &str) -> ColoredString {
 }
 
 /// Apply color and dim styling to text
+///
+/// # Errors
+///
+/// Returns an error if the color specification is invalid.
 pub fn apply_color_with_dim(
     text: &str,
     color: Option<&Color>,
