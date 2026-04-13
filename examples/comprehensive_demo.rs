@@ -83,7 +83,7 @@ fn demonstrate_border_styles() -> Result<(), Box<dyn std::error::Error>> {
     for (name, style) in styles.iter() {
         println!("{} border:", name);
         let options = BoxenOptions {
-            border_style: style.clone(),
+            border_style: *style,
             ..Default::default()
         };
         println!(
@@ -243,7 +243,7 @@ fn demonstrate_titles_and_positioning() -> Result<(), Box<dyn std::error::Error>
         println!("{} title alignment:", desc);
         let options = BoxenOptions {
             title: Some(format!("{} Title", desc)),
-            title_alignment: alignment.clone(),
+            title_alignment: *alignment,
             width: Some(40),
             ..Default::default()
         };
@@ -260,7 +260,7 @@ fn demonstrate_titles_and_positioning() -> Result<(), Box<dyn std::error::Error>
     for (desc, float_pos) in float_positions.iter() {
         println!("{} float positioning:", desc);
         let options = BoxenOptions {
-            float: float_pos.clone(),
+            float: *float_pos,
             width: Some(30),
             title: Some(format!("{} Float", desc)),
             ..Default::default()
