@@ -222,6 +222,15 @@ pub fn calculate_border_width(border_style: &BorderStyle) -> usize {
 /// // 80 - 2 (borders) - 4 (padding) = 74
 /// assert_eq!(max_width, 74);
 /// ```
+///
+/// # Errors
+///
+/// Returns `BoxenError::InvalidDimensions` if:
+/// - Specified width is less than the total overhead (borders + padding + margins)
+///
+/// Returns `BoxenError::TerminalSizeError` if:
+/// - Terminal width is less than the total overhead when no width is specified
+/// - Terminal size cannot be detected in non-interactive environments
 pub fn calculate_max_content_width(
     terminal_width: usize,
     border_style: &BorderStyle,
@@ -285,6 +294,12 @@ pub fn calculate_max_content_width(
 /// # Returns
 ///
 /// Ok(()) if dimensions are valid, or an error describing the constraint violation
+///
+/// # Errors
+///
+/// Returns `BoxenError::ConfigurationError` if:
+/// - Box width exceeds terminal width
+/// - Box height exceeds terminal height (when terminal height is known)
 pub fn validate_terminal_constraints(
     box_width: usize,
     box_height: usize,

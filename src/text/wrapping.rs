@@ -5,6 +5,11 @@ use textwrap::{Options, WordSeparator, WordSplitter, wrap};
 
 /// Wrap text to fit within a specified width, preserving ANSI escape sequences
 /// Optimized version with pre-allocated capacity and efficient iteration
+///
+/// # Errors
+///
+/// Returns `BoxenError::TextProcessingError` if:
+/// - Width is 0 (cannot wrap text to zero width)
 pub fn wrap_text(text: &str, width: usize) -> Result<Vec<String>, BoxenError> {
     if width == 0 {
         return Err(BoxenError::text_processing_error(
@@ -134,6 +139,11 @@ fn wrap_line_with_ansi(line: &str, width: usize) -> Vec<String> {
 }
 
 /// Wrap text with word boundary preservation when possible
+///
+/// # Errors
+///
+/// Returns `BoxenError::TextProcessingError` if:
+/// - Width is 0 (cannot wrap text to zero width)
 pub fn wrap_text_preserve_words(text: &str, width: usize) -> Result<Vec<String>, BoxenError> {
     if width == 0 {
         return Err(BoxenError::text_processing_error(

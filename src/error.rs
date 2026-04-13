@@ -506,6 +506,14 @@ pub mod validation {
     }
 
     /// Validate spacing values
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::InputValidationError` if:
+    /// - Top spacing exceeds 100 (unreasonably large)
+    /// - Right spacing exceeds 100 (unreasonably large)
+    /// - Bottom spacing exceeds 100 (unreasonably large)
+    /// - Left spacing exceeds 100 (unreasonably large)
     pub fn validate_spacing(
         spacing: &crate::options::Spacing,
         field_name: &str,
@@ -584,6 +592,14 @@ pub mod validation {
     }
 
     /// Validate dimension values
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::InputValidationError` if:
+    /// - Width is 0 (must be at least 1 character)
+    /// - Width exceeds 10,000 (unreasonably large, may cause display issues)
+    /// - Height is 0 (must be at least 1 line)
+    /// - Height exceeds 1,000 (unreasonably large, may cause display issues)
     pub fn validate_dimensions(width: Option<usize>, height: Option<usize>) -> BoxenResult<()> {
         if let Some(w) = width {
             if w == 0 {
@@ -657,6 +673,12 @@ pub mod validation {
     }
 
     /// Validate title input
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::InputValidationError` if:
+    /// - Title exceeds 200 characters (may be truncated or cause layout issues)
+    /// - Title contains invalid control characters (except tabs)
     pub fn validate_title(title: &str) -> BoxenResult<()> {
         if title.len() > 200 {
             return Err(BoxenError::input_validation_error(
@@ -694,6 +716,17 @@ pub mod validation {
     }
 
     /// Comprehensive validation of all configuration options
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::InputValidationError` if:
+    /// - Text validation fails (see `validate_text_input`)
+    /// - Padding validation fails (see `validate_spacing`)
+    /// - Margin validation fails (see `validate_spacing`)
+    /// - Dimension validation fails (see `validate_dimensions`)
+    /// - Title validation fails (see `validate_title`)
+    /// - Border color is invalid (not a valid color name or hex code)
+    /// - Background color is invalid (not a valid color name or hex code)
     pub fn validate_all_options(
         text: &str,
         options: &crate::options::BoxenOptions,

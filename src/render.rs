@@ -431,6 +431,38 @@ use unicode_width::UnicodeWidthChar;
 /// let colored = "\x1b[31mRed text\x1b[0m";
 /// let result = boxen(colored, None).unwrap();
 /// ```
+///
+/// # Errors
+///
+/// Returns `BoxenError::InputValidationError` if:
+/// - Text exceeds 1,000,000 characters (performance limit)
+/// - Text contains more than 1,000 lines (layout limit)
+/// - Title exceeds 200 characters
+/// - Padding or margin values exceed 100 (unreasonably large)
+/// - Width or height is 0 or exceeds reasonable limits
+/// - Invalid color specifications in border_color or background_color
+///
+/// Returns `BoxenError::InvalidDimensions` if:
+/// - Specified width is too small for borders, padding, and margins
+/// - Specified height is too small for borders, padding, and margins
+/// - Content dimensions exceed available space
+///
+/// Returns `BoxenError::TerminalSizeError` if:
+/// - Terminal size cannot be detected in non-interactive environments
+/// - Terminal dimensions are insufficient for the configuration
+///
+/// Returns `BoxenError::ConfigurationError` if:
+/// - Box dimensions exceed terminal size
+/// - Configuration options conflict with each other
+/// - Layout calculation fails due to constraint violations
+///
+/// Returns `BoxenError::TextProcessingError` if:
+/// - Text wrapping fails (e.g., zero width constraint)
+/// - Text width calculation encounters issues
+///
+/// Returns `BoxenError::RenderingError` if:
+/// - Box rendering fails due to I/O errors
+/// - Border or content rendering encounters unexpected issues
 pub fn boxen<S: AsRef<str>>(text: S, options: Option<BoxenOptions>) -> BoxenResult<String> {
     let text = text.as_ref();
     let options = options.unwrap_or_default();

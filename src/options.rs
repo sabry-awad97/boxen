@@ -848,6 +848,19 @@ impl BoxenBuilder {
     ///     }
     /// }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::InputValidationError` if:
+    /// - Text or configuration parameters fail validation (see `boxen` function for details)
+    ///
+    /// Returns `BoxenError::InvalidDimensions` if:
+    /// - Configuration constraints cannot be satisfied
+    ///
+    /// Returns `BoxenError::ConfigurationError` if:
+    /// - Configuration validation fails
+    ///
+    /// Returns errors from the underlying `boxen` function for rendering failures.
     pub fn render<S: AsRef<str>>(self, text: S) -> BoxenResult<String> {
         let text_ref = text.as_ref();
 
@@ -861,6 +874,18 @@ impl BoxenBuilder {
     }
 
     /// Validate the current builder configuration without building
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::InvalidDimensions` if:
+    /// - Width or height constraints cannot be satisfied
+    /// - Dimensions are too small for borders and padding
+    ///
+    /// Returns `BoxenError::TerminalSizeError` if:
+    /// - Terminal size cannot be detected when required
+    ///
+    /// Returns `BoxenError::ConfigurationError` if:
+    /// - Configuration options conflict with each other
     pub fn validate(&self) -> BoxenResult<()> {
         self.options.validate_constraints()
     }
@@ -891,6 +916,11 @@ impl BoxenBuilder {
     }
 
     /// Render with auto-adjustment if the current configuration fails
+    ///
+    /// # Errors
+    ///
+    /// Returns errors from the underlying `render` function if auto-adjustment cannot fix the configuration.
+    /// This method attempts smart recovery before failing, so errors indicate unrecoverable issues.
     pub fn render_or_adjust<S: AsRef<str>>(mut self, text: S) -> BoxenResult<String> {
         let text_ref = text.as_ref();
 
@@ -2112,6 +2142,17 @@ impl BoxenOptions {
         BoxenError::configuration_error(message, recommendations)
     }
     /// Calculate dimension constraints based on terminal size and options
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::InvalidDimensions` if:
+    /// - Specified width is too small for margins, borders, and padding
+    /// - Specified height is too small for margins, borders, and padding
+    /// - Fullscreen mode dimensions are insufficient for the configuration
+    ///
+    /// Returns `BoxenError::TerminalSizeError` if:
+    /// - Terminal size cannot be detected and no explicit dimensions are provided
+    /// - Terminal dimensions are smaller than the required margins
     pub fn calculate_constraints(&self) -> BoxenResult<DimensionConstraints> {
         let terminal_width = get_terminal_width();
         let terminal_height = get_terminal_height();
@@ -2212,6 +2253,15 @@ impl BoxenOptions {
     }
 
     /// Calculate final layout dimensions for given content
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::ConfigurationError` if:
+    /// - Calculated box dimensions exceed terminal size
+    /// - Box width exceeds the specified or available width limit
+    /// - Box height exceeds the specified or available height limit
+    ///
+    /// Returns errors from `calculate_constraints` if dimension constraints cannot be calculated.
     pub fn calculate_layout_dimensions(
         &self,
         content_width: usize,
@@ -2305,6 +2355,14 @@ impl BoxenOptions {
     }
 
     /// Calculate the maximum content width available given the current options
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::InvalidDimensions` if:
+    /// - Available width is too small for borders and padding
+    /// - Width constraints cannot be satisfied
+    ///
+    /// Returns errors from `calculate_constraints` if dimension constraints cannot be calculated.
     pub fn calculate_max_content_width(&self) -> BoxenResult<usize> {
         let constraints = self.calculate_constraints()?;
         let total_overhead = constraints.border_width + self.padding.horizontal();
@@ -2324,6 +2382,14 @@ impl BoxenOptions {
     }
 
     /// Calculate the maximum content height available given the current options
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::InvalidDimensions` if:
+    /// - Available height is too small for borders and padding
+    /// - Height constraints cannot be satisfied
+    ///
+    /// Returns errors from `calculate_constraints` if dimension constraints cannot be calculated.
     pub fn calculate_max_content_height(&self) -> BoxenResult<Option<usize>> {
         let constraints = self.calculate_constraints()?;
 
@@ -2430,6 +2496,11 @@ impl BoxenOptions {
     }
 
     /// Validate that the current options are compatible with terminal constraints
+    ///
+    /// # Errors
+    ///
+    /// Returns errors from `calculate_constraints`, `calculate_max_content_width`, and
+    /// `calculate_max_content_height` if any validation checks fail.
     pub fn validate_constraints(&self) -> BoxenResult<()> {
         let _constraints = self.calculate_constraints()?;
         let _max_content_width = self.calculate_max_content_width()?;

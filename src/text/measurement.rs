@@ -64,6 +64,11 @@ pub fn line_widths(text: &str) -> Vec<usize> {
 }
 
 /// Validate that text width calculation is working correctly
+///
+/// # Errors
+///
+/// Returns `BoxenError::TextProcessingError` if:
+/// - Text width exceeds 10,000 characters (unreasonably large, may indicate measurement issues)
 pub fn validate_text_measurement(text: &str) -> Result<usize, BoxenError> {
     let width = text_width(text);
 
