@@ -353,7 +353,7 @@ impl Default for BoxenOptions {
 /// ┃Hello┃
 /// ┗━━━━━┛
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum BorderStyle {
     /// No border - content only
     None,
@@ -376,7 +376,7 @@ pub enum BorderStyle {
 }
 
 /// Border character set for custom borders
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct BorderChars {
     /// Character for the top-left corner of the border
     pub top_left: char,
@@ -488,7 +488,7 @@ pub enum TextAlignment {
 }
 
 /// Title alignment within the top border
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum TitleAlignment {
     /// Align title to the left side of the top border
     Left,
@@ -499,7 +499,7 @@ pub enum TitleAlignment {
 }
 
 /// Box positioning relative to terminal
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Float {
     /// Position box on the left side of the terminal
     Left,

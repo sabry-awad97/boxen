@@ -59,7 +59,7 @@ impl BorderStyle {
                         )],
                     )
                 })?;
-                Ok(chars.clone())
+                Ok(*chars)
             }
         }
     }
@@ -391,7 +391,7 @@ mod tests {
     #[test]
     fn test_custom_border_get_chars() {
         let chars = BorderChars::single();
-        let style = BorderStyle::Custom(chars.clone());
+        let style = BorderStyle::Custom(chars);
         let retrieved_chars = style.get_chars().unwrap();
 
         assert_eq!(retrieved_chars.top_left, chars.top_left);
