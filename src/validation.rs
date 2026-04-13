@@ -561,8 +561,7 @@ pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationR
             ErrorRecommendation::with_auto_fix(
                 "Box exceeds terminal width".to_string(),
                 format!(
-                    "Reduce width or margins. Current total: {}, terminal: {}",
-                    total_width, terminal_width
+                    "Reduce width or margins. Current total: {total_width}, terminal: {terminal_width}"
                 ),
                 format!(
                     ".width({})",
@@ -580,8 +579,7 @@ pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationR
 
         result.add_error(BoxenError::configuration_error(
             format!(
-                "Box width ({}) exceeds terminal width ({})",
-                total_width, terminal_width
+                "Box width ({total_width}) exceeds terminal width ({terminal_width})"
             ),
             recommendations,
         ));
@@ -593,8 +591,7 @@ pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationR
                 ErrorRecommendation::with_auto_fix(
                     "Box exceeds terminal height".to_string(),
                     format!(
-                        "Reduce height or margins. Current total: {}, terminal: {}",
-                        total_height, term_height
+                        "Reduce height or margins. Current total: {total_height}, terminal: {term_height}"
                     ),
                     format!(
                         ".height({})",
@@ -612,8 +609,7 @@ pub fn validate_configuration(text: &str, options: &BoxenOptions) -> ValidationR
 
             result.add_error(BoxenError::configuration_error(
                 format!(
-                    "Box height ({}) exceeds terminal height ({})",
-                    total_height, term_height
+                    "Box height ({total_height}) exceeds terminal height ({term_height})"
                 ),
                 recommendations,
             ));

@@ -250,7 +250,7 @@ pub fn calculate_max_content_width(
                 None,
                 vec![ErrorRecommendation::suggestion_only(
                     "Width insufficient".to_string(),
-                    format!("Need at least {} width", total_overhead),
+                    format!("Need at least {total_overhead} width"),
                 )],
             ));
         }
@@ -309,12 +309,11 @@ pub fn validate_terminal_constraints(
     if box_width > terminal_width {
         return Err(BoxenError::configuration_error(
             format!(
-                "Box width ({}) exceeds terminal width ({})",
-                box_width, terminal_width
+                "Box width ({box_width}) exceeds terminal width ({terminal_width})"
             ),
             vec![ErrorRecommendation::suggestion_only(
                 "Width exceeds terminal".to_string(),
-                format!("Reduce width to fit in {} columns", terminal_width),
+                format!("Reduce width to fit in {terminal_width} columns"),
             )],
         ));
     }
@@ -323,12 +322,11 @@ pub fn validate_terminal_constraints(
         if box_height > term_height {
             return Err(BoxenError::configuration_error(
                 format!(
-                    "Box height ({}) exceeds terminal height ({})",
-                    box_height, term_height
+                    "Box height ({box_height}) exceeds terminal height ({term_height})"
                 ),
                 vec![ErrorRecommendation::suggestion_only(
                     "Height exceeds terminal".to_string(),
-                    format!("Reduce height to fit in {} rows", term_height),
+                    format!("Reduce height to fit in {term_height} rows"),
                 )],
             ));
         }

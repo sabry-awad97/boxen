@@ -76,7 +76,7 @@ pub fn validate_text_measurement(text: &str) -> Result<usize, BoxenError> {
     // and should be reasonable for terminal display
     if width > 10000 {
         return Err(BoxenError::text_processing_error(
-            format!("Text width {} seems unreasonably large", width),
+            format!("Text width {width} seems unreasonably large"),
             vec![
                 crate::error::ErrorRecommendation::suggestion_only(
                     "Excessive text width".to_string(),

@@ -694,16 +694,16 @@ fn render_top_border_with_title(
 
     match options.title_alignment {
         TitleAlignment::Left => {
-            write!(border, "{}", effective_title).map_err(|e| {
+            write!(border, "{effective_title}").map_err(|e| {
                 crate::error::BoxenError::rendering_error(
-                    format!("Failed to write title: {}", e),
+                    format!("Failed to write title: {e}"),
                     vec![],
                 )
             })?;
             for _ in 0..remaining_width {
                 write!(border, "{}", border_chars.top).map_err(|e| {
                     crate::error::BoxenError::rendering_error(
-                        format!("Failed to write border: {}", e),
+                        format!("Failed to write border: {e}"),
                         vec![],
                     )
                 })?;
@@ -713,14 +713,14 @@ fn render_top_border_with_title(
             for _ in 0..remaining_width {
                 write!(border, "{}", border_chars.top).map_err(|e| {
                     crate::error::BoxenError::rendering_error(
-                        format!("Failed to write border: {}", e),
+                        format!("Failed to write border: {e}"),
                         vec![],
                     )
                 })?;
             }
-            write!(border, "{}", effective_title).map_err(|e| {
+            write!(border, "{effective_title}").map_err(|e| {
                 crate::error::BoxenError::rendering_error(
-                    format!("Failed to write title: {}", e),
+                    format!("Failed to write title: {e}"),
                     vec![],
                 )
             })?;
@@ -732,21 +732,21 @@ fn render_top_border_with_title(
             for _ in 0..left_padding {
                 write!(border, "{}", border_chars.top).map_err(|e| {
                     crate::error::BoxenError::rendering_error(
-                        format!("Failed to write border: {}", e),
+                        format!("Failed to write border: {e}"),
                         vec![],
                     )
                 })?;
             }
-            write!(border, "{}", effective_title).map_err(|e| {
+            write!(border, "{effective_title}").map_err(|e| {
                 crate::error::BoxenError::rendering_error(
-                    format!("Failed to write title: {}", e),
+                    format!("Failed to write title: {e}"),
                     vec![],
                 )
             })?;
             for _ in 0..right_padding {
                 write!(border, "{}", border_chars.top).map_err(|e| {
                     crate::error::BoxenError::rendering_error(
-                        format!("Failed to write border: {}", e),
+                        format!("Failed to write border: {e}"),
                         vec![],
                     )
                 })?;
@@ -927,9 +927,9 @@ fn render_content_line(
         // Combine borders and content using write! macro with pooled buffer
         with_pooled_string(|result| {
             result.reserve(left_border.len() + styled_content.len() + right_border.len());
-            write!(result, "{}{}{}", left_border, styled_content, right_border).map_err(|e| {
+            write!(result, "{left_border}{styled_content}{right_border}").map_err(|e| {
                 crate::error::BoxenError::rendering_error(
-                    format!("Failed to write content line: {}", e),
+                    format!("Failed to write content line: {e}"),
                     vec![],
                 )
             })?;
@@ -978,9 +978,9 @@ fn render_padded_empty_line(
         // Combine borders and content using write! macro with pooled buffer
         with_pooled_string(|result| {
             result.reserve(left_border.len() + styled_content.len() + right_border.len());
-            write!(result, "{}{}{}", left_border, styled_content, right_border).map_err(|e| {
+            write!(result, "{left_border}{styled_content}{right_border}").map_err(|e| {
                 crate::error::BoxenError::rendering_error(
-                    format!("Failed to write padded line: {}", e),
+                    format!("Failed to write padded line: {e}"),
                     vec![],
                 )
             })?;
@@ -1024,9 +1024,9 @@ fn render_title_without_border(
         buffer.reserve(inner_width);
         match options.title_alignment {
             TitleAlignment::Left => {
-                write!(buffer, "{}", effective_title).map_err(|e| {
+                write!(buffer, "{effective_title}").map_err(|e| {
                     crate::error::BoxenError::rendering_error(
-                        format!("Failed to write title: {}", e),
+                        format!("Failed to write title: {e}"),
                         vec![],
                     )
                 })?;
@@ -1038,9 +1038,9 @@ fn render_title_without_border(
                 for _ in 0..remaining_width {
                     buffer.push(' ');
                 }
-                write!(buffer, "{}", effective_title).map_err(|e| {
+                write!(buffer, "{effective_title}").map_err(|e| {
                     crate::error::BoxenError::rendering_error(
-                        format!("Failed to write title: {}", e),
+                        format!("Failed to write title: {e}"),
                         vec![],
                     )
                 })?;
@@ -1051,9 +1051,9 @@ fn render_title_without_border(
                 for _ in 0..left_padding {
                     buffer.push(' ');
                 }
-                write!(buffer, "{}", effective_title).map_err(|e| {
+                write!(buffer, "{effective_title}").map_err(|e| {
                     crate::error::BoxenError::rendering_error(
-                        format!("Failed to write title: {}", e),
+                        format!("Failed to write title: {e}"),
                         vec![],
                     )
                 })?;
