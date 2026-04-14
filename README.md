@@ -81,14 +81,14 @@ Add boxen to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-boxen = "0.3"
+boxen = "0.4"
 ```
 
 For maximum performance, enable caching features:
 
 ```toml
 [dependencies]
-boxen = { version = "0.3", features = ["width-cache", "terminal-cache"] }
+boxen = { version = "0.4", features = ["width-cache", "terminal-cache"] }
 ```
 
 ---
