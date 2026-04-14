@@ -35,6 +35,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `boxen()` function - ensures rendered output is used
   - All builder methods already had `#[must_use]` (verified)
 
+### Documentation
+
+- **Safety Guarantees Section**: Added comprehensive safety documentation to main library docs (`src/lib.rs`)
+  - Memory Safety: No unsafe code, bounded allocations, no buffer overflows, thread-safe caching
+  - Error Safety: No panics, descriptive errors, graceful degradation
+  - Type Safety: Strong typing, builder pattern, validated input
+  - Thread Safety: Send + Sync types, no shared state, concurrent rendering
+  - Unicode Safety: UTF-8 validated, width aware, ANSI aware
+
 ## [0.3.3] - 2026-04-14
 
 ### Added

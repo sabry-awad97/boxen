@@ -96,6 +96,36 @@
 //!
 //! All fallible operations return `Result<T, BoxenError>` with descriptive error messages
 //! and helpful recommendations for fixing common issues.
+//!
+//! ## Safety Guarantees
+//!
+//! Boxen provides strong safety guarantees for production use:
+//!
+//! ### Memory Safety
+//! - **No Unsafe Code**: Pure safe Rust implementation
+//! - **Bounded Allocations**: All allocations are validated and bounded
+//! - **No Buffer Overflows**: All buffer operations are checked
+//! - **Thread-Safe Caching**: Thread-local storage prevents data races
+//!
+//! ### Error Safety
+//! - **No Panics**: All public functions return `Result` or gracefully degrade
+//! - **Descriptive Errors**: Every error includes actionable recommendations
+//! - **Graceful Degradation**: Convenience functions never crash
+//!
+//! ### Type Safety
+//! - **Strong Typing**: Enums prevent invalid states at compile time
+//! - **Builder Pattern**: Prevents partial initialization
+//! - **Validated Input**: All input is validated before use
+//!
+//! ### Thread Safety
+//! - **Send + Sync**: All public types are thread-safe where appropriate
+//! - **No Shared State**: No mutable global state
+//! - **Concurrent Rendering**: Safe to render boxes from multiple threads
+//!
+//! ### Unicode Safety
+//! - **UTF-8 Validated**: All text input is valid UTF-8
+//! - **Width Aware**: Correctly handles wide characters (CJK, emoji)
+//! - **ANSI Aware**: Properly handles ANSI escape sequences
 
 pub mod borders;
 pub mod color;
