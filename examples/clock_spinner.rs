@@ -21,21 +21,20 @@ const SHOW_CURSOR: &str = "?25h";
 /// Initialize terminal - hide cursor and clear screen once
 fn init_terminal() {
     print!(
-        "{}{}{}{}{}{}",
-        ESC, CLEAR_SCREEN, ESC, CURSOR_HOME, ESC, HIDE_CURSOR
+        "{ESC}{CLEAR_SCREEN}{ESC}{CURSOR_HOME}{ESC}{HIDE_CURSOR}"
     );
     io::stdout().flush().unwrap();
 }
 
 /// Move cursor to home position without clearing
 fn move_to_home() {
-    print!("{}{}", ESC, CURSOR_HOME);
+    print!("{ESC}{CURSOR_HOME}");
     io::stdout().flush().unwrap();
 }
 
 /// Show cursor on exit
 fn show_cursor() {
-    print!("{}{}", ESC, SHOW_CURSOR);
+    print!("{ESC}{SHOW_CURSOR}");
     io::stdout().flush().unwrap();
 }
 
@@ -93,7 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Move cursor to home and overwrite previous content
         move_to_home();
-        print!("{}", boxed_time);
+        print!("{boxed_time}");
         io::stdout().flush().unwrap();
 
         // Update frame index

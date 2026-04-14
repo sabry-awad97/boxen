@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         }),
     )?;
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Background color
     println!("2. Background Color (Blue):");
@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         }),
     )?;
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Both border and background colors
     println!("3. Border (Green) + Background (Yellow):");
@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         }),
     )?;
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Dim border
     println!("4. Dim Border:");
@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         }),
     )?;
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Hex colors
     println!("5. Hex Colors (Border: #FF0000, Background: #00FF00):");
@@ -59,7 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         }),
     )?;
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // RGB colors
     println!("6. RGB Colors (Border: 255,0,255, Background: 0,255,255):");
@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         }),
     )?;
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Colors with title
     println!("7. Colors with Title:");
@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         }),
     )?;
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Colors with padding
     println!("8. Colors with Padding:");
@@ -99,7 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         }),
     )?;
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Colors with different border styles
     println!("9. Colors with Double Border:");
@@ -112,7 +112,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         }),
     )?;
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Colors with no border (background only)
     println!("10. Background Color Only (No Border):");
@@ -125,7 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         }),
     )?;
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Multiline content with colors
     println!("11. Multiline Content with Colors:");
@@ -139,7 +139,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ..Default::default()
         }),
     )?;
-    println!("{}\n", result);
+    println!("{result}\n");
 
     println!("=== Demo Complete ===");
     Ok(())

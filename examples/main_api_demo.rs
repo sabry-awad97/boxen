@@ -9,7 +9,7 @@ fn main() {
 
     // Basic usage
     let basic = boxen("Hello, World!", None).unwrap();
-    println!("{}", basic);
+    println!("{basic}");
 
     // With options
     let options = BoxenOptions {
@@ -21,7 +21,7 @@ fn main() {
         ..Default::default()
     };
     let with_options = boxen("Hello with options!", Some(options)).unwrap();
-    println!("{}", with_options);
+    println!("{with_options}");
 
     println!("\n=== Builder pattern ===");
 
@@ -38,7 +38,7 @@ fn main() {
         .float(Float::Center)
         .render("Built with fluent interface!")
         .unwrap();
-    println!("{}", builder_result);
+    println!("{builder_result}");
 
     println!("\n=== Convenience functions ===");
 
@@ -62,5 +62,5 @@ fn main() {
         .title("Complex Configuration")
         .render("This demonstrates a complex\nconfiguration with multiple\nlines of text and various\nstyling options.")
         .unwrap();
-    println!("{}", complex);
+    println!("{complex}");
 }

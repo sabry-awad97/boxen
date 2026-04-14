@@ -5,7 +5,7 @@
 /// 2. Memory allocation patterns
 /// 3. Performance improvements from string pooling optimizations
 ///
-/// Run with: cargo bench --bench allocation_benchmarks
+/// Run with: cargo bench --bench `allocation_benchmarks`
 use ::boxen::{BorderStyle, BoxenOptions, Spacing, TextAlignment, TitleAlignment, boxen, builder};
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};

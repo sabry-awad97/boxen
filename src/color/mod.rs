@@ -818,26 +818,24 @@ mod tests {
         for color in valid_colors {
             assert!(
                 validate_color(&color).is_ok(),
-                "Color should be valid: {:?}",
-                color
+                "Color should be valid: {color:?}"
             );
         }
 
         // Test a variety of invalid colors
         let invalid_colors = vec![
             Color::Named("invalid_color_name".to_string()),
-            Color::Named("".to_string()),
+            Color::Named(String::new()),
             Color::Hex("#GGGGGG".to_string()),
             Color::Hex("#FF".to_string()),
             Color::Hex("#FFFFFFF".to_string()),
-            Color::Hex("".to_string()),
+            Color::Hex(String::new()),
         ];
 
         for color in invalid_colors {
             assert!(
                 validate_color(&color).is_err(),
-                "Color should be invalid: {:?}",
-                color
+                "Color should be invalid: {color:?}"
             );
         }
     }

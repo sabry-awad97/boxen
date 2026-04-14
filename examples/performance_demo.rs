@@ -36,7 +36,7 @@ fn benchmark_large_text() {
 
     let sizes = [100, 500, 1000, 2000];
 
-    for &size in sizes.iter() {
+    for &size in &sizes {
         let large_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. ".repeat(size);
 
         let start = Instant::now();
@@ -53,10 +53,10 @@ fn benchmark_large_text() {
         match result {
             Ok(output) => {
                 let lines = output.lines().count();
-                println!("  {} repetitions: {:?} ({} lines)", size, duration, lines);
+                println!("  {size} repetitions: {duration:?} ({lines} lines)");
             }
             Err(e) => {
-                println!("  {} repetitions: Error - {}", size, e);
+                println!("  {size} repetitions: Error - {e}");
             }
         }
     }
@@ -68,9 +68,9 @@ fn benchmark_many_lines() {
 
     let line_counts = [100, 500, 1000, 2000];
 
-    for &count in line_counts.iter() {
+    for &count in &line_counts {
         let many_lines = (0..count)
-            .map(|i| format!("Line number {} with some content", i))
+            .map(|i| format!("Line number {i} with some content"))
             .collect::<Vec<_>>()
             .join("\n");
 
@@ -89,13 +89,10 @@ fn benchmark_many_lines() {
         match result {
             Ok(output) => {
                 let output_lines = output.lines().count();
-                println!(
-                    "  {} input lines: {:?} ({} output lines)",
-                    count, duration, output_lines
-                );
+                println!("  {count} input lines: {duration:?} ({output_lines} output lines)");
             }
             Err(e) => {
-                println!("  {} input lines: Error - {}", count, e);
+                println!("  {count} input lines: Error - {e}");
             }
         }
     }
@@ -107,7 +104,7 @@ fn benchmark_complex_configuration() {
 
     let iterations = [10, 50, 100, 200];
 
-    for &iter_count in iterations.iter() {
+    for &iter_count in &iterations {
         let start = Instant::now();
 
         for i in 0..iter_count {
@@ -116,7 +113,7 @@ fn benchmark_complex_configuration() {
                 .padding(2)
                 .margin(1)
                 .text_alignment(TextAlignment::Center)
-                .title(format!("Complex Config {}", i))
+                .title(format!("Complex Config {i}"))
                 .title_alignment(TitleAlignment::Center)
                 .width(60)
                 .height(12)
@@ -125,17 +122,14 @@ fn benchmark_complex_configuration() {
                 .dim_border(true)
                 .render("This is a complex configuration test\nwith multiple features enabled\nto measure performance impact")
             {
-                println!("  Error in iteration {}: {}", i, err);
+                println!("  Error in iteration {i}: {err}");
                 break;
             }
         }
 
         let duration = start.elapsed();
-        let avg_duration = duration / iter_count as u32;
-        println!(
-            "  {} iterations: {:?} total, {:?} average",
-            iter_count, duration, avg_duration
-        );
+        let avg_duration = duration / u32::try_from(iter_count).unwrap_or(1);
+        println!("  {iter_count} iterations: {duration:?} total, {avg_duration:?} average");
     }
     println!();
 }
@@ -150,7 +144,7 @@ fn benchmark_unicode_handling() {
         ("Emoji Heavy", "😀😃😄😁😆😅😂🤣😊😇🙂🙃😉😌😍🥰😘😗😙😚😋😛😝😜🤪🤨🧐🤓😎🤩🥳😏😒😞😔😟😕🙁☹️😣😖😫😩🥺😢😭😤😠😡🤬🤯😳🥵🥶😱😨😰😥😓🤗🤔🤭🤫🤥😶😐😑😬🙄😯😦😧😮😲🥱😴🤤😪😵🤐🥴🤢🤮🤧😷🤒🤕🤑🤠😈👿👹👺🤡💩👻💀☠️👽👾🤖🎃😺😸😹😻😼😽🙀😿😾".repeat(20)),
     ];
 
-    for (desc, text) in unicode_texts.iter() {
+    for (desc, text) in &unicode_texts {
         let start = Instant::now();
         let result = boxen(
             text,
@@ -166,10 +160,10 @@ fn benchmark_unicode_handling() {
         match result {
             Ok(output) => {
                 let lines = output.lines().count();
-                println!("  {}: {:?} ({} lines)", desc, duration, lines);
+                println!("  {desc}: {duration:?} ({lines} lines)");
             }
             Err(e) => {
-                println!("  {}: Error - {}", desc, e);
+                println!("  {desc}: Error - {e}");
             }
         }
     }
@@ -212,22 +206,19 @@ fn benchmark_repeated_rendering() {
         ),
     ];
 
-    for (desc, config) in configurations.iter() {
+    for (desc, config) in &configurations {
         let start = Instant::now();
 
         for _ in 0..100 {
             if let Err(err) = boxen(content, Some(config.clone())) {
-                println!("  {}: Error - {}", desc, err);
+                println!("  {desc}: Error - {err}");
                 break;
             }
         }
 
         let duration = start.elapsed();
         let avg_duration = duration / 100;
-        println!(
-            "  {} (100x): {:?} total, {:?} average",
-            desc, duration, avg_duration
-        );
+        println!("  {desc} (100x): {duration:?} total, {avg_duration:?} average");
     }
     println!();
 }
@@ -243,7 +234,7 @@ fn demonstrate_memory_efficiency() {
         ("Very Large", &"Very large text content. ".repeat(2000)),
     ];
 
-    for (desc, text) in text_sizes.iter() {
+    for (desc, text) in &text_sizes {
         let start = Instant::now();
 
         // Create and drop multiple boxes to test memory efficiency
@@ -264,7 +255,7 @@ fn demonstrate_memory_efficiency() {
         }
 
         let duration = start.elapsed();
-        println!("  {} text (10x): {:?}", desc, duration);
+        println!("  {desc} text (10x): {duration:?}");
     }
     println!();
 }
@@ -275,7 +266,7 @@ fn benchmark_scaling() {
     // Test how performance scales with different parameters
     println!("  Width scaling:");
     let widths = [20, 40, 80, 120, 160];
-    for &width in widths.iter() {
+    for &width in &widths {
         let start = Instant::now();
         let result = boxen(
             "Width scaling test content",
@@ -287,19 +278,19 @@ fn benchmark_scaling() {
         let duration = start.elapsed();
 
         match result {
-            Ok(_) => println!("    Width {}: {:?}", width, duration),
-            Err(e) => println!("    Width {}: Error - {}", width, e),
+            Ok(_) => println!("    Width {width}: {duration:?}"),
+            Err(e) => println!("    Width {width}: Error - {e}"),
         }
     }
 
     println!("  Height scaling:");
     let heights = [5, 10, 20, 30, 50];
     let long_content = (0..100)
-        .map(|i| format!("Line {}", i))
+        .map(|i| format!("Line {i}"))
         .collect::<Vec<_>>()
         .join("\n");
 
-    for &height in heights.iter() {
+    for &height in &heights {
         let start = Instant::now();
         let result = boxen(
             &long_content,
@@ -312,14 +303,14 @@ fn benchmark_scaling() {
         let duration = start.elapsed();
 
         match result {
-            Ok(_) => println!("    Height {}: {:?}", height, duration),
-            Err(e) => println!("    Height {}: Error - {}", height, e),
+            Ok(_) => println!("    Height {height}: {duration:?}"),
+            Err(e) => println!("    Height {height}: Error - {e}"),
         }
     }
 
     println!("  Padding scaling:");
     let paddings = [0, 1, 2, 5, 10];
-    for &padding in paddings.iter() {
+    for &padding in &paddings {
         let start = Instant::now();
         let result = boxen(
             "Padding scaling test",
@@ -332,8 +323,8 @@ fn benchmark_scaling() {
         let duration = start.elapsed();
 
         match result {
-            Ok(_) => println!("    Padding {}: {:?}", padding, duration),
-            Err(e) => println!("    Padding {}: Error - {}", padding, e),
+            Ok(_) => println!("    Padding {padding}: {duration:?}"),
+            Err(e) => println!("    Padding {padding}: Error - {e}"),
         }
     }
 

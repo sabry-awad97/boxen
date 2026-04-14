@@ -238,8 +238,8 @@ mod tests {
         let clean_original = strip_ansi_codes(text);
         let clean_combined = strip_ansi_codes(&combined);
         assert_eq!(
-            clean_original.replace(" ", ""),
-            clean_combined.replace(" ", "")
+            clean_original.replace(' ', ""),
+            clean_combined.replace(' ', "")
         );
     }
 

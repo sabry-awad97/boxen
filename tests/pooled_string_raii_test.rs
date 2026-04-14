@@ -1,4 +1,4 @@
-//! Integration test to verify PooledString RAII behavior
+//! Integration test to verify `PooledString` RAII behavior
 
 use ::boxen::memory::pool::with_pooled_string;
 use std::fmt::Write;
@@ -59,7 +59,7 @@ fn test_multiple_sequential_uses() {
     // Test that multiple sequential uses work correctly
     for i in 0..10 {
         with_pooled_string(|buffer| {
-            write!(buffer, "iteration {}", i).unwrap();
+            write!(buffer, "iteration {i}").unwrap();
             assert!(buffer.as_str().starts_with("iteration"));
         });
     }

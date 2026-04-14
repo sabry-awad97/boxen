@@ -424,13 +424,13 @@ fn test_all_border_styles_with_content() {
         BorderStyle::None,
     ];
 
-    for style in border_styles.iter() {
+    for style in &border_styles {
         let options = BoxenOptions {
             border_style: *style,
             ..Default::default()
         };
         let result = boxen(test_content, Some(options));
-        assert!(result.is_ok(), "Failed for border style: {:?}", style);
+        assert!(result.is_ok(), "Failed for border style: {style:?}");
         let output = result.unwrap();
         assert!(output.contains(test_content));
 
@@ -466,14 +466,14 @@ fn test_all_text_alignments_with_multiline() {
         TextAlignment::Right,
     ];
 
-    for alignment in alignments.iter() {
+    for alignment in &alignments {
         let options = BoxenOptions {
             text_alignment: *alignment,
             width: Some(30),
             ..Default::default()
         };
         let result = boxen(multiline_content, Some(options));
-        assert!(result.is_ok(), "Failed for alignment: {:?}", alignment);
+        assert!(result.is_ok(), "Failed for alignment: {alignment:?}");
         let output = result.unwrap();
         assert!(output.contains("Left aligned"));
         assert!(output.contains("Center aligned"));
@@ -487,8 +487,8 @@ fn test_all_float_positions_with_different_widths() {
     let floats = [Float::Left, Float::Center, Float::Right];
     let widths = [20, 40, 60];
 
-    for float_pos in floats.iter() {
-        for &width in widths.iter() {
+    for float_pos in &floats {
+        for &width in &widths {
             let options = BoxenOptions {
                 float: *float_pos,
                 width: Some(width),
@@ -497,9 +497,7 @@ fn test_all_float_positions_with_different_widths() {
             let result = boxen(content, Some(options));
             assert!(
                 result.is_ok(),
-                "Failed for float: {:?}, width: {}",
-                float_pos,
-                width
+                "Failed for float: {float_pos:?}, width: {width}"
             );
             let output = result.unwrap();
             assert!(output.contains(content));
@@ -531,9 +529,7 @@ fn test_color_combinations_comprehensive() {
             let result = boxen(content, Some(options));
             assert!(
                 result.is_ok(),
-                "Failed for border: {:?}, background: {:?}",
-                border_color,
-                background_color
+                "Failed for border: {border_color:?}, background: {background_color:?}"
             );
             let output = result.unwrap();
             assert!(output.contains(content));
@@ -553,8 +549,8 @@ fn test_spacing_combinations_comprehensive() {
     ];
 
     // Test spacing combinations with validation (skip problematic combinations)
-    for padding in spacing_values.iter() {
-        for margin in spacing_values.iter() {
+    for padding in &spacing_values {
+        for margin in &spacing_values {
             let total_horizontal = padding.horizontal() + margin.horizontal();
             let total_vertical = padding.vertical() + margin.vertical();
 
@@ -574,16 +570,13 @@ fn test_spacing_combinations_comprehensive() {
             let result = boxen(content, Some(options));
             if let Err(e) = &result {
                 println!(
-                    "Spacing error for padding: {:?}, margin: {:?}: {}",
-                    padding, margin, e
+                    "Spacing error for padding: {padding:?}, margin: {margin:?}: {e}"
                 );
                 continue; // Skip this combination instead of failing
             }
             assert!(
                 result.is_ok(),
-                "Failed for padding: {:?}, margin: {:?}",
-                padding,
-                margin
+                "Failed for padding: {padding:?}, margin: {margin:?}"
             );
             let output = result.unwrap();
             assert!(output.contains(content));
@@ -606,9 +599,9 @@ fn test_title_combinations_comprehensive() {
     ];
     let widths = [15, 30, 50];
 
-    for title in titles.iter() {
-        for alignment in title_alignments.iter() {
-            for &width in widths.iter() {
+    for title in &titles {
+        for alignment in &title_alignments {
+            for &width in &widths {
                 let options = BoxenOptions {
                     title: Some(title.to_string()),
                     title_alignment: *alignment,
@@ -618,17 +611,13 @@ fn test_title_combinations_comprehensive() {
                 let result = boxen(content, Some(options));
                 if let Err(e) = &result {
                     println!(
-                        "Title error for '{}', alignment: {:?}, width: {}: {}",
-                        title, alignment, width, e
+                        "Title error for '{title}', alignment: {alignment:?}, width: {width}: {e}"
                     );
                     continue; // Skip this combination
                 }
                 assert!(
                     result.is_ok(),
-                    "Failed for title: '{}', alignment: {:?}, width: {}",
-                    title,
-                    alignment,
-                    width
+                    "Failed for title: '{title}', alignment: {alignment:?}, width: {width}"
                 );
                 let output = result.unwrap();
                 // Check if content appears (possibly wrapped)
@@ -636,8 +625,7 @@ fn test_title_combinations_comprehensive() {
                 let all_words_present = content_words.iter().all(|word| output.contains(word));
                 if !all_words_present {
                     println!(
-                        "Not all content words found for title '{}', width {}: {}",
-                        title, width, output
+                        "Not all content words found for title '{title}', width {width}: {output}"
                     );
                 }
                 assert!(all_words_present, "Content words not found in output");
@@ -663,7 +651,7 @@ fn test_dimension_constraints_comprehensive() {
         (None, None),
     ];
 
-    for (width, height) in dimensions.iter() {
+    for (width, height) in &dimensions {
         let options = BoxenOptions {
             width: *width,
             height: *height,
@@ -672,9 +660,7 @@ fn test_dimension_constraints_comprehensive() {
         let result = boxen(content, Some(options));
         assert!(
             result.is_ok(),
-            "Failed for width: {:?}, height: {:?}",
-            width,
-            height
+            "Failed for width: {width:?}, height: {height:?}"
         );
         let output = result.unwrap();
         assert!(output.contains("Dimension Test"));
@@ -684,9 +670,7 @@ fn test_dimension_constraints_comprehensive() {
             let line_count = output.lines().count();
             assert!(
                 line_count <= *h + 2,
-                "Height constraint violated: {} lines > {} + 2 borders",
-                line_count,
-                h
+                "Height constraint violated: {line_count} lines > {h} + 2 borders"
             );
         }
     }
@@ -786,13 +770,12 @@ fn test_performance_large_text_input() {
     let duration = start.elapsed();
 
     if let Err(e) = &result {
-        println!("Large text error: {}", e);
+        println!("Large text error: {e}");
     }
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < 100,
-        "Large text processing took too long: {:?}",
-        duration
+        "Large text processing took too long: {duration:?}"
     );
 
     let output = result.unwrap();
@@ -802,7 +785,7 @@ fn test_performance_large_text_input() {
 #[test]
 fn test_performance_many_lines() {
     let many_lines = (0..100)
-        .map(|i| format!("Line {}", i))
+        .map(|i| format!("Line {i}"))
         .collect::<Vec<_>>()
         .join("\n"); // Reduce count
 
@@ -818,13 +801,12 @@ fn test_performance_many_lines() {
     let duration = start.elapsed();
 
     if let Err(e) = &result {
-        println!("Many lines error: {}", e);
+        println!("Many lines error: {e}");
     }
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < 200,
-        "Many lines processing took too long: {:?}",
-        duration
+        "Many lines processing took too long: {duration:?}"
     );
 }
 
@@ -848,13 +830,12 @@ fn test_performance_complex_configuration() {
     let duration = start.elapsed();
 
     if let Err(e) = &result {
-        eprintln!("Error in test_performance_complex_configuration: {}", e);
+        eprintln!("Error in test_performance_complex_configuration: {e}");
     }
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < 50,
-        "Complex configuration took too long: {:?}",
-        duration
+        "Complex configuration took too long: {duration:?}"
     );
 }
 
@@ -876,13 +857,12 @@ fn test_performance_unicode_heavy_content() {
     let duration = start.elapsed();
 
     if let Err(e) = &result {
-        eprintln!("Error in test_performance_unicode_heavy_content: {}", e);
+        eprintln!("Error in test_performance_unicode_heavy_content: {e}");
     }
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < 100,
-        "Unicode processing took too long: {:?}",
-        duration
+        "Unicode processing took too long: {duration:?}"
     );
 
     let output = result.unwrap();
@@ -909,8 +889,7 @@ fn test_performance_repeated_rendering() {
 
     assert!(
         duration.as_millis() < 500,
-        "100 repeated renderings took too long: {:?}",
-        duration
+        "100 repeated renderings took too long: {duration:?}"
     );
 }
 
@@ -1040,12 +1019,11 @@ fn test_error_recovery_and_validation() {
         },
     ];
 
-    for config in invalid_configs.iter() {
+    for config in &invalid_configs {
         let result = boxen("Test", Some(config.clone()));
         assert!(
             result.is_err(),
-            "Should have failed for config: {:?}",
-            config
+            "Should have failed for config: {config:?}"
         );
     }
 }

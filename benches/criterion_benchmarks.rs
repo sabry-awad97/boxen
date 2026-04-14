@@ -8,7 +8,7 @@
 /// - HTML reports with plots
 /// - Comparison across runs
 ///
-/// Run with: cargo bench --bench criterion_benchmarks
+/// Run with: cargo bench --bench `criterion_benchmarks`
 ///
 /// View HTML reports in: target/criterion/
 use ::boxen::{BorderStyle, BoxenOptions, Spacing, TextAlignment, TitleAlignment, boxen, builder};
@@ -59,7 +59,7 @@ fn bench_border_styles(c: &mut Criterion) {
                     let _ = boxen(
                         black_box("Test content"),
                         Some(BoxenOptions {
-                            border_style: style.clone(),
+                            border_style: *style,
                             ..Default::default()
                         }),
                     );
@@ -271,7 +271,7 @@ fn bench_titles(c: &mut Criterion) {
                 b.iter(|| {
                     let _ = builder()
                         .title("Test Title")
-                        .title_alignment(alignment.clone())
+                        .title_alignment(*alignment)
                         .render(black_box("Content"));
                 });
             },
@@ -327,7 +327,9 @@ fn bench_batch_rendering(c: &mut Criterion) {
     let batch_sizes = vec![1, 10, 50, 100, 500];
 
     for batch_size in batch_sizes {
-        group.throughput(Throughput::Elements(batch_size as u64));
+        #[allow(clippy::cast_sign_loss)]
+        let batch_size_u64 = batch_size as u64;
+        group.throughput(Throughput::Elements(batch_size_u64));
         group.bench_with_input(
             BenchmarkId::from_parameter(batch_size),
             &batch_size,

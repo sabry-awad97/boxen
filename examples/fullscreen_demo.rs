@@ -10,7 +10,7 @@ fn main() {
         ..Default::default()
     };
     let result = boxen("This box fills the entire terminal!", Some(options)).unwrap();
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Fullscreen with title and center alignment
     println!("2. Fullscreen with title and center alignment:");
@@ -26,7 +26,7 @@ fn main() {
         Some(options),
     )
     .unwrap();
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Custom fullscreen mode (half size)
     println!("3. Custom fullscreen mode (3/4 size):");
@@ -39,7 +39,7 @@ fn main() {
         ..Default::default()
     };
     let result = boxen("This box is 3/4 the size of the terminal", Some(options)).unwrap();
-    println!("{}\n", result);
+    println!("{result}\n");
 
     // Fullscreen with margins
     println!("4. Fullscreen with margins:");
@@ -55,5 +55,5 @@ fn main() {
         ..Default::default()
     };
     let result = boxen("This fullscreen box has margins", Some(options)).unwrap();
-    println!("{}", result);
+    println!("{result}");
 }

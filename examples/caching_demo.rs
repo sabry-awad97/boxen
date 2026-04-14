@@ -4,10 +4,10 @@
 /// size caching features. Run with and without features to compare performance.
 ///
 /// Run with caching:
-/// cargo run --example caching_demo --features width-cache,terminal-cache
+/// cargo run --example `caching_demo` --features width-cache,terminal-cache
 ///
 /// Run without caching:
-/// cargo run --example caching_demo
+/// cargo run --example `caching_demo`
 use ::boxen::{BorderStyle, boxen, builder};
 use std::time::Instant;
 
@@ -35,7 +35,7 @@ fn main() {
         let _ = boxen("Hello, World!", None);
     }
     let duration = start.elapsed();
-    println!("Time: {:?}", duration);
+    println!("Time: {duration:?}");
     println!("Avg: {:?} per box\n", duration / 1000);
 
     // Benchmark 2: Unicode content
@@ -46,7 +46,7 @@ fn main() {
         let _ = boxen(unicode, None);
     }
     let duration = start.elapsed();
-    println!("Time: {:?}", duration);
+    println!("Time: {duration:?}");
     println!("Avg: {:?} per box\n", duration / 1000);
 
     // Benchmark 3: Multiple boxes with same content
@@ -57,7 +57,7 @@ fn main() {
         let _ = boxen(content, None);
     }
     let duration = start.elapsed();
-    println!("Time: {:?}", duration);
+    println!("Time: {duration:?}");
     println!("Avg: {:?} per box\n", duration / 1000);
 
     // Benchmark 4: Complex boxes
@@ -71,7 +71,7 @@ fn main() {
             .render("Complex box with title and padding");
     }
     let duration = start.elapsed();
-    println!("Time: {:?}", duration);
+    println!("Time: {duration:?}");
     println!("Avg: {:?} per box\n", duration / 1000);
 
     // Display cache statistics if available

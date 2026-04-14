@@ -80,15 +80,15 @@ fn demonstrate_border_styles() -> Result<(), Box<dyn std::error::Error>> {
         ("None", BorderStyle::None),
     ];
 
-    for (name, style) in styles.iter() {
-        println!("{} border:", name);
+    for (name, style) in &styles {
+        println!("{name} border:");
         let options = BoxenOptions {
             border_style: *style,
             ..Default::default()
         };
         println!(
             "{}",
-            boxen(format!("{} style example", name), Some(options))?
+            boxen(format!("{name} style example"), Some(options))?
         );
     }
 
@@ -144,8 +144,8 @@ fn demonstrate_spacing_and_dimensions() -> Result<(), Box<dyn std::error::Error>
         ("Horizontal/Vertical", Spacing::from([2, 4])),
     ];
 
-    for (desc, padding) in padding_examples.iter() {
-        println!("{}:", desc);
+    for (desc, padding) in &padding_examples {
+        println!("{desc}:");
         let options = BoxenOptions {
             padding: *padding,
             width: Some(35),
@@ -239,10 +239,10 @@ fn demonstrate_titles_and_positioning() -> Result<(), Box<dyn std::error::Error>
         ("Right", TitleAlignment::Right),
     ];
 
-    for (desc, alignment) in title_alignments.iter() {
-        println!("{} title alignment:", desc);
+    for (desc, alignment) in &title_alignments {
+        println!("{desc} title alignment:");
         let options = BoxenOptions {
-            title: Some(format!("{} Title", desc)),
+            title: Some(format!("{desc} Title")),
             title_alignment: *alignment,
             width: Some(40),
             ..Default::default()
@@ -257,12 +257,12 @@ fn demonstrate_titles_and_positioning() -> Result<(), Box<dyn std::error::Error>
         ("Right", Float::Right),
     ];
 
-    for (desc, float_pos) in float_positions.iter() {
-        println!("{} float positioning:", desc);
+    for (desc, float_pos) in &float_positions {
+        println!("{desc} float positioning:");
         let options = BoxenOptions {
             float: *float_pos,
             width: Some(30),
-            title: Some(format!("{} Float", desc)),
+            title: Some(format!("{desc} Float")),
             ..Default::default()
         };
         println!("{}", boxen("Positioned content", Some(options))?);
@@ -334,7 +334,7 @@ fn demonstrate_builder_patterns() -> Result<(), Box<dyn std::error::Error>> {
         .padding(1)
         .title("Builder Demo")
         .render("Built with fluent interface")?;
-    println!("{}", result);
+    println!("{result}");
 
     // Convenience methods
     println!("Builder convenience methods:");
@@ -345,7 +345,7 @@ fn demonstrate_builder_patterns() -> Result<(), Box<dyn std::error::Error>> {
         .center_all() // Centers everything
         .title("Convenience Methods")
         .render("Using convenience methods\nfor easier configuration")?;
-    println!("{}", result);
+    println!("{result}");
 
     // Method chaining showcase
     println!("Complex builder chain:");
@@ -362,7 +362,7 @@ fn demonstrate_builder_patterns() -> Result<(), Box<dyn std::error::Error>> {
         .dim_border(false)
         .float(Float::Center)
         .render("This demonstrates extensive\nmethod chaining with the\nbuilder pattern")?;
-    println!("{}", result);
+    println!("{result}");
 
     println!();
     Ok(())
@@ -380,7 +380,7 @@ fn demonstrate_real_world_examples() -> Result<(), Box<dyn std::error::Error>> {
         .title("✓ Success")
         .title_alignment(TitleAlignment::Left)
         .render("Operation completed successfully!\nAll files have been processed.")?;
-    println!("{}", result);
+    println!("{result}");
 
     // Error message
     println!("CLI tool error message:");
@@ -391,7 +391,7 @@ fn demonstrate_real_world_examples() -> Result<(), Box<dyn std::error::Error>> {
         .title("✗ Error")
         .title_alignment(TitleAlignment::Left)
         .render("Failed to process file: permission denied\nPlease check file permissions and try again.")?;
-    println!("{}", result);
+    println!("{result}");
 
     // Information panel
     println!("Information panel:");
@@ -405,7 +405,7 @@ fn demonstrate_real_world_examples() -> Result<(), Box<dyn std::error::Error>> {
         .width(60)
         .text_alignment(TextAlignment::Center)
         .render("System Status: Online\nUptime: 24 days, 3 hours\nMemory Usage: 45%\nDisk Space: 78% available")?;
-    println!("{}", result);
+    println!("{result}");
 
     // Configuration display
     println!("Configuration display:");
@@ -418,7 +418,7 @@ fn demonstrate_real_world_examples() -> Result<(), Box<dyn std::error::Error>> {
         .title_alignment(TitleAlignment::Center)
         .width(50)
         .render("Server: localhost:8080\nDatabase: postgresql://localhost:5432\nEnvironment: development\nDebug Mode: enabled")?;
-    println!("{}", result);
+    println!("{result}");
 
     // Progress indicator
     println!("Progress indicator:");
@@ -430,7 +430,7 @@ fn demonstrate_real_world_examples() -> Result<(), Box<dyn std::error::Error>> {
         .title_alignment(TitleAlignment::Left)
         .width(40)
         .render("Progress: ████████░░ 80%\nETA: 2 minutes remaining")?;
-    println!("{}", result);
+    println!("{result}");
 
     println!();
     Ok(())

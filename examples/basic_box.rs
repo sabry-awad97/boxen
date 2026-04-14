@@ -1,5 +1,5 @@
 /// Basic boxen usage example
-/// Run with: cargo run --example basic_box
+/// Run with: cargo run --example `basic_box`
 use ::boxen::{boxen, double_box, round_box, simple_box};
 
 fn main() {
@@ -8,7 +8,7 @@ fn main() {
     // Simplest usage
     println!("1. Default box:");
     let basic = boxen("Hello, World!", None).unwrap();
-    println!("{}\n", basic);
+    println!("{basic}\n");
 
     // Convenience functions
     println!("2. Simple box (convenience function):");
@@ -23,7 +23,7 @@ fn main() {
     // Multi-line text
     println!("5. Multi-line content:");
     let multiline = simple_box("Line 1\nLine 2\nLine 3");
-    println!("{}\n", multiline);
+    println!("{multiline}\n");
 
     // Longer text that demonstrates wrapping
     println!("6. Text wrapping:");

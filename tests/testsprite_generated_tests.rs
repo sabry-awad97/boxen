@@ -531,7 +531,7 @@ mod test_edge_cases {
     #[test]
     fn test_many_short_lines() {
         let many_lines = (0..10)
-            .map(|i| format!("Line {}", i))
+            .map(|i| format!("Line {i}"))
             .collect::<Vec<_>>()
             .join("\n");
         let result = builder().width(30).render(&many_lines);

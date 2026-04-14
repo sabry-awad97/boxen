@@ -259,11 +259,11 @@ mod tests {
         let colored_text = "\x1b[31mred\x1b[0m";
         assert_eq!(
             align_line(colored_text, TextAlignment::Left, 6),
-            format!("{}   ", colored_text)
+            format!("{colored_text}   ")
         );
         assert_eq!(
             align_line(colored_text, TextAlignment::Right, 6),
-            format!("   {}", colored_text)
+            format!("   {colored_text}")
         );
     }
 

@@ -632,35 +632,41 @@ fn render_top_border(
         // Reserve capacity upfront
         border.reserve(inner_width + 2);
 
-        // Start with left corner
-        border.push(border_chars.top_left);
-
         if let Some(title) = &options.title {
-            render_top_border_with_title(border, title, border_chars, options, inner_width)?;
+            // Render top border with title - this handles color application internally
+            render_top_border_with_title_colored(
+                border,
+                title,
+                border_chars,
+                options,
+                inner_width,
+            )?;
         } else {
-            // No title - just fill with horizontal border chars
+            // No title - build border and apply color to entire thing
+            border.push(border_chars.top_left);
             for _ in 0..inner_width {
                 border.push(border_chars.top);
             }
+            border.push(border_chars.top_right);
+
+            // Apply border color and dim styling to entire border
+            let styled_border = apply_color_with_dim(
+                border.as_str(),
+                options.border_color.as_ref(),
+                options.dim_border,
+            )?;
+
+            return Ok(styled_border.to_string());
         }
 
-        // End with right corner
-        border.push(border_chars.top_right);
-
-        // Apply border color and dim styling
-        let styled_border = apply_color_with_dim(
-            border.as_str(),
-            options.border_color.as_ref(),
-            options.dim_border,
-        )?;
-
-        Ok(styled_border.to_string())
+        Ok(border.as_str().to_string())
     })
 }
 
-/// Render top border with embedded title
-fn render_top_border_with_title(
-    border: &mut impl Write,
+/// Render top border with embedded title, applying colors correctly
+#[allow(clippy::too_many_lines)]
+fn render_top_border_with_title_colored(
+    result: &mut impl Write,
     title: &str,
     border_chars: &crate::options::BorderChars,
     options: &BoxenOptions,
@@ -692,35 +698,83 @@ fn render_top_border_with_title(
     let effective_title_width = text_width(&effective_title);
     let remaining_width = inner_width - effective_title_width;
 
+    // Apply title color with fallback chain: title_color → border_color → None
+    let title_color = options
+        .title_color
+        .as_ref()
+        .or(options.border_color.as_ref());
+
+    let styled_title = if let Some(color) = title_color {
+        apply_colors(&effective_title, Some(color), None)?.to_string()
+    } else {
+        effective_title.clone()
+    };
+
+    // Helper to style border characters
+    let style_border_char = |ch: char| -> BoxenResult<String> {
+        let ch_str = ch.to_string();
+        let styled =
+            apply_color_with_dim(&ch_str, options.border_color.as_ref(), options.dim_border)?;
+        Ok(styled.to_string())
+    };
+
+    // Helper to style border string
+    let style_border_str = |s: &str| -> BoxenResult<String> {
+        let styled = apply_color_with_dim(s, options.border_color.as_ref(), options.dim_border)?;
+        Ok(styled.to_string())
+    };
+
     match options.title_alignment {
         TitleAlignment::Left => {
-            write!(border, "{effective_title}").map_err(|e| {
+            write!(result, "{}", style_border_char(border_chars.top_left)?).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write border: {e}"),
+                    vec![],
+                )
+            })?;
+            write!(result, "{styled_title}").map_err(|e| {
                 crate::error::BoxenError::rendering_error(
                     format!("Failed to write title: {e}"),
                     vec![],
                 )
             })?;
-            for _ in 0..remaining_width {
-                write!(border, "{}", border_chars.top).map_err(|e| {
-                    crate::error::BoxenError::rendering_error(
-                        format!("Failed to write border: {e}"),
-                        vec![],
-                    )
-                })?;
-            }
+            let border_fill = border_chars.top.to_string().repeat(remaining_width);
+            write!(result, "{}", style_border_str(&border_fill)?).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write border: {e}"),
+                    vec![],
+                )
+            })?;
+            write!(result, "{}", style_border_char(border_chars.top_right)?).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write border: {e}"),
+                    vec![],
+                )
+            })?;
         }
         TitleAlignment::Right => {
-            for _ in 0..remaining_width {
-                write!(border, "{}", border_chars.top).map_err(|e| {
-                    crate::error::BoxenError::rendering_error(
-                        format!("Failed to write border: {e}"),
-                        vec![],
-                    )
-                })?;
-            }
-            write!(border, "{effective_title}").map_err(|e| {
+            write!(result, "{}", style_border_char(border_chars.top_left)?).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write border: {e}"),
+                    vec![],
+                )
+            })?;
+            let border_fill = border_chars.top.to_string().repeat(remaining_width);
+            write!(result, "{}", style_border_str(&border_fill)?).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write border: {e}"),
+                    vec![],
+                )
+            })?;
+            write!(result, "{styled_title}").map_err(|e| {
                 crate::error::BoxenError::rendering_error(
                     format!("Failed to write title: {e}"),
+                    vec![],
+                )
+            })?;
+            write!(result, "{}", style_border_char(border_chars.top_right)?).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write border: {e}"),
                     vec![],
                 )
             })?;
@@ -729,28 +783,38 @@ fn render_top_border_with_title(
             let left_padding = remaining_width / 2;
             let right_padding = remaining_width - left_padding;
 
-            for _ in 0..left_padding {
-                write!(border, "{}", border_chars.top).map_err(|e| {
-                    crate::error::BoxenError::rendering_error(
-                        format!("Failed to write border: {e}"),
-                        vec![],
-                    )
-                })?;
-            }
-            write!(border, "{effective_title}").map_err(|e| {
+            write!(result, "{}", style_border_char(border_chars.top_left)?).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write border: {e}"),
+                    vec![],
+                )
+            })?;
+            let left_border_fill = border_chars.top.to_string().repeat(left_padding);
+            write!(result, "{}", style_border_str(&left_border_fill)?).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write border: {e}"),
+                    vec![],
+                )
+            })?;
+            write!(result, "{styled_title}").map_err(|e| {
                 crate::error::BoxenError::rendering_error(
                     format!("Failed to write title: {e}"),
                     vec![],
                 )
             })?;
-            for _ in 0..right_padding {
-                write!(border, "{}", border_chars.top).map_err(|e| {
-                    crate::error::BoxenError::rendering_error(
-                        format!("Failed to write border: {e}"),
-                        vec![],
-                    )
-                })?;
-            }
+            let right_border_fill = border_chars.top.to_string().repeat(right_padding);
+            write!(result, "{}", style_border_str(&right_border_fill)?).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write border: {e}"),
+                    vec![],
+                )
+            })?;
+            write!(result, "{}", style_border_char(border_chars.top_right)?).map_err(|e| {
+                crate::error::BoxenError::rendering_error(
+                    format!("Failed to write border: {e}"),
+                    vec![],
+                )
+            })?;
         }
     }
 
@@ -2181,7 +2245,7 @@ mod tests {
     fn test_title_edge_cases() {
         // Empty title
         let options = BoxenOptions {
-            title: Some("".to_string()),
+            title: Some(String::new()),
             ..Default::default()
         };
 
@@ -2249,9 +2313,7 @@ mod tests {
                 assert!(
                     leading_spaces >= expected_left_spacing.saturating_sub(1)
                         && leading_spaces <= expected_left_spacing + 1,
-                    "Expected ~{} leading spaces, got {}",
-                    expected_left_spacing,
-                    leading_spaces
+                    "Expected ~{expected_left_spacing} leading spaces, got {leading_spaces}"
                 );
             }
         }
@@ -2288,9 +2350,7 @@ mod tests {
                 let center_position = terminal_width / 2;
                 assert!(
                     leading_spaces > center_position,
-                    "Right float should position box to the right of center. Got {} leading spaces, center is at {}",
-                    leading_spaces,
-                    center_position
+                    "Right float should position box to the right of center. Got {leading_spaces} leading spaces, center is at {center_position}"
                 );
             }
         }

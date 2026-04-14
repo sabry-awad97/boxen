@@ -3,7 +3,7 @@
 /// This benchmark suite measures overall performance improvements across
 /// various scenarios and configurations.
 ///
-/// Run with: cargo bench --bench performance_benchmarks
+/// Run with: cargo bench --bench `performance_benchmarks`
 use ::boxen::{BorderStyle, BoxenOptions, Spacing, TextAlignment, TitleAlignment, boxen, builder};
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
@@ -57,7 +57,7 @@ fn bench_simple_boxes(c: &mut Criterion) {
 fn bench_with_padding(c: &mut Criterion) {
     let mut group = c.benchmark_group("padding");
 
-    for padding in [1, 2, 3, 5].iter() {
+    for padding in &[1, 2, 3, 5] {
         group.bench_with_input(
             BenchmarkId::from_parameter(padding),
             padding,
@@ -378,14 +378,14 @@ fn bench_border_styles(c: &mut Criterion) {
         ("classic", BorderStyle::Classic),
     ];
 
-    for (name, style) in styles.iter() {
+    for (name, style) in &styles {
         group.bench_with_input(BenchmarkId::from_parameter(name), style, |b, style| {
             b.iter(|| {
                 black_box(
                     boxen(
                         SIMPLE_TEXT,
                         Some(BoxenOptions {
-                            border_style: style.clone(),
+                            border_style: *style,
                             ..Default::default()
                         }),
                     )
@@ -401,7 +401,7 @@ fn bench_border_styles(c: &mut Criterion) {
 fn bench_width_variations(c: &mut Criterion) {
     let mut group = c.benchmark_group("width_variations");
 
-    for width in [20, 40, 60, 80, 100].iter() {
+    for width in &[20, 40, 60, 80, 100] {
         group.bench_with_input(BenchmarkId::from_parameter(width), width, |b, &width| {
             b.iter(|| {
                 black_box(

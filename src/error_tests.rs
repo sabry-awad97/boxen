@@ -95,7 +95,7 @@ mod tests {
     #[test]
     fn test_validate_text_input_too_many_lines() {
         let many_lines = (0..1001)
-            .map(|i| format!("Line {}", i))
+            .map(|i| format!("Line {i}"))
             .collect::<Vec<_>>()
             .join("\n");
         let result = validation::validate_text_input(&many_lines);
@@ -490,7 +490,7 @@ mod tests {
         // Test validation detection - this should pass
         let validation_result = builder.validate();
         if validation_result.is_err() {
-            println!("Validation failed: {:?}", validation_result);
+            println!("Validation failed: {validation_result:?}");
         }
         assert!(validation_result.is_ok());
 

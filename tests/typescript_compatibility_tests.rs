@@ -114,7 +114,7 @@ fn test_typescript_title_alignment_behavior() {
         (TitleAlignment::Right, "Title┐"),
     ];
 
-    for (alignment, _expected_pattern) in alignments.iter() {
+    for (alignment, _expected_pattern) in &alignments {
         let options = BoxenOptions {
             title: Some(title.to_string()),
             title_alignment: *alignment,
@@ -134,7 +134,8 @@ fn test_typescript_title_alignment_behavior() {
                 let line_center = first_line.len() / 2;
                 let title_center = title_pos + title.len() / 2;
                 // Allow some tolerance for centering
-                assert!((title_center as i32 - line_center as i32).abs() <= 2);
+                let diff = title_center.abs_diff(line_center);
+                assert!(diff <= 2);
             }
         }
     }
@@ -149,7 +150,7 @@ fn test_typescript_text_alignment_behavior() {
         TextAlignment::Right,
     ];
 
-    for alignment in alignments.iter() {
+    for alignment in &alignments {
         let options = BoxenOptions {
             text_alignment: *alignment,
             width: Some(20),
@@ -165,12 +166,12 @@ fn test_typescript_text_alignment_behavior() {
             .filter(|line| {
                 line.contains("Left") || line.contains("Center") || line.contains("Right")
             })
-            .cloned()
+            .copied()
             .collect();
 
         assert_eq!(content_lines.len(), 3);
 
-        for content_line in content_lines.iter() {
+        for content_line in &content_lines {
             match alignment {
                 TextAlignment::Left => {
                     // Text should be left-aligned (after border and any padding)
@@ -199,7 +200,8 @@ fn test_typescript_text_alignment_behavior() {
                     let left_spaces = inner_content.len() - inner_content.trim_start().len();
                     let right_spaces = inner_content.len() - inner_content.trim_end().len();
                     // Center alignment should have roughly equal spaces on both sides
-                    assert!((left_spaces as i32 - right_spaces as i32).abs() <= 1);
+                    let diff = left_spaces.abs_diff(right_spaces);
+                    assert!(diff <= 1);
                 }
             }
         }
@@ -264,7 +266,7 @@ fn test_typescript_width_constraint_behavior() {
     assert!(lines.len() > 3);
 
     // Each line should not exceed the specified width (allow significant tolerance for float positioning)
-    for line in lines.iter() {
+    for line in &lines {
         // The actual content box should be around 30 chars, but float positioning can add significant spacing
         assert!(line.len() <= 100); // Very generous tolerance for float positioning
     }
@@ -281,7 +283,7 @@ fn test_typescript_width_constraint_behavior() {
 fn test_typescript_height_constraint_behavior() {
     // TypeScript truncates content when it exceeds specified height
     let many_lines = (0..20)
-        .map(|i| format!("Line {}", i))
+        .map(|i| format!("Line {i}"))
         .collect::<Vec<_>>()
         .join("\n");
     let options = BoxenOptions {
@@ -327,7 +329,7 @@ fn test_typescript_float_positioning() {
     // TypeScript float positioning affects the entire box placement
     let floats = [Float::Left, Float::Center, Float::Right];
 
-    for float_pos in floats.iter() {
+    for float_pos in &floats {
         let options = BoxenOptions {
             float: *float_pos,
             width: Some(20),
@@ -346,7 +348,7 @@ fn test_typescript_float_positioning() {
         match float_pos {
             Float::Left => {
                 // Left float: no leading spaces
-                for line in lines.iter() {
+                for line in &lines {
                     if line.contains("┌") || line.contains("│") || line.contains("└") {
                         assert!(!line.starts_with(' '));
                     }

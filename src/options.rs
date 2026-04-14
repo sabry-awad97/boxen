@@ -275,6 +275,8 @@ pub struct BoxenOptions {
     pub border_color: Option<Color>,
     /// Optional background color for the content area
     pub background_color: Option<Color>,
+    /// Optional color for the title text
+    pub title_color: Option<Color>,
     /// Whether to render the border with reduced intensity
     pub dim_border: bool,
     /// Optional fullscreen mode configuration
@@ -295,6 +297,7 @@ impl Default for BoxenOptions {
             height: None,
             border_color: None,
             background_color: None,
+            title_color: None,
             dim_border: false,
             fullscreen: None,
         }
@@ -744,6 +747,13 @@ impl BoxenBuilder {
     #[must_use]
     pub fn title_alignment(mut self, alignment: TitleAlignment) -> Self {
         self.options.title_alignment = alignment;
+        self
+    }
+
+    /// Set title color
+    #[must_use]
+    pub fn title_color<C: Into<Color>>(mut self, color: C) -> Self {
+        self.options.title_color = Some(color.into());
         self
     }
 

@@ -22,9 +22,7 @@ fn test_performance_small_text() {
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < SMALL_TEXT_THRESHOLD,
-        "Small text took too long: {:?} (threshold: {}ms)",
-        duration,
-        SMALL_TEXT_THRESHOLD
+        "Small text took too long: {duration:?} (threshold: {SMALL_TEXT_THRESHOLD}ms)"
     );
 }
 
@@ -46,9 +44,7 @@ fn test_performance_medium_text() {
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < MEDIUM_TEXT_THRESHOLD,
-        "Medium text took too long: {:?} (threshold: {}ms)",
-        duration,
-        MEDIUM_TEXT_THRESHOLD
+        "Medium text took too long: {duration:?} (threshold: {MEDIUM_TEXT_THRESHOLD}ms)"
     );
 }
 
@@ -70,16 +66,14 @@ fn test_performance_large_text() {
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < LARGE_TEXT_THRESHOLD,
-        "Large text took too long: {:?} (threshold: {}ms)",
-        duration,
-        LARGE_TEXT_THRESHOLD
+        "Large text took too long: {duration:?} (threshold: {LARGE_TEXT_THRESHOLD}ms)"
     );
 }
 
 #[test]
 fn test_performance_many_lines() {
     let many_lines = (0..1000)
-        .map(|i| format!("Line number {} with some content", i))
+        .map(|i| format!("Line number {i} with some content"))
         .collect::<Vec<_>>()
         .join("\n");
 
@@ -97,9 +91,7 @@ fn test_performance_many_lines() {
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < LARGE_TEXT_THRESHOLD,
-        "Many lines took too long: {:?} (threshold: {}ms)",
-        duration,
-        LARGE_TEXT_THRESHOLD
+        "Many lines took too long: {duration:?} (threshold: {LARGE_TEXT_THRESHOLD}ms)"
     );
 }
 
@@ -126,9 +118,7 @@ fn test_performance_complex_configuration() {
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < COMPLEX_CONFIG_THRESHOLD,
-        "Complex configuration took too long: {:?} (threshold: {}ms)",
-        duration,
-        COMPLEX_CONFIG_THRESHOLD
+        "Complex configuration took too long: {duration:?} (threshold: {COMPLEX_CONFIG_THRESHOLD}ms)"
     );
 }
 
@@ -152,9 +142,7 @@ fn test_performance_unicode_content() {
     assert!(result.is_ok());
     assert!(
         duration.as_millis() < MEDIUM_TEXT_THRESHOLD,
-        "Unicode content took too long: {:?} (threshold: {}ms)",
-        duration,
-        MEDIUM_TEXT_THRESHOLD
+        "Unicode content took too long: {duration:?} (threshold: {MEDIUM_TEXT_THRESHOLD}ms)"
     );
 }
 
@@ -177,9 +165,7 @@ fn test_performance_repeated_rendering() {
 
     assert!(
         duration.as_millis() < REPEATED_RENDER_THRESHOLD,
-        "100 repeated renderings took too long: {:?} (threshold: {}ms)",
-        duration,
-        REPEATED_RENDER_THRESHOLD
+        "100 repeated renderings took too long: {duration:?} (threshold: {REPEATED_RENDER_THRESHOLD}ms)"
     );
 }
 
@@ -223,7 +209,7 @@ fn test_performance_different_border_styles() {
     ];
 
     let start = Instant::now();
-    for style in styles.iter() {
+    for style in &styles {
         for _ in 0..10 {
             let result = boxen(
                 text,
@@ -239,9 +225,7 @@ fn test_performance_different_border_styles() {
 
     assert!(
         duration.as_millis() < REPEATED_RENDER_THRESHOLD,
-        "Border style variations took too long: {:?} (threshold: {}ms)",
-        duration,
-        REPEATED_RENDER_THRESHOLD
+        "Border style variations took too long: {duration:?} (threshold: {REPEATED_RENDER_THRESHOLD}ms)"
     );
 }
 
@@ -258,8 +242,8 @@ fn test_performance_color_combinations() {
     ];
 
     let start = Instant::now();
-    for border_color in colors.iter() {
-        for background_color in colors.iter() {
+    for border_color in &colors {
+        for background_color in &colors {
             let result = boxen(
                 text,
                 Some(BoxenOptions {
@@ -275,9 +259,7 @@ fn test_performance_color_combinations() {
 
     assert!(
         duration.as_millis() < REPEATED_RENDER_THRESHOLD,
-        "Color combinations took too long: {:?} (threshold: {}ms)",
-        duration,
-        REPEATED_RENDER_THRESHOLD
+        "Color combinations took too long: {duration:?} (threshold: {REPEATED_RENDER_THRESHOLD}ms)"
     );
 }
 
@@ -291,8 +273,8 @@ fn test_performance_text_alignment_variations() {
     ];
 
     let start = Instant::now();
-    for alignment in alignments.iter() {
-        for width in [20, 40, 60, 80].iter() {
+    for alignment in &alignments {
+        for width in &[20, 40, 60, 80] {
             let result = boxen(
                 multiline_text,
                 Some(BoxenOptions {
@@ -308,9 +290,7 @@ fn test_performance_text_alignment_variations() {
 
     assert!(
         duration.as_millis() < MEDIUM_TEXT_THRESHOLD,
-        "Text alignment variations took too long: {:?} (threshold: {}ms)",
-        duration,
-        MEDIUM_TEXT_THRESHOLD
+        "Text alignment variations took too long: {duration:?} (threshold: {MEDIUM_TEXT_THRESHOLD}ms)"
     );
 }
 
@@ -326,8 +306,8 @@ fn test_performance_spacing_variations() {
     ];
 
     let start = Instant::now();
-    for padding in spacing_values.iter() {
-        for margin in spacing_values.iter() {
+    for padding in &spacing_values {
+        for margin in &spacing_values {
             // Skip combinations that would exceed terminal size
             let total_vertical = padding.vertical() + margin.vertical();
             if total_vertical > 10 {
@@ -354,9 +334,7 @@ fn test_performance_spacing_variations() {
 
     assert!(
         duration.as_millis() < MEDIUM_TEXT_THRESHOLD,
-        "Spacing variations took too long: {:?} (threshold: {}ms)",
-        duration,
-        MEDIUM_TEXT_THRESHOLD
+        "Spacing variations took too long: {duration:?} (threshold: {MEDIUM_TEXT_THRESHOLD}ms)"
     );
 }
 
@@ -366,7 +344,7 @@ fn test_performance_dimension_scaling() {
 
     // Test width scaling (limit to reasonable sizes)
     let start = Instant::now();
-    for width in [10, 20, 40, 60].iter() {
+    for width in &[10, 20, 40, 60] {
         let result = boxen(
             text,
             Some(BoxenOptions {
@@ -384,11 +362,11 @@ fn test_performance_dimension_scaling() {
 
     // Test height scaling with long content
     let long_content = (0..50)
-        .map(|i| format!("Line {}", i))
+        .map(|i| format!("Line {i}"))
         .collect::<Vec<_>>()
         .join("\n"); // Reduce content
     let start = Instant::now();
-    for height in [5, 8, 10, 12].iter() {
+    for height in &[5, 8, 10, 12] {
         // Smaller heights
         let result = boxen(
             &long_content,
@@ -407,16 +385,12 @@ fn test_performance_dimension_scaling() {
 
     assert!(
         width_duration.as_millis() < SMALL_TEXT_THRESHOLD,
-        "Width scaling took too long: {:?} (threshold: {}ms)",
-        width_duration,
-        SMALL_TEXT_THRESHOLD
+        "Width scaling took too long: {width_duration:?} (threshold: {SMALL_TEXT_THRESHOLD}ms)"
     );
 
     assert!(
         height_duration.as_millis() < MEDIUM_TEXT_THRESHOLD,
-        "Height scaling took too long: {:?} (threshold: {}ms)",
-        height_duration,
-        MEDIUM_TEXT_THRESHOLD
+        "Height scaling took too long: {height_duration:?} (threshold: {MEDIUM_TEXT_THRESHOLD}ms)"
     );
 }
 
@@ -434,7 +408,7 @@ fn test_performance_memory_efficiency() {
             let result = builder()
                 .border_style(BorderStyle::Double)
                 .padding(2)
-                .title(format!("Batch {}", batch))
+                .title(format!("Batch {batch}"))
                 .width(50)
                 .render(text);
             assert!(result.is_ok());
@@ -454,9 +428,7 @@ fn test_performance_memory_efficiency() {
     // Last batch should not be more than 2x slower than first batch
     assert!(
         last_batch.as_millis() <= first_batch.as_millis() * 2,
-        "Performance degraded over time: first={:?}, last={:?}",
-        first_batch,
-        last_batch
+        "Performance degraded over time: first={first_batch:?}, last={last_batch:?}"
     );
 }
 
@@ -474,7 +446,7 @@ fn test_performance_edge_cases() {
         ),
     ];
 
-    for (desc, text) in edge_cases.iter() {
+    for (desc, text) in &edge_cases {
         let start = Instant::now();
         let result = boxen(
             text,
@@ -489,13 +461,10 @@ fn test_performance_edge_cases() {
         if result.is_err() {
             continue; // Skip problematic edge cases
         }
-        assert!(result.is_ok(), "Failed for edge case: {}", desc);
+        assert!(result.is_ok(), "Failed for edge case: {desc}");
         assert!(
             duration.as_millis() < SMALL_TEXT_THRESHOLD,
-            "Edge case '{}' took too long: {:?} (threshold: {}ms)",
-            desc,
-            duration,
-            SMALL_TEXT_THRESHOLD
+            "Edge case '{desc}' took too long: {duration:?} (threshold: {SMALL_TEXT_THRESHOLD}ms)"
         );
     }
 }

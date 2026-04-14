@@ -1,6 +1,6 @@
-//! Demonstration of the StringPool memory optimization feature.
+//! Demonstration of the `StringPool` memory optimization feature.
 //!
-//! This example shows how the StringPool reduces allocations by reusing
+//! This example shows how the `StringPool` reduces allocations by reusing
 //! string buffers across multiple operations.
 
 use ::boxen::memory::pool::with_pooled_string;
@@ -16,17 +16,17 @@ fn main() {
         write!(buffer, "World!").unwrap();
         buffer.as_str().to_string()
     });
-    println!("Result: {}\n", result1);
+    println!("Result: {result1}\n");
 
     // Example 2: Reusing buffers
     println!("Example 2: Buffer reuse across calls");
     for i in 1..=5 {
         let result = with_pooled_string(|buffer| {
-            write!(buffer, "Iteration {}: ", i).unwrap();
+            write!(buffer, "Iteration {i}: ").unwrap();
             write!(buffer, "Buffer reused!").unwrap();
             buffer.as_str().to_string()
         });
-        println!("{}", result);
+        println!("{result}");
     }
     println!();
 
@@ -46,7 +46,7 @@ fn main() {
         write!(buffer, "┘").unwrap();
         buffer.as_str().to_string()
     });
-    println!("{}\n", result3);
+    println!("{result3}\n");
 
     println!("=== Benefits ===");
     println!("✓ Reduced memory allocations");
