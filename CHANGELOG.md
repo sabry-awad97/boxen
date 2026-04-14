@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2026-04-14
+
+### Added
+
+- **Title Color Feature**: Independent color control for box titles
+  - New `title_color` field in `BoxenOptions` for setting title colors independently from border colors
+  - New `.title_color()` builder method accepting named colors, hex colors, and RGB tuples
+  - Supports all color formats: named (`"red"`), hex (`"#FF0000"`), and RGB (`(255, 0, 0)`)
+  - Title colors work seamlessly with all border styles, alignments, and other features
+- **Comprehensive Testing**: 13 new integration tests covering edge cases, integration scenarios, and error handling
+- **Example File**: New `examples/title_colors_demo.rs` with 8 creative demonstrations
+- **Documentation**: Updated README with title color usage examples
+
+### Changed
+
+- Enhanced color system to support independent title and border coloring
+- Improved validation to reject ANSI control characters in title text
+
+### Fixed
+
+- All clippy warnings resolved without using `#[allow]` attributes
+- Improved type safety in test comparisons (replaced unsafe casts with safe calculations)
+
 ## [0.3.2] - 2026-04-14
 
 ### Changed
@@ -72,6 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial stable release with core functionality.
 
+[0.3.3]: https://github.com/sabry-awad97/boxen/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/sabry-awad97/boxen/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/sabry-awad97/boxen/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/sabry-awad97/boxen/compare/v0.2.0...v0.3.0
