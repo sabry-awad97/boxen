@@ -356,6 +356,7 @@ impl Default for BoxenOptions {
 /// ┃Hello┃
 /// ┗━━━━━┛
 /// ```
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BorderStyle {
     /// No border - content only
@@ -456,14 +457,34 @@ pub struct Spacing {
 }
 
 impl From<usize> for Spacing {
-    /// Creates asymmetric spacing (3x horizontal, 1x vertical) to match TypeScript behavior
+    /// Creates terminal-balanced spacing (3x horizontal, 1x vertical) to match TypeScript behavior.
+    ///
+    /// ⚠️ **WARNING**: This implementation applies a 3x multiplier to horizontal spacing,
+    /// which may be surprising. Consider using explicit constructors instead:
+    /// - `Spacing::terminal_balanced(value)` - For terminal-aware spacing (same as this)
+    /// - `Spacing::uniform(value)` - For equal spacing on all sides
+    ///
+    /// Due to terminal character aspect ratios (characters are ~2x taller than wide),
+    /// horizontal spacing is automatically scaled 3x to appear visually balanced:
+    /// - Vertical (top/bottom): `value`
+    /// - Horizontal (left/right): `value * 3`
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::Spacing;
+    ///
+    /// let spacing = Spacing::from(2);
+    /// assert_eq!(spacing.top, 2);
+    /// assert_eq!(spacing.right, 6);  // 3x horizontal multiplier!
+    /// assert_eq!(spacing.bottom, 2);
+    /// assert_eq!(spacing.left, 6);   // 3x horizontal multiplier!
+    ///
+    /// // Prefer explicit constructors for clarity:
+    /// let explicit = Spacing::terminal_balanced(2);  // Same result, clearer intent
+    /// ```
     fn from(value: usize) -> Self {
-        Self {
-            top: value,
-            right: value * 3,
-            bottom: value,
-            left: value * 3,
-        }
+        Self::terminal_balanced(value)
     }
 }
 
@@ -480,6 +501,7 @@ impl From<(usize, usize, usize, usize)> for Spacing {
 }
 
 /// Text alignment within the box
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy)]
 pub enum TextAlignment {
     /// Align text to the left side of the box
@@ -491,6 +513,7 @@ pub enum TextAlignment {
 }
 
 /// Title alignment within the top border
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy)]
 pub enum TitleAlignment {
     /// Align title to the left side of the top border
@@ -502,6 +525,7 @@ pub enum TitleAlignment {
 }
 
 /// Box positioning relative to terminal
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy)]
 pub enum Float {
     /// Position box on the left side of the terminal
@@ -513,6 +537,7 @@ pub enum Float {
 }
 
 /// Color specification for borders and backgrounds
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub enum Color {
     /// Named color (e.g., "red", "blue", "green")
@@ -524,6 +549,7 @@ pub enum Color {
 }
 
 /// Fullscreen mode configuration
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub enum FullscreenMode {
     /// Automatically use terminal dimensions
@@ -910,6 +936,7 @@ impl BoxenBuilder {
     ///
     /// Returns `BoxenError::ConfigurationError` if:
     /// - Configuration options conflict with each other
+    #[must_use = "validation result should be checked"]
     pub fn validate(&self) -> BoxenResult<()> {
         self.options.validate_constraints()
     }
@@ -2124,6 +2151,36 @@ impl Spacing {
             right: horizontal,
             bottom: vertical,
             left: horizontal,
+        }
+    }
+
+    /// Create terminal-balanced spacing from a single value.
+    ///
+    /// Due to terminal character aspect ratios (characters are ~2x taller than wide),
+    /// horizontal spacing is automatically scaled 3x to appear visually balanced:
+    /// - Vertical (top/bottom): `value`
+    /// - Horizontal (left/right): `value * 3`
+    ///
+    /// This matches the TypeScript boxen behavior for visual consistency.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::Spacing;
+    ///
+    /// let spacing = Spacing::terminal_balanced(2);
+    /// assert_eq!(spacing.top, 2);
+    /// assert_eq!(spacing.right, 6);  // 3x horizontal
+    /// assert_eq!(spacing.bottom, 2);
+    /// assert_eq!(spacing.left, 6);   // 3x horizontal
+    /// ```
+    #[must_use]
+    pub fn terminal_balanced(value: usize) -> Self {
+        Self {
+            top: value,
+            right: value * 3,
+            bottom: value,
+            left: value * 3,
         }
     }
 }

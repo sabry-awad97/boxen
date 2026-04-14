@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Thread Safety Verification**: Comprehensive test suite verifying all public types are `Send + Sync`
+  - 16 new tests in `tests/thread_safety_tests.rs`
+  - Compile-time verification using trait bounds
+  - Runtime verification with actual thread spawning and Arc-based sharing
+  - Verified types: `BoxenOptions`, `BoxenBuilder`, `BorderStyle`, `BorderChars`, `Color`, `Spacing`, `TextAlignment`, `TitleAlignment`, `Float`, `FullscreenMode`, `DimensionConstraints`, `LayoutDimensions`
+
+- **Spacing API Improvements**: New explicit constructor for terminal-balanced spacing
+  - `Spacing::terminal_balanced(value)` - Creates spacing with 3x horizontal multiplier for terminal aspect ratios
+  - Enhanced documentation for `From<usize>` implementation with clear warnings about 3x multiplier behavior
+  - 11 new tests in `tests/spacing_api_tests.rs` covering all spacing constructors
+  - Backward compatible - all existing code continues to work
+
+### Changed
+
+- **API Future-Proofing**: Added `#[non_exhaustive]` to all public enums
+  - Enables adding new variants in minor versions without breaking changes
+  - Affected enums: `BorderStyle`, `TextAlignment`, `TitleAlignment`, `Float`, `Color`, `FullscreenMode`, `BoxenError`
+  - Updated pattern matching in tests to handle non-exhaustive enums
+
+- **API Safety Improvements**: Added `#[must_use]` attributes to prevent accidental misuse
+  - `builder()` function - ensures builder is used
+  - `BoxenBuilder::new()` - ensures builder is used
+  - `BoxenBuilder::validate()` - ensures validation result is checked (with custom message)
+  - `boxen()` function - ensures rendered output is used
+  - All builder methods already had `#[must_use]` (verified)
+
 ## [0.3.3] - 2026-04-14
 
 ### Added

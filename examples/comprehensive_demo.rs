@@ -86,10 +86,7 @@ fn demonstrate_border_styles() -> Result<(), Box<dyn std::error::Error>> {
             border_style: *style,
             ..Default::default()
         };
-        println!(
-            "{}",
-            boxen(format!("{name} style example"), Some(options))?
-        );
+        println!("{}", boxen(format!("{name} style example"), Some(options))?);
     }
 
     println!();

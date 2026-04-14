@@ -463,6 +463,7 @@ use unicode_width::UnicodeWidthChar;
 /// Returns `BoxenError::RenderingError` if:
 /// - Box rendering fails due to I/O errors
 /// - Border or content rendering encounters unexpected issues
+#[must_use]
 pub fn boxen<S: AsRef<str>>(text: S, options: Option<BoxenOptions>) -> BoxenResult<String> {
     let text = text.as_ref();
     let options = options.unwrap_or_default();

@@ -308,9 +308,7 @@ pub fn validate_terminal_constraints(
 ) -> BoxenResult<()> {
     if box_width > terminal_width {
         return Err(BoxenError::configuration_error(
-            format!(
-                "Box width ({box_width}) exceeds terminal width ({terminal_width})"
-            ),
+            format!("Box width ({box_width}) exceeds terminal width ({terminal_width})"),
             vec![ErrorRecommendation::suggestion_only(
                 "Width exceeds terminal".to_string(),
                 format!("Reduce width to fit in {terminal_width} columns"),
@@ -321,9 +319,7 @@ pub fn validate_terminal_constraints(
     if let Some(term_height) = terminal_height {
         if box_height > term_height {
             return Err(BoxenError::configuration_error(
-                format!(
-                    "Box height ({box_height}) exceeds terminal height ({term_height})"
-                ),
+                format!("Box height ({box_height}) exceeds terminal height ({term_height})"),
                 vec![ErrorRecommendation::suggestion_only(
                     "Height exceeds terminal".to_string(),
                     format!("Reduce height to fit in {term_height} rows"),

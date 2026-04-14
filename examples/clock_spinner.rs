@@ -20,9 +20,7 @@ const SHOW_CURSOR: &str = "?25h";
 
 /// Initialize terminal - hide cursor and clear screen once
 fn init_terminal() {
-    print!(
-        "{ESC}{CLEAR_SCREEN}{ESC}{CURSOR_HOME}{ESC}{HIDE_CURSOR}"
-    );
+    print!("{ESC}{CLEAR_SCREEN}{ESC}{CURSOR_HOME}{ESC}{HIDE_CURSOR}");
     io::stdout().flush().unwrap();
 }
 

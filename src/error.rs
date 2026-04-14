@@ -178,6 +178,7 @@ pub struct ErrorRecommendation {
 }
 
 /// Errors that can occur when creating or rendering boxes
+#[non_exhaustive]
 #[derive(Debug, Error)]
 pub enum BoxenError {
     /// Invalid border style configuration

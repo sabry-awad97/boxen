@@ -137,6 +137,7 @@ fn test_typescript_title_alignment_behavior() {
                 let diff = title_center.abs_diff(line_center);
                 assert!(diff <= 2);
             }
+            _ => panic!("Unexpected title alignment variant"),
         }
     }
 }
@@ -203,6 +204,7 @@ fn test_typescript_text_alignment_behavior() {
                     let diff = left_spaces.abs_diff(right_spaces);
                     assert!(diff <= 1);
                 }
+                _ => panic!("Unexpected text alignment variant"),
             }
         }
     }
@@ -372,6 +374,7 @@ fn test_typescript_float_positioning() {
                     assert!(first_line.starts_with(' ') || first_line.len() >= 20);
                 }
             }
+            _ => panic!("Unexpected float variant"),
         }
     }
 }
