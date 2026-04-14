@@ -356,7 +356,7 @@ impl Default for BoxenOptions {
 /// ┃Hello┃
 /// ┗━━━━━┛
 /// ```
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BorderStyle {
     /// No border - content only
     None,
@@ -379,7 +379,7 @@ pub enum BorderStyle {
 }
 
 /// Border character set for custom borders
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BorderChars {
     /// Character for the top-left corner of the border
     pub top_left: char,
@@ -751,6 +751,19 @@ impl BoxenBuilder {
     }
 
     /// Set title color
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::builder;
+    ///
+    /// let result = builder()
+    ///     .title("Status")
+    ///     .title_color("red")
+    ///     .border_color("blue")
+    ///     .render("Content")
+    ///     .unwrap();
+    /// ```
     #[must_use]
     pub fn title_color<C: Into<Color>>(mut self, color: C) -> Self {
         self.options.title_color = Some(color.into());

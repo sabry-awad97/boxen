@@ -27,6 +27,7 @@ dhat = { version = "0.3.3", optional = true }
 chrono = "0.4.44"
 ctrlc = "3.5.2"
 criterion = { version = "0.8.2", features = ["html_reports"] }
+ctor = "0.2"
 
 [features]
 default = []

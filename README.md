@@ -308,6 +308,12 @@ builder()
     .border_color((255, 0, 0))
     .background_color((0, 0, 255));
 
+// Title colors (independent from border color)
+builder()
+    .title("Status")
+    .title_color("green")
+    .border_color("blue");
+
 // Dim borders for subtle styling
 builder()
     .border_color("cyan")

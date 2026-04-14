@@ -5,6 +5,12 @@ use ::boxen::{
 };
 use std::time::Instant;
 
+// Force enable colors for tests (colored crate disables them in non-TTY environments)
+#[ctor::ctor]
+fn init_colors() {
+    colored::control::set_override(true);
+}
+
 #[test]
 fn test_main_boxen_function_basic() {
     let result = boxen("Hello World", None).unwrap();
@@ -569,9 +575,7 @@ fn test_spacing_combinations_comprehensive() {
             };
             let result = boxen(content, Some(options));
             if let Err(e) = &result {
-                println!(
-                    "Spacing error for padding: {padding:?}, margin: {margin:?}: {e}"
-                );
+                println!("Spacing error for padding: {padding:?}, margin: {margin:?}: {e}");
                 continue; // Skip this combination instead of failing
             }
             assert!(
@@ -1021,9 +1025,326 @@ fn test_error_recovery_and_validation() {
 
     for config in &invalid_configs {
         let result = boxen("Test", Some(config.clone()));
+        assert!(result.is_err(), "Should have failed for config: {config:?}");
+    }
+}
+
+// ===== TITLE COLOR EDGE CASE TESTS =====
+
+#[test]
+fn test_title_color_with_no_title_set() {
+    // Title color without title should be harmless (ignored)
+    let options = BoxenOptions {
+        title: None,
+        title_color: Some(Color::Named("red".to_string())),
+        ..Default::default()
+    };
+    let result = boxen("Content", Some(options));
+
+    assert!(result.is_ok(), "Title color without title should not error");
+    let output = result.unwrap();
+    assert!(output.contains("Content"), "Content should be present");
+}
+
+#[test]
+fn test_title_color_with_empty_title() {
+    // Title color with empty title string should be harmless
+    let options = BoxenOptions {
+        title: Some("".to_string()),
+        title_color: Some(Color::Named("blue".to_string())),
+        ..Default::default()
+    };
+    let result = boxen("Content", Some(options));
+
+    assert!(
+        result.is_ok(),
+        "Title color with empty title should not error"
+    );
+    let output = result.unwrap();
+    assert!(output.contains("Content"), "Content should be present");
+}
+
+#[test]
+fn test_title_color_with_very_long_title() {
+    // Title color with very long title (tests truncation)
+    let long_title =
+        "This is a very long title that should be truncated to fit within the box width";
+    let options = BoxenOptions {
+        title: Some(long_title.to_string()),
+        title_color: Some(Color::Named("green".to_string())),
+        width: Some(30),
+        ..Default::default()
+    };
+    let result = boxen("Content", Some(options));
+
+    assert!(result.is_ok(), "Title color with long title should work");
+    let output = result.unwrap();
+    assert!(output.contains("Content"), "Content should be present");
+    // Verify green ANSI code is present (color applied after truncation)
+    assert!(
+        output.contains("\x1b[32m"),
+        "Title should have green color even when truncated"
+    );
+}
+
+#[test]
+fn test_title_color_with_unicode_characters() {
+    // Title color with Unicode characters in title
+    let unicode_title = "你好世界 🌍 ñáéíóú";
+    let options = BoxenOptions {
+        title: Some(unicode_title.to_string()),
+        title_color: Some(Color::Named("yellow".to_string())),
+        width: Some(40), // Ensure adequate width for Unicode
+        ..Default::default()
+    };
+    let result = boxen("Content", Some(options));
+
+    assert!(result.is_ok(), "Title color with Unicode should work");
+    let output = result.unwrap();
+    assert!(output.contains("Content"), "Content should be present");
+    // Check for at least part of the Unicode title
+    assert!(
+        output.contains("你好") || output.contains("🌍") || output.contains("ñáéíóú"),
+        "Unicode title should be present"
+    );
+    // Verify yellow ANSI code is present
+    assert!(
+        output.contains("\x1b[33m"),
+        "Title should have yellow color with Unicode"
+    );
+}
+
+#[test]
+fn test_title_color_with_ansi_codes_in_title() {
+    // Title with ANSI codes is rejected by validation (control characters not allowed)
+    let colored_title = "\x1b[31mRed Text\x1b[0m";
+    let options = BoxenOptions {
+        title: Some(colored_title.to_string()),
+        title_color: Some(Color::Named("blue".to_string())),
+        width: Some(30),
+        ..Default::default()
+    };
+    let result = boxen("Content", Some(options));
+
+    // ANSI codes in title should be rejected by validation
+    assert!(
+        result.is_err(),
+        "Title with ANSI control codes should be rejected"
+    );
+
+    // Verify the error message mentions control characters
+    if let Err(e) = result {
+        let error_msg = format!("{}", e);
         assert!(
-            result.is_err(),
-            "Should have failed for config: {config:?}"
+            error_msg.contains("control character") || error_msg.contains("invalid"),
+            "Error should mention control characters, got: {}",
+            error_msg
         );
     }
+}
+
+// ===== TITLE COLOR INTEGRATION TESTS =====
+
+#[test]
+fn test_title_color_with_border_and_background_colors() {
+    // Title color + border color + background color (all three)
+    let options = BoxenOptions {
+        title: Some("Triple Color".to_string()),
+        title_color: Some(Color::Named("white".to_string())),
+        border_color: Some(Color::Named("blue".to_string())),
+        background_color: Some(Color::Named("black".to_string())),
+        width: Some(30), // Ensure adequate width
+        ..Default::default()
+    };
+    let result = boxen("Content", Some(options));
+
+    assert!(result.is_ok(), "All three colors should work together");
+    let output = result.unwrap();
+    assert!(output.contains("Content"), "Content should be present");
+    assert!(output.contains("Triple Color"), "Title should be present");
+    // Verify all three color codes are present
+    assert!(
+        output.contains("\x1b[37m"),
+        "White title color should be present"
+    );
+    assert!(
+        output.contains("\x1b[34m"),
+        "Blue border color should be present"
+    );
+    assert!(
+        output.contains("\x1b[40m"),
+        "Black background color should be present"
+    );
+}
+
+#[test]
+fn test_title_color_with_dim_border() {
+    // Title color + dim border (title should not be dimmed)
+    let options = BoxenOptions {
+        title: Some("Bright Title".to_string()),
+        title_color: Some(Color::Named("red".to_string())),
+        border_color: Some(Color::Named("blue".to_string())),
+        dim_border: true,
+        width: Some(30), // Ensure adequate width
+        ..Default::default()
+    };
+    let result = boxen("Content", Some(options));
+
+    match result {
+        Ok(output) => {
+            assert!(output.contains("Content"), "Content should be present");
+            assert!(output.contains("Bright Title"), "Title should be present");
+            // Verify the output has ANSI color codes (implementation detail may vary)
+            assert!(
+                output.contains("\x1b["),
+                "Output should contain ANSI color codes"
+            );
+        }
+        Err(e) => {
+            panic!(
+                "Title color with dim border should work, but got error: {}",
+                e
+            );
+        }
+    }
+}
+
+#[test]
+fn test_title_color_with_all_alignments() {
+    // Test title color with all title alignments
+    let alignments = [
+        TitleAlignment::Left,
+        TitleAlignment::Center,
+        TitleAlignment::Right,
+    ];
+
+    for alignment in &alignments {
+        let options = BoxenOptions {
+            title: Some("Aligned Title".to_string()),
+            title_color: Some(Color::Named("magenta".to_string())),
+            title_alignment: *alignment,
+            width: Some(30),
+            ..Default::default()
+        };
+        let result = boxen("Content", Some(options));
+
+        assert!(
+            result.is_ok(),
+            "Title color with {alignment:?} alignment should work"
+        );
+        let output = result.unwrap();
+        assert!(output.contains("Content"), "Content should be present");
+        assert!(output.contains("Aligned Title"), "Title should be present");
+        // Verify magenta ANSI code is present
+        assert!(
+            output.contains("\x1b[35m"),
+            "Title should have magenta color with {alignment:?} alignment"
+        );
+    }
+}
+
+#[test]
+fn test_title_color_with_all_border_styles() {
+    // Test title color with all border styles including None
+    let border_styles = [
+        BorderStyle::Single,
+        BorderStyle::Double,
+        BorderStyle::Round,
+        BorderStyle::Bold,
+        BorderStyle::None,
+    ];
+
+    for style in &border_styles {
+        let options = BoxenOptions {
+            title: Some("Styled Title".to_string()),
+            title_color: Some(Color::Named("cyan".to_string())),
+            border_style: *style,
+            width: Some(30), // Ensure adequate width
+            ..Default::default()
+        };
+        let result = boxen("Content", Some(options));
+
+        assert!(
+            result.is_ok(),
+            "Title color with {style:?} border style should work"
+        );
+        let output = result.unwrap();
+        assert!(output.contains("Content"), "Content should be present");
+
+        // With BorderStyle::None, title might not be rendered
+        if !matches!(style, BorderStyle::None) {
+            assert!(output.contains("Styled Title"), "Title should be present");
+            // Verify cyan ANSI code is present (36 for cyan, 96 for bright cyan)
+            assert!(
+                output.contains("\x1b[36m") || output.contains("\x1b[96m"),
+                "Title should have cyan color with {style:?} border style"
+            );
+        }
+    }
+}
+
+#[test]
+fn test_title_color_with_fullscreen_mode() {
+    // Title color + fullscreen mode
+    let options = BoxenOptions {
+        title: Some("Fullscreen Title".to_string()),
+        title_color: Some(Color::Named("green".to_string())),
+        fullscreen: Some(FullscreenMode::Auto),
+        ..Default::default()
+    };
+    let result = boxen("Content", Some(options));
+
+    assert!(result.is_ok(), "Title color with fullscreen should work");
+    let output = result.unwrap();
+    assert!(output.contains("Content"), "Content should be present");
+    assert!(
+        output.contains("Fullscreen Title"),
+        "Title should be present"
+    );
+    // Verify green ANSI code is present
+    assert!(
+        output.contains("\x1b[32m"),
+        "Title should have green color in fullscreen mode"
+    );
+}
+
+// ===== TITLE COLOR ERROR HANDLING TESTS =====
+
+#[test]
+fn test_invalid_title_color_named() {
+    // Invalid named color should return error
+    let options = BoxenOptions {
+        title: Some("Test".to_string()),
+        title_color: Some(Color::Named("invalid_color_name".to_string())),
+        ..Default::default()
+    };
+    let result = boxen("Content", Some(options));
+
+    assert!(result.is_err(), "Invalid named color should return error");
+}
+
+#[test]
+fn test_invalid_title_color_hex() {
+    // Invalid hex color should return error
+    let options = BoxenOptions {
+        title: Some("Test".to_string()),
+        title_color: Some(Color::Hex("not_a_hex_color".to_string())),
+        ..Default::default()
+    };
+    let result = boxen("Content", Some(options));
+
+    assert!(result.is_err(), "Invalid hex color should return error");
+}
+
+#[test]
+fn test_invalid_title_color_malformed_hex() {
+    // Malformed hex color should return error
+    let options = BoxenOptions {
+        title: Some("Test".to_string()),
+        title_color: Some(Color::Hex("#GGGGGG".to_string())),
+        ..Default::default()
+    };
+    let result = boxen("Content", Some(options));
+
+    assert!(result.is_err(), "Malformed hex color should return error");
 }
