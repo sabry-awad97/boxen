@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-14
+
 ### Added
 
 - **Dynamic Width/Height Support**: New `Width` and `Height` types supporting both fixed and dynamic sizing
@@ -20,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Example: `.height(|available: usize| (available / 2).max(10))` - Dynamic height using closure
   - Fully backward compatible - existing code using `.width(50)` continues to work
   - Thread-safe: Uses `Arc` for shared ownership of closures across threads
+  - New example: `examples/dynamic_sizing_demo.rs` demonstrating all dynamic sizing patterns
 
 - **Color Validation Method**: New `Color::validated()` method for early validation of color specifications
   - Validates named colors against supported color names
@@ -42,15 +45,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING**: `BoxenOptions.width` and `BoxenOptions.height` now use `Width` and `Height` enums instead of `usize`
+  - Migration: Change `width: Some(50)` to `width: Some(Width::Fixed(50))`
+  - Migration: Change `height: Some(20)` to `height: Some(Height::Fixed(20))`
+  - Builder API remains unchanged: `.width(50)` and `.height(20)` continue to work via `From` trait
+
 - **Test Infrastructure Improvements**: Enhanced test reliability and coverage
   - Added global color initialization using `ctor` for all test suites
   - Added terminal size environment variable support for fullscreen tests
   - Fixed all color-related tests to work in non-TTY environments
-  - All 650 tests now pass consistently
+  - All 654 tests now pass consistently (311 lib + 343 integration/doc tests)
 
 - **API Future-Proofing**: Added `#[non_exhaustive]` to all public enums
   - Enables adding new variants in minor versions without breaking changes
-  - Affected enums: `BorderStyle`, `TextAlignment`, `TitleAlignment`, `Float`, `Color`, `FullscreenMode`, `BoxenError`
+  - Affected enums: `BorderStyle`, `TextAlignment`, `TitleAlignment`, `Float`, `Color`, `FullscreenMode`, `BoxenError`, `Width`, `Height`
   - Updated pattern matching in tests to handle non-exhaustive enums
 
 - **API Safety Improvements**: Added `#[must_use]` attributes to prevent accidental misuse
@@ -68,6 +76,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Type Safety: Strong typing, builder pattern, validated input
   - Thread Safety: Send + Sync types, no shared state, concurrent rendering
   - Unicode Safety: UTF-8 validated, width aware, ANSI aware
+
+- **README Updates**: Added comprehensive dynamic sizing documentation
+  - New "Dynamic Sizing" section with practical examples
+  - Updated feature list to highlight dynamic width/height support
+  - Added `dynamic_sizing_demo` to examples list
 
 ## [0.3.3] - 2026-04-14
 
@@ -159,6 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial stable release with core functionality.
 
+[0.4.0]: https://github.com/sabry-awad97/boxen/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/sabry-awad97/boxen/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/sabry-awad97/boxen/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/sabry-awad97/boxen/compare/v0.3.0...v0.3.1
