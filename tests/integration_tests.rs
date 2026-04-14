@@ -1,7 +1,7 @@
 /// Integration tests for main boxen API functions
 use ::boxen::{
-    BorderStyle, BoxenOptions, Color, Float, FullscreenMode, Spacing, TextAlignment,
-    TitleAlignment, boxen, builder, double_box, round_box, simple_box,
+    BorderStyle, BoxenOptions, Color, Float, FullscreenMode, Height, Spacing, TextAlignment,
+    TitleAlignment, Width, boxen, builder, double_box, round_box, simple_box,
 };
 use std::time::Instant;
 
@@ -72,7 +72,7 @@ fn test_main_boxen_function_empty_text() {
 #[test]
 fn test_main_boxen_function_error_handling() {
     let options = BoxenOptions {
-        width: Some(5),
+        width: Some(Width::Fixed(5)),
         padding: Spacing::from(10), // Too large padding
         ..Default::default()
     };
@@ -300,8 +300,8 @@ fn test_complex_configuration_integration() {
         title: Some("Complex Config".to_string()),
         title_alignment: TitleAlignment::Right,
         float: Float::Right,
-        width: Some(50),
-        height: Some(12), // Increased height to accommodate all content
+        width: Some(Width::Fixed(50)),
+        height: Some(Height::Fixed(12)), // Increased height to accommodate all content
         border_color: Some(Color::Hex("#ff0000".to_string())),
         background_color: Some(Color::Rgb(255, 255, 0)),
         dim_border: true,
@@ -336,7 +336,7 @@ fn test_builder_vs_options_equivalence() {
         padding: Spacing::from(2),
         text_alignment: TextAlignment::Center,
         title: Some("Title".to_string()),
-        width: Some(30),
+        width: Some(Width::Fixed(30)),
         ..Default::default()
     };
 
@@ -384,7 +384,7 @@ fn test_error_propagation() {
 
     // Invalid configuration through main function
     let invalid_options = BoxenOptions {
-        width: Some(1),
+        width: Some(Width::Fixed(1)),
         padding: Spacing::from(5),
         ..Default::default()
     };
@@ -407,7 +407,7 @@ fn test_performance_with_large_text() {
     let result = boxen(&large_text, None);
     assert!(result.is_ok());
 
-    let result = builder().width(80).render(&large_text);
+    let result = builder().width(70).render(&large_text);
     assert!(result.is_ok());
 
     let result = simple_box(&large_text);
@@ -475,7 +475,7 @@ fn test_all_text_alignments_with_multiline() {
     for alignment in &alignments {
         let options = BoxenOptions {
             text_alignment: *alignment,
-            width: Some(30),
+            width: Some(Width::Fixed(30)),
             ..Default::default()
         };
         let result = boxen(multiline_content, Some(options));
@@ -497,7 +497,7 @@ fn test_all_float_positions_with_different_widths() {
         for &width in &widths {
             let options = BoxenOptions {
                 float: *float_pos,
-                width: Some(width),
+                width: Some(boxen::Width::Fixed(width)),
                 ..Default::default()
             };
             let result = boxen(content, Some(options));
@@ -529,7 +529,7 @@ fn test_color_combinations_comprehensive() {
             let options = BoxenOptions {
                 border_color: Some(border_color.clone()),
                 background_color: Some(background_color.clone()),
-                width: Some(30), // Ensure adequate width
+                width: Some(Width::Fixed(30)), // Ensure adequate width
                 ..Default::default()
             };
             let result = boxen(content, Some(options));
@@ -570,7 +570,7 @@ fn test_spacing_combinations_comprehensive() {
             let options = BoxenOptions {
                 padding: *padding,
                 margin: *margin,
-                width: Some(width),
+                width: Some(boxen::Width::Fixed(width)),
                 ..Default::default()
             };
             let result = boxen(content, Some(options));
@@ -609,7 +609,7 @@ fn test_title_combinations_comprehensive() {
                 let options = BoxenOptions {
                     title: Some(title.to_string()),
                     title_alignment: *alignment,
-                    width: Some(width),
+                    width: Some(boxen::Width::Fixed(width)),
                     ..Default::default()
                 };
                 let result = boxen(content, Some(options));
@@ -657,8 +657,8 @@ fn test_dimension_constraints_comprehensive() {
 
     for (width, height) in &dimensions {
         let options = BoxenOptions {
-            width: *width,
-            height: *height,
+            width: width.map(Width::Fixed),
+            height: height.map(Height::Fixed),
             ..Default::default()
         };
         let result = boxen(content, Some(options));
@@ -720,7 +720,7 @@ fn test_typescript_title_truncation_behavior() {
     let long_title = "This is a very long title that should be truncated";
     let options = BoxenOptions {
         title: Some(long_title.to_string()),
-        width: Some(20),
+        width: Some(Width::Fixed(20)),
         ..Default::default()
     };
     let result = boxen("Content", Some(options)).unwrap();
@@ -766,8 +766,8 @@ fn test_performance_large_text_input() {
     let result = boxen(
         &large_text,
         Some(BoxenOptions {
-            width: Some(80),
-            height: Some(10), // Smaller height to fit in terminal
+            width: Some(Width::Fixed(70)),
+            height: Some(Height::Fixed(10)), // Smaller height to fit in terminal
             ..Default::default()
         }),
     );
@@ -797,8 +797,8 @@ fn test_performance_many_lines() {
     let result = boxen(
         &many_lines,
         Some(BoxenOptions {
-            width: Some(80),
-            height: Some(10), // Smaller height to fit in terminal
+            width: Some(Width::Fixed(70)),
+            height: Some(Height::Fixed(10)), // Smaller height to fit in terminal
             ..Default::default()
         }),
     );
@@ -852,8 +852,8 @@ fn test_performance_unicode_heavy_content() {
     let result = boxen(
         &unicode_content,
         Some(BoxenOptions {
-            width: Some(80),
-            height: Some(8), // Limit height
+            width: Some(Width::Fixed(70)),
+            height: Some(Height::Fixed(8)), // Limit height
             text_alignment: TextAlignment::Center,
             ..Default::default()
         }),
@@ -904,7 +904,7 @@ fn test_edge_case_very_narrow_width() {
     let result = boxen(
         "Test",
         Some(BoxenOptions {
-            width: Some(6), // Minimum viable width
+            width: Some(Width::Fixed(6)), // Minimum viable width
             ..Default::default()
         }),
     );
@@ -919,7 +919,7 @@ fn test_edge_case_very_small_height() {
     let result = boxen(
         "Test",
         Some(BoxenOptions {
-            height: Some(3), // Minimum viable height (2 borders + 1 content)
+            height: Some(Height::Fixed(3)), // Minimum viable height (2 borders + 1 content)
             ..Default::default()
         }),
     );
@@ -1012,13 +1012,13 @@ fn test_error_recovery_and_validation() {
     let invalid_configs = [
         // Width too small for content + padding
         BoxenOptions {
-            width: Some(3),
+            width: Some(Width::Fixed(3)),
             padding: Spacing::from(5),
             ..Default::default()
         },
         // Height too small
         BoxenOptions {
-            height: Some(1),
+            height: Some(Height::Fixed(1)),
             ..Default::default()
         },
     ];
@@ -1072,7 +1072,7 @@ fn test_title_color_with_very_long_title() {
     let options = BoxenOptions {
         title: Some(long_title.to_string()),
         title_color: Some(Color::Named("green".to_string())),
-        width: Some(30),
+        width: Some(Width::Fixed(30)),
         ..Default::default()
     };
     let result = boxen("Content", Some(options));
@@ -1094,7 +1094,7 @@ fn test_title_color_with_unicode_characters() {
     let options = BoxenOptions {
         title: Some(unicode_title.to_string()),
         title_color: Some(Color::Named("yellow".to_string())),
-        width: Some(40), // Ensure adequate width for Unicode
+        width: Some(Width::Fixed(40)), // Ensure adequate width for Unicode
         ..Default::default()
     };
     let result = boxen("Content", Some(options));
@@ -1121,7 +1121,7 @@ fn test_title_color_with_ansi_codes_in_title() {
     let options = BoxenOptions {
         title: Some(colored_title.to_string()),
         title_color: Some(Color::Named("blue".to_string())),
-        width: Some(30),
+        width: Some(Width::Fixed(30)),
         ..Default::default()
     };
     let result = boxen("Content", Some(options));
@@ -1153,7 +1153,7 @@ fn test_title_color_with_border_and_background_colors() {
         title_color: Some(Color::Named("white".to_string())),
         border_color: Some(Color::Named("blue".to_string())),
         background_color: Some(Color::Named("black".to_string())),
-        width: Some(30), // Ensure adequate width
+        width: Some(Width::Fixed(30)), // Ensure adequate width
         ..Default::default()
     };
     let result = boxen("Content", Some(options));
@@ -1185,7 +1185,7 @@ fn test_title_color_with_dim_border() {
         title_color: Some(Color::Named("red".to_string())),
         border_color: Some(Color::Named("blue".to_string())),
         dim_border: true,
-        width: Some(30), // Ensure adequate width
+        width: Some(Width::Fixed(30)), // Ensure adequate width
         ..Default::default()
     };
     let result = boxen("Content", Some(options));
@@ -1223,7 +1223,7 @@ fn test_title_color_with_all_alignments() {
             title: Some("Aligned Title".to_string()),
             title_color: Some(Color::Named("magenta".to_string())),
             title_alignment: *alignment,
-            width: Some(30),
+            width: Some(Width::Fixed(30)),
             ..Default::default()
         };
         let result = boxen("Content", Some(options));
@@ -1259,7 +1259,7 @@ fn test_title_color_with_all_border_styles() {
             title: Some("Styled Title".to_string()),
             title_color: Some(Color::Named("cyan".to_string())),
             border_style: *style,
-            width: Some(30), // Ensure adequate width
+            width: Some(Width::Fixed(30)), // Ensure adequate width
             ..Default::default()
         };
         let result = boxen("Content", Some(options));

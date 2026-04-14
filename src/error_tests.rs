@@ -2,7 +2,7 @@
 #[cfg(test)]
 mod tests {
     use crate::error::{BoxenError, ErrorRecommendation, validation};
-    use crate::options::{BorderStyle, BoxenBuilder, BoxenOptions, Color, Spacing};
+    use crate::options::{BorderStyle, BoxenBuilder, BoxenOptions, Color, Height, Spacing, Width};
     use crate::validation::{recovery, validate_configuration};
 
     #[test]
@@ -231,8 +231,8 @@ mod tests {
     #[test]
     fn test_validate_all_options_valid() {
         let options = BoxenOptions {
-            width: Some(50),
-            height: Some(20),
+            width: Some(Width::Fixed(50)),
+            height: Some(Height::Fixed(20)),
             padding: Spacing::from(2),
             title: Some("Valid Title".to_string()),
             border_color: Some(Color::Named("red".to_string())),
@@ -258,7 +258,7 @@ mod tests {
     #[test]
     fn test_validate_all_options_invalid_dimensions() {
         let options = BoxenOptions {
-            width: Some(0),
+            width: Some(Width::Fixed(0)),
             ..Default::default()
         };
 
@@ -285,8 +285,8 @@ mod tests {
     #[test]
     fn test_recovery_invalid_width() {
         let options = BoxenOptions {
-            width: Some(5),            // Too small
-            padding: Spacing::from(2), // 6 horizontal padding
+            width: Some(Width::Fixed(5)), // Too small
+            padding: Spacing::from(2),    // 6 horizontal padding
             ..Default::default()
         };
 
@@ -302,8 +302,8 @@ mod tests {
     #[test]
     fn test_recovery_invalid_height() {
         let options = BoxenOptions {
-            height: Some(2),           // Too small
-            padding: Spacing::from(2), // 2 vertical padding
+            height: Some(Height::Fixed(2)), // Too small
+            padding: Spacing::from(2),      // 2 vertical padding
             ..Default::default()
         };
 
@@ -318,7 +318,7 @@ mod tests {
     #[test]
     fn test_recovery_terminal_overflow() {
         let options = BoxenOptions {
-            width: Some(200), // Likely exceeds terminal
+            width: Some(Width::Fixed(200)), // Likely exceeds terminal
             padding: Spacing::from(5),
             ..Default::default()
         };
@@ -334,9 +334,9 @@ mod tests {
     #[test]
     fn test_smart_recovery() {
         let options = BoxenOptions {
-            width: Some(5),            // Too small
-            height: Some(2),           // Too small
-            padding: Spacing::from(3), // Large padding
+            width: Some(Width::Fixed(5)),   // Too small
+            height: Some(Height::Fixed(2)), // Too small
+            padding: Spacing::from(3),      // Large padding
             ..Default::default()
         };
 

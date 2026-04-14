@@ -1,7 +1,7 @@
 /// Tests to ensure Rust boxen behavior matches TypeScript version outputs
-use ::boxen::{
-    BorderStyle, BoxenOptions, Color, Float, Spacing, TextAlignment, TitleAlignment, boxen,
-    builder, double_box, round_box, simple_box,
+use boxen::{
+    BorderStyle, BoxenOptions, Color, Float, Height, Spacing, TextAlignment, TitleAlignment, Width,
+    boxen, builder, double_box, round_box, simple_box,
 };
 
 // Force enable colors for tests (colored crate disables them in non-TTY environments)
@@ -60,7 +60,7 @@ fn test_typescript_padding_object_behavior() {
     // TypeScript: padding as object with individual values
     let options = BoxenOptions {
         padding: Spacing::from((1, 2, 3, 4)), // top, right, bottom, left
-        width: Some(20),
+        width: Some(Width::Fixed(20)),
         ..Default::default()
     };
     let result = boxen("Test", Some(options)).unwrap();
@@ -90,7 +90,7 @@ fn test_typescript_title_truncation() {
     let long_title = "This is a very long title that should be truncated";
     let options = BoxenOptions {
         title: Some(long_title.to_string()),
-        width: Some(20),
+        width: Some(Width::Fixed(20)),
         ..Default::default()
     };
     let result = boxen("Content", Some(options)).unwrap();
@@ -124,7 +124,7 @@ fn test_typescript_title_alignment_behavior() {
         let options = BoxenOptions {
             title: Some(title.to_string()),
             title_alignment: *alignment,
-            width: Some(20),
+            width: Some(Width::Fixed(20)),
             ..Default::default()
         };
         let result = boxen("Content", Some(options)).unwrap();
@@ -160,7 +160,7 @@ fn test_typescript_text_alignment_behavior() {
     for alignment in &alignments {
         let options = BoxenOptions {
             text_alignment: *alignment,
-            width: Some(20),
+            width: Some(Width::Fixed(20)),
             ..Default::default()
         };
         let result = boxen(multiline_text, Some(options)).unwrap();
@@ -263,7 +263,7 @@ fn test_typescript_width_constraint_behavior() {
     // TypeScript wraps text when it exceeds the specified width
     let long_text = "This is a very long line that should be wrapped when width is constrained";
     let options = BoxenOptions {
-        width: Some(30),
+        width: Some(Width::Fixed(30)),
         ..Default::default()
     };
     let result = boxen(long_text, Some(options)).unwrap();
@@ -295,7 +295,7 @@ fn test_typescript_height_constraint_behavior() {
         .collect::<Vec<_>>()
         .join("\n");
     let options = BoxenOptions {
-        height: Some(8), // Should fit only a few lines
+        height: Some(Height::Fixed(8)), // Should fit only a few lines
         ..Default::default()
     };
     let result = boxen(&many_lines, Some(options)).unwrap();
@@ -340,7 +340,7 @@ fn test_typescript_float_positioning() {
     for float_pos in &floats {
         let options = BoxenOptions {
             float: *float_pos,
-            width: Some(20),
+            width: Some(Width::Fixed(20)),
             ..Default::default()
         };
         let result = boxen("Float test", Some(options)).unwrap();
@@ -443,7 +443,7 @@ fn test_typescript_builder_equivalence() {
         padding: Spacing::from(1),
         text_alignment: TextAlignment::Center,
         title: Some("Test".to_string()),
-        width: Some(30),
+        width: Some(Width::Fixed(30)),
         border_color: Some(Color::Named("blue".to_string())),
         ..Default::default()
     };

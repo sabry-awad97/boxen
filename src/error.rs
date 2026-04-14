@@ -740,7 +740,15 @@ pub mod validation {
         validate_spacing(&options.margin, "margin")?;
 
         // Validate dimensions
-        validate_dimensions(options.width, options.height)?;
+        // Calculate actual width/height values for validation
+        let terminal_width = crate::terminal::get_terminal_width();
+        let terminal_height = crate::terminal::get_terminal_height();
+        let actual_width = options.width.as_ref().map(|w| w.calculate(terminal_width));
+        let actual_height = options
+            .height
+            .as_ref()
+            .map(|h| h.calculate(terminal_height.unwrap_or(24)));
+        validate_dimensions(actual_width, actual_height)?;
 
         // Validate title if present
         if let Some(ref title) = options.title {

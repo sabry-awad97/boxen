@@ -79,7 +79,7 @@
 //! For advanced use cases, you can construct `BoxenOptions` directly:
 //!
 //! ```rust
-//! use ::boxen::{BoxenOptions, BorderStyle, TextAlignment, Spacing, Color};
+//! use ::boxen::{BoxenOptions, BorderStyle, TextAlignment, Spacing, Color, Width, Height};
 //!
 //! let options = BoxenOptions {
 //!     border_style: BorderStyle::Double,
@@ -88,7 +88,7 @@
 //!     text_alignment: TextAlignment::Center,
 //!     border_color: Some(Color::Named("green".to_string())),
 //!     title: Some("Direct Config".to_string()),
-//!     width: Some(50),
+//!     width: Some(Width::Fixed(50)),
 //!     ..Default::default()
 //! };
 //! ```
@@ -198,6 +198,193 @@
 use crate::error::{BoxenError, BoxenResult};
 use crate::terminal::{calculate_border_width, get_terminal_height, get_terminal_width};
 
+/// Width specification for box sizing.
+///
+/// Supports both fixed width values and dynamic width calculation based on available space.
+///
+/// # Examples
+///
+/// ```rust
+/// use ::boxen::{builder, Width};
+///
+/// // Fixed width
+/// let fixed = builder().width(50);
+///
+/// // Dynamic width based on available space
+/// let dynamic = builder().width(|available: usize| available.min(80));
+///
+/// // Or using Into trait
+/// let fixed2 = builder().width(Width::from(50));
+/// ```
+pub enum Width {
+    /// Fixed width in columns
+    Fixed(usize),
+    /// Dynamic width calculated from available space
+    Dynamic(std::sync::Arc<dyn Fn(usize) -> usize + Send + Sync>),
+}
+
+impl Clone for Width {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Fixed(w) => Self::Fixed(*w),
+            Self::Dynamic(f) => Self::Dynamic(f.clone()),
+        }
+    }
+}
+
+impl PartialEq for Width {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Fixed(a), Self::Fixed(b)) => a == b,
+            // Dynamic functions can't be compared for equality
+            (Self::Dynamic(_), Self::Dynamic(_)) => false,
+            _ => false,
+        }
+    }
+}
+
+impl Width {
+    /// Create a fixed width
+    #[must_use]
+    pub const fn fixed(width: usize) -> Self {
+        Self::Fixed(width)
+    }
+
+    /// Create a dynamic width from a function or closure
+    #[must_use]
+    pub fn from_fn<F>(f: F) -> Self
+    where
+        F: Fn(usize) -> usize + Send + Sync + 'static,
+    {
+        Self::Dynamic(std::sync::Arc::new(f))
+    }
+
+    /// Calculate the actual width given available space
+    #[must_use]
+    pub fn calculate(&self, available: usize) -> usize {
+        match self {
+            Self::Fixed(w) => *w,
+            Self::Dynamic(f) => f(available),
+        }
+    }
+}
+
+impl std::fmt::Debug for Width {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Fixed(w) => write!(f, "Width::Fixed({w})"),
+            Self::Dynamic(_) => write!(f, "Width::Dynamic(<fn>)"),
+        }
+    }
+}
+
+impl From<usize> for Width {
+    fn from(width: usize) -> Self {
+        Self::Fixed(width)
+    }
+}
+
+impl<F> From<F> for Width
+where
+    F: Fn(usize) -> usize + Send + Sync + 'static,
+{
+    fn from(f: F) -> Self {
+        Self::Dynamic(std::sync::Arc::new(f))
+    }
+}
+
+/// Height specification for box sizing.
+///
+/// Supports both fixed height values and dynamic height calculation based on available space.
+///
+/// # Examples
+///
+/// ```rust
+/// use ::boxen::{builder, Height};
+///
+/// // Fixed height
+/// let fixed = builder().height(20);
+///
+/// // Dynamic height based on available space
+/// let dynamic = builder().height(|available: usize| available.min(30));
+/// ```
+pub enum Height {
+    /// Fixed height in rows
+    Fixed(usize),
+    /// Dynamic height calculated from available space
+    Dynamic(std::sync::Arc<dyn Fn(usize) -> usize + Send + Sync>),
+}
+
+impl Clone for Height {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Fixed(h) => Self::Fixed(*h),
+            Self::Dynamic(f) => Self::Dynamic(f.clone()),
+        }
+    }
+}
+
+impl PartialEq for Height {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Fixed(a), Self::Fixed(b)) => a == b,
+            // Dynamic functions can't be compared for equality
+            (Self::Dynamic(_), Self::Dynamic(_)) => false,
+            _ => false,
+        }
+    }
+}
+
+impl Height {
+    /// Create a fixed height
+    #[must_use]
+    pub const fn fixed(height: usize) -> Self {
+        Self::Fixed(height)
+    }
+
+    /// Create a dynamic height from a function or closure
+    #[must_use]
+    pub fn from_fn<F>(f: F) -> Self
+    where
+        F: Fn(usize) -> usize + Send + Sync + 'static,
+    {
+        Self::Dynamic(std::sync::Arc::new(f))
+    }
+
+    /// Calculate the actual height given available space
+    #[must_use]
+    pub fn calculate(&self, available: usize) -> usize {
+        match self {
+            Self::Fixed(h) => *h,
+            Self::Dynamic(f) => f(available),
+        }
+    }
+}
+
+impl std::fmt::Debug for Height {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Fixed(h) => write!(f, "Height::Fixed({h})"),
+            Self::Dynamic(_) => write!(f, "Height::Dynamic(<fn>)"),
+        }
+    }
+}
+
+impl From<usize> for Height {
+    fn from(height: usize) -> Self {
+        Self::Fixed(height)
+    }
+}
+
+impl<F> From<F> for Height
+where
+    F: Fn(usize) -> usize + Send + Sync + 'static,
+{
+    fn from(f: F) -> Self {
+        Self::Dynamic(std::sync::Arc::new(f))
+    }
+}
+
 /// Main configuration struct for boxen styling options.
 ///
 /// `BoxenOptions` contains all the configuration parameters for customizing
@@ -209,14 +396,14 @@ use crate::terminal::{calculate_border_width, get_terminal_height, get_terminal_
 /// ## Direct Construction
 ///
 /// ```rust
-/// use ::boxen::{BoxenOptions, BorderStyle, TextAlignment, Spacing};
+/// use ::boxen::{BoxenOptions, BorderStyle, TextAlignment, Spacing, Width};
 ///
 /// let options = BoxenOptions {
 ///     border_style: BorderStyle::Double,
 ///     padding: Spacing::from(2),
 ///     text_alignment: TextAlignment::Center,
 ///     title: Some("My Box".to_string()),
-///     width: Some(40),
+///     width: Some(Width::Fixed(40)),
 ///     ..Default::default()
 /// };
 /// ```
@@ -267,10 +454,10 @@ pub struct BoxenOptions {
     pub title_alignment: TitleAlignment,
     /// How to position the box within the terminal width
     pub float: Float,
-    /// Optional fixed width for the box (overrides automatic sizing)
-    pub width: Option<usize>,
-    /// Optional fixed height for the box (overrides automatic sizing)
-    pub height: Option<usize>,
+    /// Optional width specification (fixed or dynamic)
+    pub width: Option<Width>,
+    /// Optional height specification (fixed or dynamic)
+    pub height: Option<Height>,
     /// Optional color for the border characters
     pub border_color: Option<Color>,
     /// Optional background color for the content area
@@ -803,17 +990,51 @@ impl BoxenBuilder {
         self
     }
 
-    /// Set box width
+    /// Set box width (fixed or dynamic)
+    ///
+    /// Accepts either a fixed width value or a closure for dynamic sizing.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::builder;
+    ///
+    /// // Fixed width
+    /// let result = builder().width(50).render("Hello").unwrap();
+    ///
+    /// // Dynamic width: use 80% of available space, minimum 30
+    /// let result = builder()
+    ///     .width(|available: usize| (available * 4 / 5).max(30))
+    ///     .render("Hello")
+    ///     .unwrap();
+    /// ```
     #[must_use]
-    pub fn width(mut self, width: usize) -> Self {
-        self.options.width = Some(width);
+    pub fn width<W: Into<Width>>(mut self, width: W) -> Self {
+        self.options.width = Some(width.into());
         self
     }
 
-    /// Set box height
+    /// Set box height (fixed or dynamic)
+    ///
+    /// Accepts either a fixed height value or a closure for dynamic sizing.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::builder;
+    ///
+    /// // Fixed height
+    /// let result = builder().height(20).render("Hello").unwrap();
+    ///
+    /// // Dynamic height: use 50% of available space, minimum 10
+    /// let result = builder()
+    ///     .height(|available: usize| (available / 2).max(10))
+    ///     .render("Hello")
+    ///     .unwrap();
+    /// ```
     #[must_use]
-    pub fn height(mut self, height: usize) -> Self {
-        self.options.height = Some(height);
+    pub fn height<H: Into<Height>>(mut self, height: H) -> Self {
+        self.options.height = Some(height.into());
         self
     }
 
@@ -1049,8 +1270,8 @@ impl BoxenBuilder {
     /// Convenience method to set both width and height
     #[must_use]
     pub fn size(mut self, width: usize, height: usize) -> Self {
-        self.options.width = Some(width);
-        self.options.height = Some(height);
+        self.options.width = Some(Width::Fixed(width));
+        self.options.height = Some(Height::Fixed(height));
         self
     }
 
@@ -1366,7 +1587,7 @@ mod tests {
     #[test]
     fn test_calculate_constraints_with_specified_width() {
         let options = BoxenOptions {
-            width: Some(50),
+            width: Some(Width::Fixed(50)),
             ..Default::default()
         };
         let constraints = options.calculate_constraints().unwrap();
@@ -1377,8 +1598,8 @@ mod tests {
     #[test]
     fn test_calculate_constraints_invalid_width() {
         let options = BoxenOptions {
-            width: Some(1),            // Too small for borders + padding
-            padding: Spacing::from(2), // 6 horizontal padding + 2 border = 8 total
+            width: Some(Width::Fixed(1)), // Too small for borders + padding
+            padding: Spacing::from(2),    // 6 horizontal padding + 2 border = 8 total
             ..Default::default()
         };
 
@@ -1443,7 +1664,7 @@ mod tests {
     #[test]
     fn test_calculate_max_content_width() {
         let options = BoxenOptions {
-            width: Some(50),
+            width: Some(Width::Fixed(50)),
             padding: Spacing::from(1), // 6 horizontal padding
             ..Default::default()
         };
@@ -1455,7 +1676,7 @@ mod tests {
     #[test]
     fn test_calculate_max_content_height() {
         let options = BoxenOptions {
-            height: Some(20),
+            height: Some(Height::Fixed(20)),
             padding: Spacing::from(1), // 2 vertical padding
             ..Default::default()
         };
@@ -1477,8 +1698,8 @@ mod tests {
     #[test]
     fn test_validate_constraints_valid() {
         let options = BoxenOptions {
-            width: Some(50),
-            height: Some(20),
+            width: Some(Width::Fixed(50)),
+            height: Some(Height::Fixed(20)),
             padding: Spacing::from(1),
             ..Default::default()
         };
@@ -1489,8 +1710,8 @@ mod tests {
     #[test]
     fn test_validate_constraints_invalid() {
         let options = BoxenOptions {
-            width: Some(5),            // Too small
-            padding: Spacing::from(2), // Large padding
+            width: Some(Width::Fixed(5)), // Too small
+            padding: Spacing::from(2),    // Large padding
             ..Default::default()
         };
 
@@ -1557,8 +1778,8 @@ mod tests {
                 bottom: 0,
                 left: 1,
             },
-            width: Some(60),
-            height: Some(50), // Use a larger height that should work on most terminals
+            width: Some(Width::Fixed(60)),
+            height: Some(Height::Fixed(50)), // Use a larger height that should work on most terminals
             ..Default::default()
         };
 
@@ -1703,8 +1924,8 @@ mod tests {
     fn test_fullscreen_mode_overrides_width_height() {
         let options = BoxenOptions {
             fullscreen: Some(FullscreenMode::Auto),
-            width: Some(50),  // Should be ignored in fullscreen mode
-            height: Some(20), // Should be ignored in fullscreen mode
+            width: Some(Width::Fixed(50)), // Should be ignored in fullscreen mode
+            height: Some(Height::Fixed(20)), // Should be ignored in fullscreen mode
             ..Default::default()
         };
 
@@ -1881,8 +2102,8 @@ mod tests {
     fn test_builder_dimensions() {
         let options = BoxenBuilder::new().width(80).height(25).build();
 
-        assert_eq!(options.width, Some(80));
-        assert_eq!(options.height, Some(25));
+        assert_eq!(options.width, Some(Width::Fixed(80)));
+        assert_eq!(options.height, Some(Height::Fixed(25)));
     }
 
     #[test]
@@ -2056,8 +2277,8 @@ mod tests {
         // Both should produce equivalent options
         assert!(matches!(options1.border_style, BorderStyle::Round));
         assert!(matches!(options2.border_style, BorderStyle::Round));
-        assert_eq!(options1.width, Some(50));
-        assert_eq!(options2.width, Some(50));
+        assert_eq!(options1.width, Some(Width::Fixed(50)));
+        assert_eq!(options2.width, Some(Width::Fixed(50)));
         assert_eq!(options1.padding.top, 2);
         assert_eq!(options2.padding.top, 2);
     }
@@ -2072,7 +2293,7 @@ mod tests {
             .padding(3) // Should overwrite the 1
             .build();
 
-        assert_eq!(options.width, Some(50));
+        assert_eq!(options.width, Some(Width::Fixed(50)));
         assert_eq!(options.padding.top, 3);
         assert_eq!(options.padding.right, 9); // 3x horizontal
     }
@@ -2138,8 +2359,8 @@ mod tests {
     fn test_builder_size_convenience() {
         let options = BoxenBuilder::new().size(80, 25).build();
 
-        assert_eq!(options.width, Some(80));
-        assert_eq!(options.height, Some(25));
+        assert_eq!(options.width, Some(Width::Fixed(80)));
+        assert_eq!(options.height, Some(Height::Fixed(25)));
     }
 
     #[test]
@@ -2425,7 +2646,10 @@ impl BoxenOptions {
             border_width + self.padding.horizontal() + self.margin.horizontal();
 
         // Calculate maximum available width
-        let max_width = if let Some(specified_width) = self.width {
+        let max_width = if let Some(ref width_spec) = self.width {
+            // Calculate the actual width from the specification
+            let specified_width = width_spec.calculate(terminal_width);
+
             // When width is specified, it represents the total box width including margins
             // So we need to subtract margins to get the available width for content + borders + padding
             let available_width_for_content = if specified_width > self.margin.horizontal() {
@@ -2438,7 +2662,9 @@ impl BoxenOptions {
                         self.margin.horizontal()
                     ),
                     Some(specified_width),
-                    self.height,
+                    self.height
+                        .as_ref()
+                        .map(|h| h.calculate(terminal_height.unwrap_or(24))),
                 ));
             };
 
@@ -2447,7 +2673,9 @@ impl BoxenOptions {
                 return Err(Self::invalid_dimensions_error(
                     format!("Width {specified_width} is too small for borders and padding"),
                     Some(specified_width),
-                    self.height,
+                    self.height
+                        .as_ref()
+                        .map(|h| h.calculate(terminal_height.unwrap_or(24))),
                 ));
             }
 
@@ -2475,7 +2703,10 @@ impl BoxenOptions {
         };
 
         // Calculate maximum available height
-        let max_height = if let Some(specified_height) = self.height {
+        let max_height = if let Some(ref height_spec) = self.height {
+            // Calculate the actual height from the specification
+            let specified_height = height_spec.calculate(terminal_height.unwrap_or(24));
+
             // When height is specified, it represents the total box height including margins
             // So we need to subtract margins to get the available height for content + borders + padding
             if specified_height > self.margin.vertical() {
@@ -2560,8 +2791,8 @@ impl BoxenOptions {
         // In fullscreen mode, ignore specified width and use terminal width as limit
         let width_limit = if self.fullscreen.is_some() {
             constraints.terminal_width // In fullscreen mode, use terminal width as limit
-        } else if let Some(specified_width) = self.width {
-            specified_width
+        } else if let Some(ref width_spec) = self.width {
+            width_spec.calculate(constraints.terminal_width)
         } else {
             constraints.max_width + self.margin.horizontal()
         };

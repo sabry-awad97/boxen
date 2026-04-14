@@ -66,7 +66,7 @@
 //!
 //! ### Dynamic Sizing
 //! ```rust
-//! use ::boxen::{BoxenOptions, Spacing};
+//! use ::boxen::{BoxenOptions, Spacing, Width, Height};
 //!
 //! # fn main() {
 //! // Auto-size to terminal width with margins
@@ -83,12 +83,12 @@
 //!
 //! ### Layout Control
 //! ```rust
-//! use ::boxen::{BoxenOptions, Float, Spacing};
+//! use ::boxen::{BoxenOptions, Float, Spacing, Width, Height};
 //!
 //! # fn main() {
 //! let options = BoxenOptions {
-//!     width: Some(60),
-//!     height: Some(10),
+//!     width: Some(Width::Fixed(60)),
+//!     height: Some(Height::Fixed(10)),
 //!     float: Float::Center,
 //!     margin: Spacing::from(3),
 //!     ..Default::default()
@@ -124,11 +124,11 @@
 //!
 //! ### Validation Errors
 //! ```rust
-//! use ::boxen::{BoxenOptions, Spacing};
+//! use ::boxen::{BoxenOptions, Spacing, Width, Height};
 //!
 //! # fn main() {
 //! let options = BoxenOptions {
-//!     width: Some(5),  // Too small for content
+//!     width: Some(Width::Fixed(5)),  // Too small for content
 //!     padding: Spacing::from(10), // Excessive padding
 //!     ..Default::default()
 //! };
@@ -152,11 +152,11 @@
 //!
 //! ### Automatic Recovery
 //! ```rust
-//! use ::boxen::BoxenOptions;
+//! use ::boxen::{BoxenOptions, Width};
 //!
 //! # fn main() {
 //! let options = BoxenOptions {
-//!     width: Some(3), // Invalid - too small
+//!     width: Some(Width::Fixed(3)), // Invalid - too small
 //!     ..Default::default()
 //! };
 //! let content = "Content that doesn't fit";
@@ -238,7 +238,7 @@
 //!
 //! ### Terminal Size Detection
 //! ```rust
-//! use ::boxen::{BoxenOptions, Spacing};
+//! use ::boxen::{BoxenOptions, Spacing, Width, Height};
 //!
 //! # fn main() {
 //! // Automatically respects terminal dimensions
@@ -343,14 +343,14 @@ use unicode_width::UnicodeWidthChar;
 /// ## With Custom Options
 ///
 /// ```rust
-/// use ::boxen::{boxen, BoxenOptions, BorderStyle, TextAlignment, Spacing};
+/// use ::boxen::{boxen, BoxenOptions, BorderStyle, TextAlignment, Spacing, Width};
 ///
 /// let options = BoxenOptions {
 ///     border_style: BorderStyle::Double,
 ///     padding: Spacing::from(1),
 ///     text_alignment: TextAlignment::Center,
 ///     title: Some("Greeting".to_string()),
-///     width: Some(20),
+///     width: Some(Width::Fixed(20)),
 ///     ..Default::default()
 /// };
 ///
@@ -383,10 +383,10 @@ use unicode_width::UnicodeWidthChar;
 /// All errors include detailed messages and actionable recommendations:
 ///
 /// ```rust
-/// use ::boxen::{boxen, BoxenOptions, Spacing};
+/// use ::boxen::{boxen, BoxenOptions, Spacing, Width};
 ///
 /// let options = BoxenOptions {
-///     width: Some(5),  // Too small
+///     width: Some(Width::Fixed(5)),  // Too small
 ///     padding: Spacing::from(10),  // Too large
 ///     ..Default::default()
 /// };
@@ -1196,7 +1196,9 @@ fn add_line_with_float_positioning(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::options::{BorderStyle, BoxenOptions, Spacing, TextAlignment, TitleAlignment};
+    use crate::options::{
+        BorderStyle, BoxenOptions, Height, Spacing, TextAlignment, TitleAlignment, Width,
+    };
 
     // Force enable colors for tests (colored crate disables them in non-TTY environments)
     #[ctor::ctor]
@@ -1392,7 +1394,7 @@ mod tests {
             let options = BoxenOptions {
                 title: Some("Title".to_string()),
                 title_alignment: alignment,
-                width: Some(20), // Fixed width for predictable alignment
+                width: Some(Width::Fixed(20)), // Fixed width for predictable alignment
                 ..Default::default()
             };
 
@@ -1411,7 +1413,7 @@ mod tests {
     fn test_title_truncation() {
         let options = BoxenOptions {
             title: Some("Very Long Title That Should Be Truncated".to_string()),
-            width: Some(15), // Small width to force truncation
+            width: Some(Width::Fixed(15)), // Small width to force truncation
             ..Default::default()
         };
 
@@ -1440,7 +1442,7 @@ mod tests {
         for alignment in alignments {
             let options = BoxenOptions {
                 text_alignment: alignment,
-                width: Some(20), // Fixed width for predictable alignment
+                width: Some(Width::Fixed(20)), // Fixed width for predictable alignment
                 ..Default::default()
             };
 
@@ -1496,7 +1498,7 @@ mod tests {
     #[test]
     fn test_width_constraint() {
         let options = BoxenOptions {
-            width: Some(10),
+            width: Some(Width::Fixed(10)),
             ..Default::default()
         };
 
@@ -1580,8 +1582,8 @@ mod tests {
     fn test_error_handling() {
         // Test with invalid width constraint
         let options = BoxenOptions {
-            width: Some(1),            // Too small for any content
-            padding: Spacing::from(2), // Large padding
+            width: Some(Width::Fixed(1)), // Too small for any content
+            padding: Spacing::from(2),    // Large padding
             ..Default::default()
         };
 
@@ -1606,7 +1608,7 @@ mod tests {
     fn test_long_text_wrapping() {
         let long_text = "This is a very long line of text that should be wrapped when it exceeds the available width";
         let options = BoxenOptions {
-            width: Some(30),
+            width: Some(Width::Fixed(30)),
             ..Default::default()
         };
 
@@ -1622,7 +1624,7 @@ mod tests {
     #[test]
     fn test_width_calculation_fix() {
         // This test verifies that the width calculation issue is fixed
-        // Previously, specifying width: Some(70) would cause the calculated width
+        // Previously, specifying width: Some(Width::Fixed(70)) would cause the calculated width
         // to grow by 2 each time, leading to errors like "72 exceeds 70"
 
         let options = BoxenOptions {
@@ -1632,7 +1634,7 @@ mod tests {
                 bottom: 1,
                 left: 1,
             },
-            width: Some(70),
+            width: Some(Width::Fixed(70)),
             ..Default::default()
         };
 
@@ -1827,7 +1829,7 @@ mod tests {
     fn test_fullscreen_mode_overrides_width() {
         let options = BoxenOptions {
             fullscreen: Some(crate::options::FullscreenMode::Auto),
-            width: Some(50), // Should be ignored
+            width: Some(Width::Fixed(50)), // Should be ignored
             ..Default::default()
         };
 
@@ -1900,7 +1902,7 @@ mod tests {
             title: Some("Left Title".to_string()),
             title_alignment: TitleAlignment::Left,
             border_style: BorderStyle::None,
-            width: Some(20),
+            width: Some(Width::Fixed(20)),
             ..Default::default()
         };
 
@@ -1927,7 +1929,7 @@ mod tests {
             title: Some("Center".to_string()),
             title_alignment: TitleAlignment::Center,
             border_style: BorderStyle::None,
-            width: Some(20),
+            width: Some(Width::Fixed(20)),
             ..Default::default()
         };
 
@@ -1951,7 +1953,7 @@ mod tests {
             title: Some("Right Title".to_string()),
             title_alignment: TitleAlignment::Right,
             border_style: BorderStyle::None,
-            width: Some(20),
+            width: Some(Width::Fixed(20)),
             ..Default::default()
         };
 
@@ -1970,7 +1972,7 @@ mod tests {
         let options = BoxenOptions {
             title: Some("This is a very long title that should be truncated".to_string()),
             border_style: BorderStyle::None,
-            width: Some(15),
+            width: Some(Width::Fixed(15)),
             ..Default::default()
         };
 
@@ -1987,7 +1989,7 @@ mod tests {
     #[test]
     fn test_height_constraint_padding() {
         let options = BoxenOptions {
-            height: Some(10), // Specify height larger than content
+            height: Some(Height::Fixed(10)), // Specify height larger than content
             ..Default::default()
         };
 
@@ -2009,7 +2011,7 @@ mod tests {
     fn test_height_constraint_truncation() {
         let long_text = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8";
         let options = BoxenOptions {
-            height: Some(5), // Small height to force truncation
+            height: Some(Height::Fixed(5)), // Small height to force truncation
             ..Default::default()
         };
 
@@ -2034,7 +2036,7 @@ mod tests {
     #[test]
     fn test_height_constraint_exact_fit() {
         let options = BoxenOptions {
-            height: Some(3), // Exact fit for single line + borders
+            height: Some(Height::Fixed(3)), // Exact fit for single line + borders
             ..Default::default()
         };
 
@@ -2054,7 +2056,7 @@ mod tests {
     #[test]
     fn test_height_constraint_with_padding() {
         let options = BoxenOptions {
-            height: Some(8),
+            height: Some(Height::Fixed(8)),
             padding: Spacing {
                 top: 1,
                 right: 1,
@@ -2081,7 +2083,7 @@ mod tests {
     #[test]
     fn test_height_constraint_with_margins() {
         let options = BoxenOptions {
-            height: Some(10), // Total height including margins (need more space)
+            height: Some(Height::Fixed(10)), // Total height including margins (need more space)
             margin: Spacing {
                 top: 1,
                 right: 0,
@@ -2109,7 +2111,7 @@ mod tests {
     fn test_height_constraint_no_border() {
         let options = BoxenOptions {
             border_style: BorderStyle::None,
-            height: Some(4), // Height constraint without borders
+            height: Some(Height::Fixed(4)), // Height constraint without borders
             ..Default::default()
         };
 
@@ -2131,7 +2133,7 @@ mod tests {
     #[test]
     fn test_height_constraint_minimum_height() {
         let options = BoxenOptions {
-            height: Some(2), // Very small height
+            height: Some(Height::Fixed(2)), // Very small height
             ..Default::default()
         };
 
@@ -2149,7 +2151,7 @@ mod tests {
     fn test_height_constraint_with_title() {
         let options = BoxenOptions {
             title: Some("Title".to_string()),
-            height: Some(5),
+            height: Some(Height::Fixed(5)),
             ..Default::default()
         };
 
@@ -2171,7 +2173,7 @@ mod tests {
     fn test_height_constraint_error_handling() {
         // Test with height too small for borders and padding
         let options = BoxenOptions {
-            height: Some(1), // Too small for borders
+            height: Some(Height::Fixed(1)), // Too small for borders
             padding: Spacing::from(1),
             ..Default::default()
         };
@@ -2185,7 +2187,7 @@ mod tests {
     #[test]
     fn test_process_content_with_height_constraints() {
         let options = BoxenOptions {
-            height: Some(8), // Total height including borders
+            height: Some(Height::Fixed(8)), // Total height including borders
             padding: Spacing {
                 top: 1,
                 right: 1,
@@ -2220,7 +2222,7 @@ mod tests {
                 bottom: 1,
                 left: 2,
             },
-            width: Some(20),
+            width: Some(Width::Fixed(20)),
             ..Default::default()
         };
 
@@ -2241,7 +2243,7 @@ mod tests {
         let options = BoxenOptions {
             title: Some("测试标题".to_string()),
             title_alignment: TitleAlignment::Center,
-            width: Some(20),
+            width: Some(Width::Fixed(20)),
             ..Default::default()
         };
 
@@ -2307,7 +2309,7 @@ mod tests {
 
         let options = BoxenOptions {
             float: Float::Center,
-            width: Some(20), // Fixed width for predictable centering
+            width: Some(Width::Fixed(20)), // Fixed width for predictable centering
             ..Default::default()
         };
 
@@ -2341,7 +2343,7 @@ mod tests {
 
         let options = BoxenOptions {
             float: Float::Right,
-            width: Some(20), // Fixed width for predictable positioning
+            width: Some(Width::Fixed(20)), // Fixed width for predictable positioning
             margin: Spacing {
                 top: 0,
                 right: 3, // 3 spaces from right
@@ -2378,7 +2380,7 @@ mod tests {
         // Test that float positioning adapts to terminal width constraints
         let options = BoxenOptions {
             float: Float::Center,
-            width: Some(10),
+            width: Some(Width::Fixed(10)),
             ..Default::default()
         };
 
@@ -2407,7 +2409,7 @@ mod tests {
         let options = BoxenOptions {
             float: Float::Center,
             border_style: BorderStyle::None,
-            width: Some(15),
+            width: Some(Width::Fixed(15)),
             ..Default::default()
         };
 
@@ -2470,7 +2472,7 @@ mod tests {
         // Test with very small terminal width simulation
         let options = BoxenOptions {
             float: Float::Right,
-            width: Some(50), // Larger than typical small terminal
+            width: Some(Width::Fixed(50)), // Larger than typical small terminal
             ..Default::default()
         };
 
@@ -2488,7 +2490,7 @@ mod tests {
 
         let options = BoxenOptions {
             float: Float::Center,
-            width: Some(25),
+            width: Some(Width::Fixed(25)),
             ..Default::default()
         };
 
@@ -2529,7 +2531,7 @@ mod tests {
         let options = BoxenOptions {
             float: Float::Right,
             title: Some("My Title".to_string()),
-            width: Some(20),
+            width: Some(Width::Fixed(20)),
             margin: Spacing {
                 top: 0,
                 right: 2,
@@ -2771,7 +2773,7 @@ mod tests {
             title: Some("Title".to_string()),
             border_color: Some(Color::Named("blue".to_string())),
             background_color: Some(Color::Named("white".to_string())),
-            width: Some(20), // Ensure enough width for the title
+            width: Some(Width::Fixed(20)), // Ensure enough width for the title
             ..Default::default()
         };
 
@@ -2863,7 +2865,7 @@ mod tests {
             float: Float::Center,
             border_color: Some(Color::Named("blue".to_string())),
             background_color: Some(Color::Named("yellow".to_string())),
-            width: Some(20),
+            width: Some(Width::Fixed(20)),
             ..Default::default()
         };
 
@@ -2877,7 +2879,7 @@ mod tests {
             "Centered",
             Some(BoxenOptions {
                 float: Float::Center,
-                width: Some(20),
+                width: Some(Width::Fixed(20)),
                 ..Default::default()
             }),
         )

@@ -36,10 +36,10 @@
 //!
 //! ```rust
 //! use ::boxen::validation::{validate_configuration, auto_adjust_options};
-//! use ::boxen::BoxenOptions;
+//! use ::boxen::{BoxenOptions, Width, Height};
 //!
 //! let mut options = BoxenOptions::default();
-//! options.width = Some(10); // Potentially too small
+//! options.width = Some(Width::Fixed(10)); // Potentially too small
 //! let text = "This is a long line of text";
 //!
 //! // Validate configuration
@@ -80,11 +80,11 @@
 //!
 //! ```rust
 //! use ::boxen::validation::validate_configuration;
-//! use ::boxen::BoxenOptions;
+//! use ::boxen::{BoxenOptions, Width, Height};
 //!
 //! let mut options = BoxenOptions::default();
-//! options.width = Some(200);  // Might exceed terminal width
-//! options.height = Some(100); // Might exceed terminal height
+//! options.width = Some(Width::Fixed(200));  // Might exceed terminal width
+//! options.height = Some(Height::Fixed(100)); // Might exceed terminal height
 //!
 //! let validation = validate_configuration("Content", &options);
 //!
@@ -124,18 +124,23 @@
 //!
 //! ```rust
 //! use ::boxen::validation::auto_adjust_options;
-//! use ::boxen::BoxenOptions;
+//! use ::boxen::{BoxenOptions, Width, Height};
+//! use ::boxen::terminal::{get_terminal_width, get_terminal_height};
 //!
 //! let mut problematic_options = BoxenOptions::default();
-//! problematic_options.width = Some(5);   // Too small
-//! problematic_options.height = Some(1); // Too small
+//! problematic_options.width = Some(Width::Fixed(5));   // Too small
+//! problematic_options.height = Some(Height::Fixed(1)); // Too small
 //!
 //! let text = "This text is too long for the specified dimensions";
 //! let fixed_options = auto_adjust_options(text, problematic_options);
 //!
 //! // Options are now adjusted to accommodate the text
-//! assert!(fixed_options.width.unwrap() >= 5);
-//! assert!(fixed_options.height.unwrap() >= 1);
+//! if let Some(Width::Fixed(w)) = fixed_options.width {
+//!     assert!(w >= 5);
+//! }
+//! if let Some(Height::Fixed(h)) = fixed_options.height {
+//!     assert!(h >= 1);
+//! }
 //! ```
 //!
 //! ### Smart Recovery Strategies
@@ -143,10 +148,10 @@
 //!
 //! ```rust
 //! use ::boxen::validation::recovery::smart_recovery;
-//! use ::boxen::{BoxenOptions, Spacing};
+//! use ::boxen::{BoxenOptions, Spacing, Width};
 //!
 //! let mut options = BoxenOptions::default();
-//! options.width = Some(300);  // Exceeds terminal
+//! options.width = Some(Width::Fixed(300));  // Exceeds terminal
 //! options.padding = Spacing::from(10); // Large padding
 //!
 //! let recovered = smart_recovery("Content", options);
@@ -221,10 +226,10 @@
 //!
 //! ```rust
 //! use ::boxen::validation::validate_configuration;
-//! use ::boxen::BoxenOptions;
+//! use ::boxen::{BoxenOptions, Width};
 //!
 //! let mut options = BoxenOptions::default();
-//! options.width = Some(3); // Too small
+//! options.width = Some(Width::Fixed(3)); // Too small
 //! let result = validate_configuration("Hello World", &options);
 //!
 //! for error in &result.errors {
@@ -248,7 +253,7 @@
 //! ### Optimal Dimension Calculation
 //! ```rust
 //! use ::boxen::validation::suggest_optimal_dimensions;
-//! use ::boxen::BoxenOptions;
+//! use ::boxen::{BoxenOptions, Width, Height};
 //!
 //! let options = BoxenOptions::default();
 //! let text = "Sample content that needs optimal sizing";
@@ -257,8 +262,8 @@
 //!
 //! // Use optimal dimensions for best user experience
 //! let mut optimized_options = BoxenOptions::default();
-//! optimized_options.width = Some(optimal_width);
-//! optimized_options.height = Some(optimal_height);
+//! optimized_options.width = Some(Width::Fixed(optimal_width));
+//! optimized_options.height = Some(Height::Fixed(optimal_height));
 //! ```
 //!
 //! ### Minimum Dimension Analysis
@@ -286,10 +291,10 @@
 //! ### Error Types and Recovery
 //! ```rust
 //! use ::boxen::validation::validate_configuration;
-//! use ::boxen::{BoxenOptions, BoxenError};
+//! use ::boxen::{BoxenOptions, BoxenError, Width};
 //!
 //! let mut options = BoxenOptions::default();
-//! options.width = Some(1); // Invalid
+//! options.width = Some(Width::Fixed(1)); // Invalid
 //! let result = validate_configuration("Content", &options);
 //!
 //! for error in &result.errors {
@@ -351,7 +356,7 @@
 //! - **Integration Tests**: End-to-end validation with real terminal constraints
 
 use crate::error::{BoxenError, ErrorRecommendation};
-use crate::options::{BoxenOptions, Spacing};
+use crate::options::{BoxenOptions, Height, Spacing, Width};
 use crate::terminal::{get_terminal_height, get_terminal_width};
 use crate::text::text_width;
 
@@ -464,7 +469,11 @@ fn validate_width_constraints(
     options: &BoxenOptions,
     min_dims: &MinimumDimensions,
 ) {
-    if let Some(specified_width) = options.width {
+    if let Some(ref width_spec) = options.width {
+        // Calculate actual width using terminal width as available space
+        let terminal_width = get_terminal_width();
+        let specified_width = width_spec.calculate(terminal_width);
+
         if specified_width < min_dims.width {
             let recommendations = vec![
                 ErrorRecommendation::with_auto_fix(
@@ -512,7 +521,11 @@ fn validate_height_constraints(
     options: &BoxenOptions,
     min_dims: &MinimumDimensions,
 ) {
-    if let Some(specified_height) = options.height {
+    if let Some(ref height_spec) = options.height {
+        // Calculate actual height using terminal height as available space
+        let terminal_height = get_terminal_height();
+        let specified_height = height_spec.calculate(terminal_height.unwrap_or(24));
+
         if specified_height < min_dims.height {
             let recommendations = vec![
                 ErrorRecommendation::with_auto_fix(
@@ -563,8 +576,20 @@ fn validate_terminal_constraints(
     let terminal_width: usize = get_terminal_width();
     let terminal_height: Option<usize> = get_terminal_height();
 
-    let total_width = options.width.unwrap_or(min_dims.width) + options.margin.horizontal();
-    let total_height = options.height.unwrap_or(min_dims.height) + options.margin.vertical();
+    // Calculate actual width/height from specifications
+    let actual_width = options
+        .width
+        .as_ref()
+        .map(|w| w.calculate(terminal_width))
+        .unwrap_or(min_dims.width);
+    let actual_height = options
+        .height
+        .as_ref()
+        .map(|h| h.calculate(terminal_height.unwrap_or(24)))
+        .unwrap_or(min_dims.height);
+
+    let total_width = actual_width + options.margin.horizontal();
+    let total_height = actual_height + options.margin.vertical();
 
     if total_width > terminal_width {
         let recommendations = vec![
@@ -702,25 +727,32 @@ pub fn auto_adjust_options(text: &str, mut options: BoxenOptions) -> BoxenOption
         let terminal_height = get_terminal_height();
 
         // Auto-adjust width if too small
-        if let Some(width) = options.width {
+        if let Some(ref width_spec) = options.width {
+            let width = width_spec.calculate(terminal_width);
             if width < min_dims.width {
-                options.width = Some(min_dims.width);
+                options.width = Some(Width::Fixed(min_dims.width));
             }
         }
 
         // Auto-adjust height if too small
-        if let Some(height) = options.height {
+        if let Some(ref height_spec) = options.height {
+            let height = height_spec.calculate(terminal_height.unwrap_or(24));
             if height < min_dims.height {
-                options.height = Some(min_dims.height);
+                options.height = Some(Height::Fixed(min_dims.height));
             }
         }
 
         // Auto-adjust if exceeds terminal size
-        let total_width = options.width.unwrap_or(min_dims.width) + options.margin.horizontal();
+        let actual_width = options
+            .width
+            .as_ref()
+            .map(|w| w.calculate(terminal_width))
+            .unwrap_or(min_dims.width);
+        let total_width = actual_width + options.margin.horizontal();
         if total_width > terminal_width {
             let max_width = terminal_width.saturating_sub(options.margin.horizontal());
             if max_width >= min_dims.width {
-                options.width = Some(max_width);
+                options.width = Some(Width::Fixed(max_width));
             } else {
                 // Reduce margins if necessary
                 let required_margin_reduction = total_width - terminal_width;
@@ -736,12 +768,17 @@ pub fn auto_adjust_options(text: &str, mut options: BoxenOptions) -> BoxenOption
             }
         }
 
-        let total_height = options.height.unwrap_or(min_dims.height) + options.margin.vertical();
+        let actual_height = options
+            .height
+            .as_ref()
+            .map(|h| h.calculate(terminal_height.unwrap_or(24)))
+            .unwrap_or(min_dims.height);
+        let total_height = actual_height + options.margin.vertical();
         if let Some(term_height) = terminal_height {
             if total_height > term_height {
                 let max_height = term_height.saturating_sub(options.margin.vertical());
                 if max_height >= min_dims.height {
-                    options.height = Some(max_height);
+                    options.height = Some(Height::Fixed(max_height));
                 } else {
                     // Reduce margins if necessary
                     let required_margin_reduction = total_height - term_height;
@@ -768,7 +805,7 @@ pub mod recovery {
         BoxenError, calculate_minimum_dimensions, get_terminal_height, get_terminal_width,
         validate_configuration,
     };
-    use crate::options::{BorderStyle, BoxenOptions, Spacing};
+    use crate::options::{BorderStyle, BoxenOptions, Height, Spacing, Width};
 
     /// Attempt to recover from invalid width by adjusting configuration
     #[must_use]
@@ -806,7 +843,7 @@ pub mod recovery {
             }
 
             // As last resort, set width to minimum required
-            options.width = Some(min_dims.width);
+            options.width = Some(Width::Fixed(min_dims.width));
         }
 
         options
@@ -848,7 +885,7 @@ pub mod recovery {
             }
 
             // As last resort, set height to minimum required
-            options.height = Some(min_dims.height);
+            options.height = Some(Height::Fixed(min_dims.height));
         }
 
         options
@@ -861,10 +898,15 @@ pub mod recovery {
         let terminal_height = get_terminal_height();
 
         // Adjust width if it exceeds terminal
-        let total_width = options.width.unwrap_or_else(|| {
-            let min_dims = calculate_minimum_dimensions(text, &options);
-            min_dims.width
-        }) + options.margin.horizontal();
+        let actual_width = options
+            .width
+            .as_ref()
+            .map(|w| w.calculate(terminal_width))
+            .unwrap_or_else(|| {
+                let min_dims = calculate_minimum_dimensions(text, &options);
+                min_dims.width
+            });
+        let total_width = actual_width + options.margin.horizontal();
 
         if total_width > terminal_width {
             let margin_horizontal = options.margin.horizontal();
@@ -873,10 +915,15 @@ pub mod recovery {
 
         // Adjust height if it exceeds terminal
         if let Some(term_height) = terminal_height {
-            let total_height = options.height.unwrap_or_else(|| {
-                let min_dims = calculate_minimum_dimensions(text, &options);
-                min_dims.height
-            }) + options.margin.vertical();
+            let actual_height = options
+                .height
+                .as_ref()
+                .map(|h| h.calculate(term_height))
+                .unwrap_or_else(|| {
+                    let min_dims = calculate_minimum_dimensions(text, &options);
+                    min_dims.height
+                });
+            let total_height = actual_height + options.margin.vertical();
 
             if total_height > term_height {
                 let margin_vertical = options.margin.vertical();
@@ -962,7 +1009,7 @@ mod tests {
     #[test]
     fn test_validate_configuration_width_too_small() {
         let options = BoxenOptions {
-            width: Some(5), // Too small for "Hello" + borders
+            width: Some(Width::Fixed(5)), // Too small for "Hello" + borders
             ..Default::default()
         };
         let result = validate_configuration("Hello", &options);
@@ -991,16 +1038,32 @@ mod tests {
     #[test]
     fn test_auto_adjust_options() {
         let original_options = BoxenOptions {
-            width: Some(5),  // Too small
-            height: Some(2), // Too small
+            width: Some(Width::Fixed(5)),   // Too small
+            height: Some(Height::Fixed(2)), // Too small
             ..Default::default()
         };
 
         let adjusted = auto_adjust_options("Hello\nWorld", original_options);
 
         // Should be adjusted to minimum required
-        assert!(adjusted.width.unwrap() >= 7); // Minimum for "Hello" + borders
-        assert!(adjusted.height.unwrap() >= 4); // Minimum for 2 lines + borders
+        let terminal_width = get_terminal_width();
+        let terminal_height = get_terminal_height().unwrap_or(24);
+        assert!(
+            adjusted
+                .width
+                .as_ref()
+                .map(|w| w.calculate(terminal_width))
+                .unwrap()
+                >= 7
+        ); // Minimum for "Hello" + borders
+        assert!(
+            adjusted
+                .height
+                .as_ref()
+                .map(|h| h.calculate(terminal_height))
+                .unwrap()
+                >= 4
+        ); // Minimum for 2 lines + borders
     }
 
     #[test]

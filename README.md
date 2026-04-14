@@ -43,7 +43,8 @@ A Rust implementation of the popular [boxen](https://github.com/sindresorhus/box
 
 - Flexible text alignment (left, center, right)
 - Precise padding and margins
-- Width and height constraints
+- Dynamic width/height with closures
+- Fixed width/height constraints
 - Fullscreen mode
 
 </td>
@@ -220,6 +221,53 @@ let result = builder()
     .render("Congratulations!\nYou've mastered boxen!")
     .unwrap();
 ```
+
+### Dynamic Sizing
+
+Boxen supports both fixed and dynamic width/height using closures that adapt to available terminal space:
+
+```rust
+use boxen::builder;
+
+// Fixed width (traditional approach)
+let result = builder()
+    .width(50)
+    .render("Fixed width box")
+    .unwrap();
+
+// Dynamic width - use 80% of available terminal width
+let result = builder()
+    .width(|available: usize| (available * 4 / 5).max(30))
+    .render("This box adapts to terminal width")
+    .unwrap();
+
+// Dynamic height - use 50% of available terminal height
+let result = builder()
+    .height(|available: usize| (available / 2).max(10))
+    .render("Multi\nLine\nContent")
+    .unwrap();
+
+// Both dynamic - fully responsive box
+let result = builder()
+    .width(|available: usize| (available * 3 / 4).max(40))
+    .height(|available: usize| (available / 3).max(8))
+    .render("Fully responsive box")
+    .unwrap();
+
+// Mix fixed and dynamic
+let result = builder()
+    .width(|available: usize| available.min(60))  // Cap at 60 columns
+    .height(15)  // Fixed height
+    .render("Dynamic width, fixed height")
+    .unwrap();
+```
+
+**Key features:**
+
+- 🎯 **Unified API** - Same `.width()` and `.height()` methods accept both fixed values and closures
+- 📏 **Terminal-aware** - Closures receive available terminal space as parameter
+- 🔄 **100% backward compatible** - Existing code using `.width(50)` continues to work
+- 🎨 **Flexible** - Mix fixed and dynamic dimensions as needed
 
 ---
 
@@ -447,6 +495,9 @@ Run the included examples to see boxen in action:
 ```bash
 # Basic usage patterns
 cargo run --example main_api_demo
+
+# Dynamic width/height sizing
+cargo run --example dynamic_sizing_demo
 
 # Color demonstrations
 cargo run --example color_demo

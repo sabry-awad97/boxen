@@ -1,4 +1,5 @@
 use ::boxen::{BorderStyle, BoxenOptions, Color, Spacing, TextAlignment, TitleAlignment, boxen};
+use boxen::Width;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Boxen Color Integration Demo ===\n");
@@ -82,7 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             title_alignment: TitleAlignment::Center,
             border_color: Some(Color::Named("cyan".to_string())),
             background_color: Some(Color::Named("magenta".to_string())),
-            width: Some(25),
+            width: Some(Width::Fixed(25)),
             ..Default::default()
         }),
     )?;
@@ -135,7 +136,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             border_color: Some(Color::Named("yellow".to_string())),
             background_color: Some(Color::Named("blue".to_string())),
             text_alignment: TextAlignment::Center,
-            width: Some(20),
+            width: Some(Width::Fixed(20)),
             ..Default::default()
         }),
     )?;

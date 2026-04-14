@@ -62,7 +62,7 @@ fn main() {
         let _ = boxen(
             &large_content,
             Some(BoxenOptions {
-                width: Some(60),
+                width: Some(boxen::Width::Fixed(60)),
                 ..Default::default()
             }),
         );

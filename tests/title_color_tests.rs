@@ -1,5 +1,5 @@
 /// Integration tests for `title_color` feature
-use ::boxen::{BoxenOptions, Color, TitleAlignment, boxen};
+use boxen::{BoxenOptions, Color, TitleAlignment, Width, boxen};
 
 // Force enable colors for tests (colored crate disables them in non-TTY environments)
 #[ctor::ctor]
@@ -30,7 +30,7 @@ fn test_title_color_fallback_to_border_color() {
         title: Some("Test".to_string()),
         title_color: None,
         border_color: Some(Color::Named("blue".to_string())),
-        width: Some(20),
+        width: Some(Width::Fixed(20)),
         ..Default::default()
     };
     let result = boxen("Content", Some(options)).unwrap();
@@ -49,7 +49,7 @@ fn test_title_color_no_fallback() {
         title: Some("Test".to_string()),
         title_color: None,
         border_color: None,
-        width: Some(20),
+        width: Some(Width::Fixed(20)),
         ..Default::default()
     };
     let result = boxen("Content", Some(options)).unwrap();

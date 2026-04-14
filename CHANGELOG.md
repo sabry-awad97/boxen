@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Dynamic Width/Height Support**: New `Width` and `Height` types supporting both fixed and dynamic sizing
+  - `Width::Fixed(usize)` - Fixed width in columns
+  - `Width::Dynamic(Arc<dyn Fn(usize) -> usize>)` - Dynamic width calculated from available terminal space using closures
+  - `Height::Fixed(usize)` - Fixed height in rows
+  - `Height::Dynamic(Arc<dyn Fn(usize) -> usize>)` - Dynamic height calculated from available terminal space using closures
+  - Unified builder API: `.width()` and `.height()` accept both fixed values and closures
+  - Example: `.width(50)` - Fixed width
+  - Example: `.width(|available: usize| (available * 4 / 5).max(30))` - Dynamic width using closure
+  - Example: `.height(|available: usize| (available / 2).max(10))` - Dynamic height using closure
+  - Fully backward compatible - existing code using `.width(50)` continues to work
+  - Thread-safe: Uses `Arc` for shared ownership of closures across threads
+
 - **Color Validation Method**: New `Color::validated()` method for early validation of color specifications
   - Validates named colors against supported color names
   - Validates hex colors for correct format (#RRGGBB with 6 hex digits)
@@ -20,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 16 new tests in `tests/thread_safety_tests.rs`
   - Compile-time verification using trait bounds
   - Runtime verification with actual thread spawning and Arc-based sharing
-  - Verified types: `BoxenOptions`, `BoxenBuilder`, `BorderStyle`, `BorderChars`, `Color`, `Spacing`, `TextAlignment`, `TitleAlignment`, `Float`, `FullscreenMode`, `DimensionConstraints`, `LayoutDimensions`
+  - Verified types: `BoxenOptions`, `BoxenBuilder`, `BorderStyle`, `BorderChars`, `Color`, `Spacing`, `TextAlignment`, `TitleAlignment`, `Float`, `FullscreenMode`, `DimensionConstraints`, `LayoutDimensions`, `Width`, `Height`
 
 - **Spacing API Improvements**: New explicit constructor for terminal-balanced spacing
   - `Spacing::terminal_balanced(value)` - Creates spacing with 3x horizontal multiplier for terminal aspect ratios

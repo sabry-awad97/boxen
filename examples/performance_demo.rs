@@ -43,7 +43,7 @@ fn benchmark_large_text() {
         let result = boxen(
             &large_text,
             Some(BoxenOptions {
-                width: Some(80),
+                width: Some(boxen::Width::Fixed(80)),
                 text_alignment: TextAlignment::Left,
                 ..Default::default()
             }),
@@ -78,8 +78,8 @@ fn benchmark_many_lines() {
         let result = boxen(
             &many_lines,
             Some(BoxenOptions {
-                width: Some(80),
-                height: Some(50), // Limit output height
+                width: Some(boxen::Width::Fixed(80)),
+                height: Some(boxen::Height::Fixed(50)), // Limit output height
                 text_alignment: TextAlignment::Left,
                 ..Default::default()
             }),
@@ -149,7 +149,7 @@ fn benchmark_unicode_handling() {
         let result = boxen(
             text,
             Some(BoxenOptions {
-                width: Some(80),
+                width: Some(boxen::Width::Fixed(80)),
                 text_alignment: TextAlignment::Center,
                 border_style: BorderStyle::Round,
                 ..Default::default()
@@ -199,7 +199,7 @@ fn benchmark_repeated_rendering() {
                 margin: Spacing::from(1),
                 text_alignment: TextAlignment::Center,
                 title: Some("Performance Test".to_string()),
-                width: Some(50),
+                width: Some(boxen::Width::Fixed(50)),
                 border_color: Some(Color::Hex("#ff0000".to_string())),
                 ..Default::default()
             },
@@ -242,7 +242,7 @@ fn demonstrate_memory_efficiency() {
             let result = boxen(
                 text,
                 Some(BoxenOptions {
-                    width: Some(80),
+                    width: Some(boxen::Width::Fixed(80)),
                     padding: Spacing::from(1),
                     ..Default::default()
                 }),
@@ -271,7 +271,7 @@ fn benchmark_scaling() {
         let result = boxen(
             "Width scaling test content",
             Some(BoxenOptions {
-                width: Some(width),
+                width: Some(boxen::Width::Fixed(width)),
                 ..Default::default()
             }),
         );
@@ -295,8 +295,8 @@ fn benchmark_scaling() {
         let result = boxen(
             &long_content,
             Some(BoxenOptions {
-                height: Some(height),
-                width: Some(80),
+                height: Some(boxen::Height::Fixed(height)),
+                width: Some(boxen::Width::Fixed(80)),
                 ..Default::default()
             }),
         );
@@ -316,7 +316,7 @@ fn benchmark_scaling() {
             "Padding scaling test",
             Some(BoxenOptions {
                 padding: Spacing::from(padding),
-                width: Some(80),
+                width: Some(boxen::Width::Fixed(80)),
                 ..Default::default()
             }),
         );

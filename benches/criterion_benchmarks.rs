@@ -195,7 +195,7 @@ fn bench_text_alignment(c: &mut Criterion) {
                         black_box(content),
                         Some(BoxenOptions {
                             text_alignment: *alignment,
-                            width: Some(50),
+                            width: Some(boxen::Width::Fixed(50)),
                             ..Default::default()
                         }),
                     );
@@ -305,7 +305,7 @@ fn bench_width_configurations(c: &mut Criterion) {
                     let _ = boxen(
                         black_box("Test content"),
                         Some(BoxenOptions {
-                            width: Some(width),
+                            width: Some(boxen::Width::Fixed(width)),
                             ..Default::default()
                         }),
                     );

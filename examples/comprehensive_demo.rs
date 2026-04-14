@@ -102,7 +102,7 @@ fn demonstrate_text_formatting() -> Result<(), Box<dyn std::error::Error>> {
     println!("Left alignment:");
     let options = BoxenOptions {
         text_alignment: TextAlignment::Left,
-        width: Some(40),
+        width: Some(boxen::Width::Fixed(40)),
         ..Default::default()
     };
     println!("{}", boxen(multiline_content, Some(options))?);
@@ -111,7 +111,7 @@ fn demonstrate_text_formatting() -> Result<(), Box<dyn std::error::Error>> {
     println!("Center alignment:");
     let options = BoxenOptions {
         text_alignment: TextAlignment::Center,
-        width: Some(40),
+        width: Some(boxen::Width::Fixed(40)),
         ..Default::default()
     };
     println!("{}", boxen(multiline_content, Some(options))?);
@@ -120,7 +120,7 @@ fn demonstrate_text_formatting() -> Result<(), Box<dyn std::error::Error>> {
     println!("Right alignment:");
     let options = BoxenOptions {
         text_alignment: TextAlignment::Right,
-        width: Some(40),
+        width: Some(boxen::Width::Fixed(40)),
         ..Default::default()
     };
     println!("{}", boxen(multiline_content, Some(options))?);
@@ -145,7 +145,7 @@ fn demonstrate_spacing_and_dimensions() -> Result<(), Box<dyn std::error::Error>
         println!("{desc}:");
         let options = BoxenOptions {
             padding: *padding,
-            width: Some(35),
+            width: Some(boxen::Width::Fixed(35)),
             ..Default::default()
         };
         println!("{}", boxen("Padding example", Some(options))?);
@@ -163,8 +163,8 @@ fn demonstrate_spacing_and_dimensions() -> Result<(), Box<dyn std::error::Error>
     // Dimension constraints
     println!("Dimension constraints:");
     let options = BoxenOptions {
-        width: Some(30),
-        height: Some(8),
+        width: Some(boxen::Width::Fixed(30)),
+        height: Some(boxen::Height::Fixed(8)),
         text_alignment: TextAlignment::Center,
         ..Default::default()
     };
@@ -241,7 +241,7 @@ fn demonstrate_titles_and_positioning() -> Result<(), Box<dyn std::error::Error>
         let options = BoxenOptions {
             title: Some(format!("{desc} Title")),
             title_alignment: *alignment,
-            width: Some(40),
+            width: Some(boxen::Width::Fixed(40)),
             ..Default::default()
         };
         println!("{}", boxen("Content with title", Some(options))?);
@@ -258,7 +258,7 @@ fn demonstrate_titles_and_positioning() -> Result<(), Box<dyn std::error::Error>
         println!("{desc} float positioning:");
         let options = BoxenOptions {
             float: *float_pos,
-            width: Some(30),
+            width: Some(boxen::Width::Fixed(30)),
             title: Some(format!("{desc} Float")),
             ..Default::default()
         };
@@ -302,8 +302,8 @@ fn demonstrate_advanced_features() -> Result<(), Box<dyn std::error::Error>> {
         text_alignment: TextAlignment::Center,
         title: Some("Complex Example".to_string()),
         title_alignment: TitleAlignment::Center,
-        width: Some(50),
-        height: Some(10),
+        width: Some(boxen::Width::Fixed(50)),
+        height: Some(boxen::Height::Fixed(10)),
         border_color: Some(Color::Named("cyan".to_string())),
         background_color: Some(Color::Named("black".to_string())),
         float: Float::Center,

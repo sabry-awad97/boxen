@@ -180,7 +180,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         boxen(
             "This box has fixed width of 20",
             Some(BoxenOptions {
-                width: Some(20),
+                width: Some(boxen::Width::Fixed(20)),
                 ..Default::default()
             })
         )?
@@ -191,7 +191,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         boxen(
             "This box has fixed width of 50",
             Some(BoxenOptions {
-                width: Some(50),
+                width: Some(boxen::Width::Fixed(50)),
                 ..Default::default()
             })
         )?
@@ -203,7 +203,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         boxen(
             "This box has fixed height of 8",
             Some(BoxenOptions {
-                height: Some(8),
+                height: Some(boxen::Height::Fixed(8)),
                 ..Default::default()
             })
         )?
@@ -214,7 +214,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         boxen(
             "This box has fixed height of 10",
             Some(BoxenOptions {
-                height: Some(10),
+                height: Some(boxen::Height::Fixed(10)),
                 padding: Spacing::from(2),
                 ..Default::default()
             })
@@ -227,8 +227,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         boxen(
             "This box has fixed height of 8 and width of 15",
             Some(BoxenOptions {
-                height: Some(8),
-                width: Some(15),
+                height: Some(boxen::Height::Fixed(8)),
+                width: Some(boxen::Width::Fixed(15)),
                 ..Default::default()
             })
         )?

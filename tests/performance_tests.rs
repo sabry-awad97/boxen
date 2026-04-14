@@ -1,6 +1,7 @@
 /// Performance tests for boxen library
 use ::boxen::{
-    BorderStyle, BoxenOptions, Color, Spacing, TextAlignment, TitleAlignment, boxen, builder,
+    BorderStyle, BoxenOptions, Color, Height, Spacing, TextAlignment, TitleAlignment, Width, boxen,
+    builder,
 };
 use std::time::Instant;
 
@@ -34,8 +35,8 @@ fn test_performance_medium_text() {
     let result = boxen(
         &text,
         Some(BoxenOptions {
-            width: Some(60), // Reduce width to fit in smaller terminals
-            height: Some(8), // Add height constraint
+            width: Some(Width::Fixed(60)), // Reduce width to fit in smaller terminals
+            height: Some(Height::Fixed(8)), // Add height constraint
             ..Default::default()
         }),
     );
@@ -56,8 +57,8 @@ fn test_performance_large_text() {
     let result = boxen(
         &text,
         Some(BoxenOptions {
-            width: Some(60),  // Reduce width
-            height: Some(10), // Smaller height to fit in terminal
+            width: Some(Width::Fixed(60)),   // Reduce width
+            height: Some(Height::Fixed(10)), // Smaller height to fit in terminal
             ..Default::default()
         }),
     );
@@ -81,8 +82,8 @@ fn test_performance_many_lines() {
     let result = boxen(
         &many_lines,
         Some(BoxenOptions {
-            width: Some(60),  // Reduce width
-            height: Some(10), // Smaller height to fit in terminal
+            width: Some(Width::Fixed(60)),   // Reduce width
+            height: Some(Height::Fixed(10)), // Smaller height to fit in terminal
             ..Default::default()
         }),
     );
@@ -131,8 +132,8 @@ fn test_performance_unicode_content() {
     let result = boxen(
         &unicode_text,
         Some(BoxenOptions {
-            width: Some(60),  // Reduce width
-            height: Some(10), // Add height constraint
+            width: Some(Width::Fixed(60)),   // Reduce width
+            height: Some(Height::Fixed(10)), // Add height constraint
             text_alignment: TextAlignment::Center,
             ..Default::default()
         }),
@@ -279,7 +280,7 @@ fn test_performance_text_alignment_variations() {
                 multiline_text,
                 Some(BoxenOptions {
                     text_alignment: *alignment,
-                    width: Some(*width),
+                    width: Some(boxen::Width::Fixed(*width)),
                     ..Default::default()
                 }),
             );
@@ -319,8 +320,8 @@ fn test_performance_spacing_variations() {
                 Some(BoxenOptions {
                     padding: *padding,
                     margin: *margin,
-                    width: Some(40),
-                    height: Some(8), // Add height constraint
+                    width: Some(Width::Fixed(40)),
+                    height: Some(Height::Fixed(8)), // Add height constraint
                     ..Default::default()
                 }),
             );
@@ -348,8 +349,8 @@ fn test_performance_dimension_scaling() {
         let result = boxen(
             text,
             Some(BoxenOptions {
-                width: Some(*width),
-                height: Some(5), // Add height constraint
+                width: Some(boxen::Width::Fixed(*width)),
+                height: Some(Height::Fixed(5)), // Add height constraint
                 ..Default::default()
             }),
         );
@@ -371,8 +372,8 @@ fn test_performance_dimension_scaling() {
         let result = boxen(
             &long_content,
             Some(BoxenOptions {
-                height: Some(*height),
-                width: Some(60), // Reduce width
+                height: Some(boxen::Height::Fixed(*height)),
+                width: Some(Width::Fixed(60)), // Reduce width
                 ..Default::default()
             }),
         );
@@ -451,8 +452,8 @@ fn test_performance_edge_cases() {
         let result = boxen(
             text,
             Some(BoxenOptions {
-                width: Some(60),  // Reduce width
-                height: Some(10), // Smaller height
+                width: Some(Width::Fixed(60)),   // Reduce width
+                height: Some(Height::Fixed(10)), // Smaller height
                 ..Default::default()
             }),
         );

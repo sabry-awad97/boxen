@@ -144,7 +144,7 @@ mod error_tests;
 pub use error::{BoxenError, BoxenResult, ErrorRecommendation};
 pub use options::{
     BorderChars, BorderStyle, BoxenBuilder, BoxenOptions, Color, DimensionConstraints, Float,
-    FullscreenMode, LayoutDimensions, Spacing, TextAlignment, TitleAlignment,
+    FullscreenMode, Height, LayoutDimensions, Spacing, TextAlignment, TitleAlignment, Width,
 };
 pub use render::boxen;
 pub use validation::{

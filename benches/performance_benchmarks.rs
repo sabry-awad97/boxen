@@ -91,7 +91,7 @@ fn bench_text_alignment(c: &mut Criterion) {
                     SIMPLE_TEXT,
                     Some(BoxenOptions {
                         text_alignment: TextAlignment::Left,
-                        width: Some(30),
+                        width: Some(boxen::Width::Fixed(30)),
                         ..Default::default()
                     }),
                 )
@@ -107,7 +107,7 @@ fn bench_text_alignment(c: &mut Criterion) {
                     SIMPLE_TEXT,
                     Some(BoxenOptions {
                         text_alignment: TextAlignment::Center,
-                        width: Some(30),
+                        width: Some(boxen::Width::Fixed(30)),
                         ..Default::default()
                     }),
                 )
@@ -123,7 +123,7 @@ fn bench_text_alignment(c: &mut Criterion) {
                     SIMPLE_TEXT,
                     Some(BoxenOptions {
                         text_alignment: TextAlignment::Right,
-                        width: Some(30),
+                        width: Some(boxen::Width::Fixed(30)),
                         ..Default::default()
                     }),
                 )
@@ -164,7 +164,7 @@ fn bench_multiline_content(c: &mut Criterion) {
                     MULTILINE_TEXT,
                     Some(BoxenOptions {
                         text_alignment: TextAlignment::Center,
-                        width: Some(40),
+                        width: Some(boxen::Width::Fixed(40)),
                         ..Default::default()
                     }),
                 )
@@ -205,7 +205,7 @@ fn bench_unicode_content(c: &mut Criterion) {
                     UNICODE_TEXT,
                     Some(BoxenOptions {
                         text_alignment: TextAlignment::Center,
-                        width: Some(60),
+                        width: Some(boxen::Width::Fixed(60)),
                         ..Default::default()
                     }),
                 )
@@ -226,7 +226,7 @@ fn bench_large_content(c: &mut Criterion) {
                 boxen(
                     LARGE_TEXT,
                     Some(BoxenOptions {
-                        width: Some(40),
+                        width: Some(boxen::Width::Fixed(40)),
                         ..Default::default()
                     }),
                 )
@@ -241,7 +241,7 @@ fn bench_large_content(c: &mut Criterion) {
                 boxen(
                     LARGE_TEXT,
                     Some(BoxenOptions {
-                        width: Some(60),
+                        width: Some(boxen::Width::Fixed(60)),
                         ..Default::default()
                     }),
                 )
@@ -256,7 +256,7 @@ fn bench_large_content(c: &mut Criterion) {
                 boxen(
                     LARGE_TEXT,
                     Some(BoxenOptions {
-                        width: Some(80),
+                        width: Some(boxen::Width::Fixed(80)),
                         ..Default::default()
                     }),
                 )
@@ -408,7 +408,7 @@ fn bench_width_variations(c: &mut Criterion) {
                     boxen(
                         LARGE_TEXT,
                         Some(BoxenOptions {
-                            width: Some(width),
+                            width: Some(boxen::Width::Fixed(width)),
                             ..Default::default()
                         }),
                     )
