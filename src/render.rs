@@ -463,7 +463,6 @@ use unicode_width::UnicodeWidthChar;
 /// Returns `BoxenError::RenderingError` if:
 /// - Box rendering fails due to I/O errors
 /// - Border or content rendering encounters unexpected issues
-#[must_use]
 pub fn boxen<S: AsRef<str>>(text: S, options: Option<BoxenOptions>) -> BoxenResult<String> {
     let text = text.as_ref();
     let options = options.unwrap_or_default();
@@ -1198,6 +1197,21 @@ fn add_line_with_float_positioning(
 mod tests {
     use super::*;
     use crate::options::{BorderStyle, BoxenOptions, Spacing, TextAlignment, TitleAlignment};
+
+    // Force enable colors for tests (colored crate disables them in non-TTY environments)
+    #[ctor::ctor]
+    fn init_colors() {
+        colored::control::set_override(true);
+    }
+
+    // Set terminal size for fullscreen tests
+    #[ctor::ctor]
+    fn init_terminal_size() {
+        unsafe {
+            std::env::set_var("COLUMNS", "80");
+            std::env::set_var("LINES", "24");
+        }
+    }
 
     #[test]
     fn test_basic_box_rendering() {

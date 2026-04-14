@@ -128,9 +128,19 @@ pub fn get_terminal_height() -> Option<usize> {
 /// assert!(width > 0);
 /// ```
 pub fn get_terminal_size() -> (usize, Option<usize>) {
-    *CACHED_TERMINAL_SIZE.get_or_init(|| match terminal_size::terminal_size() {
-        Some((w, h)) => (w.0 as usize, Some(h.0 as usize)),
-        None => (DEFAULT_TERMINAL_WIDTH, None),
+    *CACHED_TERMINAL_SIZE.get_or_init(|| {
+        // Check environment variables first (useful for testing)
+        if let (Ok(cols), Ok(lines)) = (std::env::var("COLUMNS"), std::env::var("LINES")) {
+            if let (Ok(width), Ok(height)) = (cols.parse::<usize>(), lines.parse::<usize>()) {
+                return (width, Some(height));
+            }
+        }
+
+        // Fall back to actual terminal detection
+        match terminal_size::terminal_size() {
+            Some((w, h)) => (w.0 as usize, Some(h.0 as usize)),
+            None => (DEFAULT_TERMINAL_WIDTH, None),
+        }
     })
 }
 

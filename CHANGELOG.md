@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Color Validation Method**: New `Color::validated()` method for early validation of color specifications
+  - Validates named colors against supported color names
+  - Validates hex colors for correct format (#RRGGBB with 6 hex digits)
+  - Returns descriptive errors with actionable recommendations
+  - Complements the existing `From<&str>` implementation which accepts any string
+  - 19 new tests in `tests/color_validation_tests.rs` covering validation scenarios
+
 - **Thread Safety Verification**: Comprehensive test suite verifying all public types are `Send + Sync`
   - 16 new tests in `tests/thread_safety_tests.rs`
   - Compile-time verification using trait bounds
@@ -22,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Backward compatible - all existing code continues to work
 
 ### Changed
+
+- **Test Infrastructure Improvements**: Enhanced test reliability and coverage
+  - Added global color initialization using `ctor` for all test suites
+  - Added terminal size environment variable support for fullscreen tests
+  - Fixed all color-related tests to work in non-TTY environments
+  - All 650 tests now pass consistently
 
 - **API Future-Proofing**: Added `#[non_exhaustive]` to all public enums
   - Enables adding new variants in minor versions without breaking changes

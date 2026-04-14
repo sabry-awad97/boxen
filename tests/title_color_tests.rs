@@ -1,6 +1,12 @@
 /// Integration tests for `title_color` feature
 use ::boxen::{BoxenOptions, Color, TitleAlignment, boxen};
 
+// Force enable colors for tests (colored crate disables them in non-TTY environments)
+#[ctor::ctor]
+fn init_colors() {
+    colored::control::set_override(true);
+}
+
 #[test]
 fn test_title_color_basic() {
     let options = BoxenOptions {

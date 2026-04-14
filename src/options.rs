@@ -1081,10 +1081,180 @@ impl From<String> for Color {
 }
 
 impl From<&str> for Color {
+    /// Creates a color from a string without validation.
+    ///
+    /// This implementation accepts any string and does not validate whether
+    /// the color name is valid or the hex format is correct. For validated
+    /// color creation, use `Color::validated(s)` instead.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use boxen::Color;
+    ///
+    /// // Accepts any string without validation
+    /// let color: Color = "red".into();
+    /// let invalid: Color = "not_a_color".into(); // No error, but may fail at render time
+    /// ```
     fn from(value: &str) -> Self {
         Color::from(value.to_string())
     }
 }
+
+impl Color {
+    /// Try to create a color from a string, validating named colors and hex format.
+    ///
+    /// This method validates the color specification and returns an error
+    /// if the color name is not recognized or the hex format is invalid.
+    ///
+    /// # Supported Named Colors
+    ///
+    /// Standard colors: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`
+    ///
+    /// Bright colors: `bright_black`, `bright_red`, `bright_green`, `bright_yellow`,
+    /// `bright_blue`, `bright_magenta`, `bright_cyan`, `bright_white`
+    ///
+    /// # Hex Format
+    ///
+    /// Hex colors must start with `#` and be exactly 6 characters (e.g., `#FF0000`).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use boxen::Color;
+    ///
+    /// // Valid named color
+    /// let red = Color::validated("red").unwrap();
+    ///
+    /// // Valid hex color
+    /// let orange = Color::validated("#FF8000").unwrap();
+    ///
+    /// // Invalid color name
+    /// assert!(Color::validated("invalid_color").is_err());
+    ///
+    /// // Invalid hex format
+    /// assert!(Color::validated("#GGG").is_err());
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns `BoxenError::InvalidColor` if:
+    /// - The color name is not recognized
+    /// - The hex format is invalid (wrong length or invalid characters)
+    /// - The string contains whitespace or special characters
+    pub fn validated(value: &str) -> Result<Self, crate::error::BoxenError> {
+        use crate::error::{BoxenError, ErrorRecommendation};
+
+        // Reject empty strings
+        if value.is_empty() {
+            return Err(BoxenError::invalid_color(
+                "Color string cannot be empty".to_string(),
+                value.to_string(),
+                vec![ErrorRecommendation::suggestion_only(
+                    "Empty color string".to_string(),
+                    "Use a valid color name like 'red', 'blue', or a hex code like '#FF0000'"
+                        .to_string(),
+                )],
+            ));
+        }
+
+        // Reject strings with whitespace
+        if value.contains(char::is_whitespace) {
+            return Err(BoxenError::invalid_color(
+                "Color string cannot contain whitespace".to_string(),
+                value.to_string(),
+                vec![ErrorRecommendation::suggestion_only(
+                    "Whitespace in color string".to_string(),
+                    "Remove any leading, trailing, or embedded whitespace".to_string(),
+                )],
+            ));
+        }
+
+        if value.starts_with('#') {
+            // Validate hex format
+            let hex = value.trim_start_matches('#');
+
+            if hex.len() != 6 {
+                return Err(BoxenError::invalid_color(
+                    format!("Invalid hex color format: {value}"),
+                    value.to_string(),
+                    vec![
+                        ErrorRecommendation::suggestion_only(
+                            "Invalid hex length".to_string(),
+                            "Hex colors must be exactly 6 characters (e.g., #FF0000)".to_string(),
+                        ),
+                        ErrorRecommendation::with_auto_fix(
+                            "Use 6-digit format".to_string(),
+                            "Try using the full 6-digit hex format".to_string(),
+                            "\"#FF0000\"".to_string(),
+                        ),
+                    ],
+                ));
+            }
+
+            if !hex.chars().all(|c| c.is_ascii_hexdigit()) {
+                return Err(BoxenError::invalid_color(
+                    format!("Invalid hex color format: {value}"),
+                    value.to_string(),
+                    vec![
+                        ErrorRecommendation::suggestion_only(
+                            "Invalid hex characters".to_string(),
+                            "Hex colors can only contain digits 0-9 and letters A-F".to_string(),
+                        ),
+                        ErrorRecommendation::with_auto_fix(
+                            "Use valid hex color".to_string(),
+                            "Try using a valid hex color".to_string(),
+                            "\"#FF0000\"".to_string(),
+                        ),
+                    ],
+                ));
+            }
+
+            Ok(Color::Hex(value.to_string()))
+        } else {
+            // Validate named color
+            let normalized = value.to_lowercase();
+            match normalized.as_str() {
+                // Standard terminal colors
+                "black" | "red" | "green" | "yellow" | "blue" | "magenta" | "purple"
+                | "cyan" | "white" |
+                // Bright colors with underscore or no separator
+                "bright_black" | "brightblack" | "gray" | "grey" |
+                "bright_red" | "brightred" |
+                "bright_green" | "brightgreen" |
+                "bright_yellow" | "brightyellow" |
+                "bright_blue" | "brightblue" |
+                "bright_magenta" | "brightmagenta" | "bright_purple" | "brightpurple" |
+                "bright_cyan" | "brightcyan" |
+                "bright_white" | "brightwhite" => Ok(Color::Named(value.to_string())),
+                _ => Err(BoxenError::invalid_color(
+                    format!("Unknown color name: {value}"),
+                    value.to_string(),
+                    vec![
+                        ErrorRecommendation::suggestion_only(
+                            "Unknown color name".to_string(),
+                            "Use a standard color name like 'red', 'blue', 'green', etc."
+                                .to_string(),
+                        ),
+                        ErrorRecommendation::with_auto_fix(
+                            "Use standard color".to_string(),
+                            "Try using 'red' as a common color".to_string(),
+                            "\"red\"".to_string(),
+                        ),
+                        ErrorRecommendation::suggestion_only(
+                            "Alternative: Use hex color".to_string(),
+                            "You can also use hex colors like '#FF0000' for red".to_string(),
+                        ),
+                    ],
+                )),
+            }
+        }
+    }
+}
+
+// Note: We cannot implement TryFrom<&str> because Rust provides a blanket implementation
+// of TryFrom<U> for any T where U: Into<T>. Since we have From<&str>, we automatically
+// get TryFrom<&str> that never fails. Use Color::validated() for validation instead.
 
 impl From<(u8, u8, u8)> for Color {
     fn from((r, g, b): (u8, u8, u8)) -> Self {

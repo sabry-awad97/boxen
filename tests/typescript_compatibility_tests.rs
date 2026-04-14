@@ -4,6 +4,12 @@ use ::boxen::{
     builder, double_box, round_box, simple_box,
 };
 
+// Force enable colors for tests (colored crate disables them in non-TTY environments)
+#[ctor::ctor]
+fn init_colors() {
+    colored::control::set_override(true);
+}
+
 #[test]
 fn test_typescript_default_single_border() {
     // TypeScript default: single border, no padding, no margin
