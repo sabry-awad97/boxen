@@ -24,7 +24,7 @@ signal-hook = { version = "0.4.4", optional = true }
 dhat = { version = "0.3.3", optional = true }
 
 [dev-dependencies]
-chrono = "0.4.44"
+chrono = "0.4.45"
 ctrlc = "3.5.2"
 criterion = { version = "0.8.2", features = ["html_reports"] }
 ctor = "0.2"
