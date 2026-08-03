@@ -468,6 +468,12 @@ pub struct BoxenOptions {
     pub dim_border: bool,
     /// Optional fullscreen mode configuration
     pub fullscreen: Option<FullscreenMode>,
+    /// Whether markdown rendering is enabled
+    pub markdown_enabled: bool,
+    /// Markdown styling configuration
+    pub markdown_style: Option<crate::markdown::MarkdownStyle>,
+    /// Markdown feature configuration
+    pub markdown_config: Option<crate::markdown::MarkdownConfig>,
 }
 
 impl Default for BoxenOptions {
@@ -487,6 +493,9 @@ impl Default for BoxenOptions {
             title_color: None,
             dim_border: false,
             fullscreen: None,
+            markdown_enabled: false,
+            markdown_style: None,
+            markdown_config: None,
         }
     }
 }
@@ -1281,6 +1290,113 @@ impl BoxenBuilder {
         self.options.text_alignment = TextAlignment::Center;
         self.options.title_alignment = TitleAlignment::Center;
         self.options.float = Float::Center;
+        self
+    }
+
+    /// Enable markdown rendering with default styling
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::builder;
+    ///
+    /// let result = builder()
+    ///     .markdown()
+    ///     .render("# Hello\n**bold** and `code`")
+    ///     .unwrap();
+    /// ```
+    #[must_use]
+    pub fn markdown(mut self) -> Self {
+        self.options.markdown_enabled = true;
+        self.options.markdown_style = Some(crate::markdown::MarkdownStyle::default());
+        self.options.markdown_config = Some(crate::markdown::MarkdownConfig::default());
+        self
+    }
+
+    /// Enable markdown rendering with custom style
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::{builder, markdown::MarkdownStyle, Color};
+    ///
+    /// let style = MarkdownStyle {
+    ///     h1_color: Color::Named("blue".to_string()),
+    ///     ..Default::default()
+    /// };
+    ///
+    /// let result = builder()
+    ///     .markdown_with_style(style)
+    ///     .render("# Heading")
+    ///     .unwrap();
+    /// ```
+    #[must_use]
+    pub fn markdown_with_style(mut self, style: crate::markdown::MarkdownStyle) -> Self {
+        self.options.markdown_enabled = true;
+        self.options.markdown_style = Some(style);
+        self.options.markdown_config = Some(crate::markdown::MarkdownConfig::default());
+        self
+    }
+
+    /// Enable markdown rendering with custom configuration
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::{builder, markdown::MarkdownConfig};
+    ///
+    /// let config = MarkdownConfig {
+    ///     headers: true,
+    ///     bold: true,
+    ///     italic: false,
+    ///     ..Default::default()
+    /// };
+    ///
+    /// let result = builder()
+    ///     .markdown_with_config(config)
+    ///     .render("# Title")
+    ///     .unwrap();
+    /// ```
+    #[must_use]
+    pub fn markdown_with_config(mut self, config: crate::markdown::MarkdownConfig) -> Self {
+        self.options.markdown_enabled = true;
+        self.options.markdown_style = Some(crate::markdown::MarkdownStyle::default());
+        self.options.markdown_config = Some(config);
+        self
+    }
+
+    /// Enable markdown with both custom style and config
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use ::boxen::{builder, markdown::{MarkdownStyle, MarkdownConfig}, Color};
+    ///
+    /// let style = MarkdownStyle {
+    ///     h1_color: Color::Named("blue".to_string()),
+    ///     ..Default::default()
+    /// };
+    ///
+    /// let config = MarkdownConfig {
+    ///     headers: true,
+    ///     bold: true,
+    ///     ..Default::default()
+    /// };
+    ///
+    /// let result = builder()
+    ///     .markdown_full(style, config)
+    ///     .render("# Title")
+    ///     .unwrap();
+    /// ```
+    #[must_use]
+    pub fn markdown_full(
+        mut self,
+        style: crate::markdown::MarkdownStyle,
+        config: crate::markdown::MarkdownConfig,
+    ) -> Self {
+        self.options.markdown_enabled = true;
+        self.options.markdown_style = Some(style);
+        self.options.markdown_config = Some(config);
         self
     }
 }

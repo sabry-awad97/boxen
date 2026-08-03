@@ -6,7 +6,7 @@ rust-version = "1.85.0"
 authors = ["Boxen Contributors"]
 description = "A Rust library for creating styled terminal boxes around text with performance optimizations"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/sabry-awad97/boxen"
+repository = "https://github.com/sabryio/boxen"
 documentation = "https://docs.rs/boxen"
 keywords = ["terminal", "cli", "box", "text", "formatting"]
 categories = ["command-line-utilities", "text-processing"]
@@ -17,14 +17,15 @@ terminal_size = "0.4.4"
 colored = "3.1.1"
 unicode-width = "0.2.2"
 textwrap = "0.16.2"
-thiserror = "2.0.18"
-lru = { version = "0.16.3", optional = true }
+thiserror = "2.0.19"
+pulldown-cmark = "0.13.4"
+lru = { version = "0.16.4", optional = true }
 ahash = { version = "0.8.12", optional = true }
 signal-hook = { version = "0.4.4", optional = true }
 dhat = { version = "0.3.3", optional = true }
 
 [dev-dependencies]
-chrono = "0.4.44"
+chrono = "0.4.45"
 ctrlc = "3.5.2"
 criterion = { version = "0.8.2", features = ["html_reports"] }
 ctor = "0.2"

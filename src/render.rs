@@ -475,8 +475,20 @@ pub fn boxen<S: AsRef<str>>(text: S, options: Option<BoxenOptions>) -> BoxenResu
         )
     })?;
 
+    // Convert markdown to styled text if enabled
+    let text_to_render = if options.markdown_enabled {
+        if let (Some(style), Some(config)) = (&options.markdown_style, &options.markdown_config) {
+            let renderer = crate::markdown::MarkdownRenderer::new(style.clone(), config.clone());
+            renderer.render(text)
+        } else {
+            text.to_string()
+        }
+    } else {
+        text.to_string()
+    };
+
     // Process the text content
-    let processed_content = process_content(text, &options).map_err(|e| {
+    let processed_content = process_content(&text_to_render, &options).map_err(|e| {
         crate::error::BoxenError::rendering_error(
             format!("Text processing failed: {e}"),
             vec![crate::error::ErrorRecommendation::suggestion_only(

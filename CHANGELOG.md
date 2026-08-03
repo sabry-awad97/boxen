@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Markdown Rendering**: Automatic markdown parsing and rendering with styled terminal output
+  - Headers (H1-H6) with customizable colors
+  - Text formatting: bold (`**bold**`), italic (`*italic*`), strikethrough (`~~text~~`)
+  - Inline code (`` `code` ``) and code blocks with syntax styling
+  - Lists: ordered and unordered with customizable markers
+  - Links with multiple display styles (text only, with URL, etc.)
+  - Horizontal rules with customizable characters
+  - Blockquotes with visual markers
+- New builder methods: `.markdown()`, `.markdown_with_style()`, `.markdown_with_config()`, `.markdown_full()`
+- New convenience function: `markdown_box()` for quick markdown rendering
+- New configuration types: `MarkdownStyle`, `MarkdownConfig`, `BoldStyle`, `ItalicStyle`, `LinkStyle`
+- Comprehensive markdown integration tests (30 tests covering all features)
+- Example: `examples/markdown_demo.rs` showcasing all markdown capabilities
+
+### Dependencies
+
+- Added `pulldown-cmark = "0.13"` for CommonMark-compliant markdown parsing
+
 ## [0.4.0] - 2026-04-14
 
 ### Added

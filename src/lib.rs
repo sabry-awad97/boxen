@@ -5,9 +5,9 @@
 // #![warn(clippy::nursery)]
 // #![warn(clippy::cargo)]
 #![doc(html_root_url = "https://docs.rs/boxen")]
-#![doc(html_logo_url = "https://raw.githubusercontent.com/sabry-awad97/boxen/main/assets/logo.png")]
+#![doc(html_logo_url = "https://raw.githubusercontent.com/sabryio/boxen/main/assets/logo.png")]
 #![doc(
-    html_favicon_url = "https://raw.githubusercontent.com/sabry-awad97/boxen/main/assets/favicon.ico"
+    html_favicon_url = "https://raw.githubusercontent.com/sabryio/boxen/main/assets/favicon.ico"
 )]
 
 //! # Boxen
@@ -26,7 +26,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use ::boxen::{boxen, builder, BorderStyle, TextAlignment};
+//! use boxen::{boxen, builder, BorderStyle, TextAlignment};
 //!
 //! // Simple box with default settings
 //! let simple = boxen("Hello, World!", None).unwrap();
@@ -50,7 +50,7 @@
 //! ### Basic Usage
 //!
 //! ```rust
-//! use ::boxen::boxen;
+//! use boxen::boxen;
 //!
 //! let result = boxen("Simple box", None).unwrap();
 //! // ┌──────────┐
@@ -61,7 +61,7 @@
 //! ### Builder Pattern
 //!
 //! ```rust
-//! use ::boxen::{builder, BorderStyle, TextAlignment, Color};
+//! use boxen::{builder, BorderStyle, TextAlignment, Color};
 //!
 //! let result = builder()
 //!     .border_style(BorderStyle::Round)
@@ -77,7 +77,54 @@
 //! ### Convenience Functions
 //!
 //! ```rust
-//! use ::boxen::{simple_box, double_box, round_box};
+//! use boxen::{simple_box, double_box, round_box, markdown_box};
+//!
+//! println!("{}", simple_box("Default style"));
+//! println!("{}", double_box("Double border"));
+//! println!("{}", round_box("Round corners"));
+//! println!("{}", markdown_box("# **Markdown** support!"));
+//! ```
+//!
+//! ### Markdown Rendering
+//!
+//! Transform markdown syntax into styled terminal output:
+//!
+//! ```rust
+//! use boxen::builder;
+//!
+//! let markdown = r#"
+//! # Commands
+//!
+//! **create** - Create a new item
+//! **delete** - Remove an item
+//!
+//! Use `--help` for more info
+//! "#;
+//!
+//! let result = builder()
+//!     .title("Help")
+//!     .markdown()  // Enable markdown rendering
+//!     .render(markdown)
+//!     .unwrap();
+//! ```
+//!
+//! Custom markdown styling:
+//!
+//! ```rust
+//! use boxen::{builder, Color, markdown::{MarkdownStyle, LinkStyle}};
+//!
+//! let style = MarkdownStyle {
+//!     h1_color: Color::Named("magenta".to_string()),
+//!     bold_color: Some(Color::Named("yellow".to_string())),
+//!     link_style: LinkStyle::ShowUrl,
+//!     ..Default::default()
+//! };
+//!
+//! let result = builder()
+//!     .markdown_with_style(style)
+//!     .render("# Custom **colors**!")
+//!     .unwrap();
+//! ```
 //!
 //! println!("{}", simple_box("Default style"));
 //! println!("{}", double_box("Double border"));
@@ -130,6 +177,7 @@
 pub mod borders;
 pub mod color;
 pub mod error;
+pub mod markdown;
 pub mod memory;
 pub mod options;
 pub mod render;
@@ -163,7 +211,7 @@ pub use terminal::{get_terminal_height, get_terminal_size, get_terminal_width};
 /// # Examples
 ///
 /// ```rust
-/// use ::boxen::{builder, BorderStyle, TextAlignment};
+/// use boxen::{builder, BorderStyle, TextAlignment};
 ///
 /// let result = builder()
 ///     .border_style(BorderStyle::Double)
@@ -192,7 +240,7 @@ pub fn builder() -> BoxenBuilder {
 /// # Examples
 ///
 /// ```rust
-/// use ::boxen::simple_box;
+/// use boxen::simple_box;
 ///
 /// println!("{}", simple_box("Hello, World!"));
 /// // ┌─────────────┐
@@ -215,7 +263,7 @@ pub fn simple_box<S: AsRef<str>>(text: S) -> String {
 /// # Examples
 ///
 /// ```rust
-/// use ::boxen::double_box;
+/// use boxen::double_box;
 ///
 /// println!("{}", double_box("Important!"));
 /// // ╔═══════════╗
@@ -242,7 +290,7 @@ pub fn double_box<S: AsRef<str>>(text: S) -> String {
 /// # Examples
 ///
 /// ```rust
-/// use ::boxen::round_box;
+/// use boxen::round_box;
 ///
 /// println!("{}", round_box("Friendly message"));
 /// // ╭─────────────────╮
@@ -257,6 +305,40 @@ pub fn round_box<S: AsRef<str>>(text: S) -> String {
     let text_ref = text.as_ref();
     let options = BoxenOptions {
         border_style: BorderStyle::Round,
+        ..Default::default()
+    };
+    boxen(text_ref, Some(options)).unwrap_or_else(|_| text_ref.to_string())
+}
+
+/// Create a box with markdown rendering enabled.
+///
+/// This is a convenience function for creating a box that renders markdown syntax
+/// to styled terminal output.
+///
+/// # Examples
+///
+/// ```rust
+/// use boxen::markdown_box;
+///
+/// println!("{}", markdown_box(r#"
+/// # Commands
+///
+/// **create** - Create a new item
+/// **delete** - Remove an item
+///
+/// Use `--help` for more info
+/// "#));
+/// ```
+///
+/// # Error Handling
+///
+/// This function never panics. If box creation fails, it returns the original text.
+pub fn markdown_box<S: AsRef<str>>(text: S) -> String {
+    let text_ref = text.as_ref();
+    let options = BoxenOptions {
+        markdown_enabled: true,
+        markdown_style: Some(markdown::MarkdownStyle::default()),
+        markdown_config: Some(markdown::MarkdownConfig::default()),
         ..Default::default()
     };
     boxen(text_ref, Some(options)).unwrap_or_else(|_| text_ref.to_string())

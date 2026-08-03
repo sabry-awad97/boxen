@@ -229,6 +229,95 @@ Boxen supports both fixed and dynamic width/height using closures that adapt to 
 ```rust
 use boxen::builder;
 
+// Fixed width
+let fixed = builder()
+    .width(50)
+    .render("Fixed width box")
+    .unwrap();
+
+// Dynamic width - 80% of terminal, minimum 30 columns
+let dynamic = builder()
+    .width(|available| (available * 4 / 5).max(30))
+    .render("Dynamic width adapts to terminal size")
+    .unwrap();
+```
+
+### Markdown Rendering
+
+Transform markdown syntax into beautifully styled terminal output:
+
+<table>
+<tr>
+<td width="50%">
+
+**Code:**
+
+```rust
+use boxen::builder;
+
+let markdown = r#"
+# Commands
+
+**create** - Create a new item
+**delete** - Remove an item
+
+Use `--help` for more info
+"#;
+
+let result = builder()
+    .title("Help")
+    .markdown()  // Enable markdown
+    .render(markdown)
+    .unwrap();
+println!("{}", result);
+```
+
+</td>
+<td width="50%">
+
+**Features:**
+
+- Headers (H1-H6) with colors
+- **Bold**, *italic*, ~~strikethrough~~
+- `Inline code` styling
+- Code blocks
+- Lists (ordered & unordered)
+- Links with display options
+- Horizontal rules
+- Blockquotes
+
+</td>
+</tr>
+</table>
+
+**Custom Markdown Styling:**
+
+```rust
+use boxen::{builder, Color, markdown::{MarkdownStyle, LinkStyle, ItalicStyle}};
+
+let style = MarkdownStyle {
+    h1_color: Color::Named("magenta".to_string()),
+    bold_color: Some(Color::Named("yellow".to_string())),
+    link_style: LinkStyle::ShowUrl,
+    italic_style: ItalicStyle::Underline,
+    ..Default::default()
+};
+
+let result = builder()
+    .markdown_with_style(style)
+    .render("# Custom **styling** for [links](https://example.com)")
+    .unwrap();
+```
+
+**Quick Markdown Box:**
+
+```rust
+use boxen::markdown_box;
+
+// One-line markdown rendering
+println!("{}", markdown_box("# Quick\n**Easy** markdown!"));
+```
+
 // Fixed width (traditional approach)
 let result = builder()
     .width(50)
