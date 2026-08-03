@@ -24,6 +24,8 @@ impl MarkdownRenderer {
         if self.config.lists {
             options.insert(Options::ENABLE_TASKLISTS);
         }
+        // Enable definition lists
+        options.insert(Options::ENABLE_DEFINITION_LIST);
 
         let parser = Parser::new_ext(markdown, options);
         let mut output = String::with_capacity(markdown.len() * 2);
@@ -76,6 +78,18 @@ impl MarkdownRenderer {
             }
             Tag::BlockQuote(_) => {
                 state.in_blockquote = true;
+                state.blockquote_depth += 1;
+                if self.config.blockquotes {
+                    // Add blockquote marker at the start of the line
+                    if let Some(color) = &self.style.blockquote_color {
+                        output.push_str(&self.color_to_ansi_fg(color));
+                    }
+                    output.push_str(&self.style.blockquote_marker);
+                    output.push(' ');
+                    if self.style.blockquote_color.is_some() {
+                        output.push_str("\x1b[0m");
+                    }
+                }
             }
             Tag::CodeBlock(_) => {
                 state.in_code_block = true;
@@ -93,6 +107,9 @@ impl MarkdownRenderer {
             }
             Tag::Item => {
                 if self.config.lists {
+                    state.in_list_item = true;
+
+                    // Handle nested lists with proper indentation
                     let indent = "  ".repeat(state.list_depth.saturating_sub(1));
                     output.push_str(&indent);
 
@@ -152,9 +169,25 @@ impl MarkdownRenderer {
             Tag::TableHead => {}
             Tag::TableRow => {}
             Tag::TableCell => {}
-            Tag::DefinitionList => {}
-            Tag::DefinitionListTitle => {}
-            Tag::DefinitionListDefinition => {}
+            Tag::DefinitionList => {
+                if self.config.lists {
+                    state.in_definition_list = true;
+                    output.push('\n');
+                }
+            }
+            Tag::DefinitionListTitle => {
+                if self.config.lists {
+                    state.in_definition_title = true;
+                    // Make definition titles bold
+                    output.push_str("\x1b[1m");
+                }
+            }
+            Tag::DefinitionListDefinition => {
+                if self.config.lists {
+                    state.in_definition_definition = true;
+                    output.push_str("  "); // Indent definitions
+                }
+            }
             Tag::Superscript => {}
             Tag::Subscript => {}
             Tag::MetadataBlock(_) => {}
@@ -176,7 +209,11 @@ impl MarkdownRenderer {
                 state.in_heading = None;
             }
             TagEnd::BlockQuote(_) => {
-                state.in_blockquote = false;
+                state.blockquote_depth = state.blockquote_depth.saturating_sub(1);
+                if state.blockquote_depth == 0 {
+                    state.in_blockquote = false;
+                }
+                output.push('\n');
             }
             TagEnd::CodeBlock => {
                 output.push_str("\x1b[0m");
@@ -194,6 +231,7 @@ impl MarkdownRenderer {
             }
             TagEnd::Item => {
                 if self.config.lists {
+                    state.in_list_item = false;
                     output.push('\n');
                 }
             }
@@ -235,9 +273,25 @@ impl MarkdownRenderer {
             TagEnd::TableHead => {}
             TagEnd::TableRow => {}
             TagEnd::TableCell => {}
-            TagEnd::DefinitionList => {}
-            TagEnd::DefinitionListTitle => {}
-            TagEnd::DefinitionListDefinition => {}
+            TagEnd::DefinitionList => {
+                if self.config.lists {
+                    state.in_definition_list = false;
+                    output.push('\n');
+                }
+            }
+            TagEnd::DefinitionListTitle => {
+                if self.config.lists {
+                    state.in_definition_title = false;
+                    output.push_str("\x1b[0m"); // Reset bold
+                    output.push('\n');
+                }
+            }
+            TagEnd::DefinitionListDefinition => {
+                if self.config.lists {
+                    state.in_definition_definition = false;
+                    output.push('\n');
+                }
+            }
             TagEnd::Superscript => {}
             TagEnd::Subscript => {}
             TagEnd::MetadataBlock(_) => {}
@@ -365,11 +419,15 @@ impl MarkdownRenderer {
 struct RenderState {
     in_heading: Option<HeadingLevel>,
     in_blockquote: bool,
+    blockquote_depth: usize,
     in_code_block: bool,
     in_list_item: bool,
     list_depth: usize,
     list_item_number: Option<u64>,
     link_url: Option<String>,
+    in_definition_list: bool,
+    in_definition_title: bool,
+    in_definition_definition: bool,
 }
 
 #[cfg(test)]

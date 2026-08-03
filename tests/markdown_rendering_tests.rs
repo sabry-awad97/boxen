@@ -604,3 +604,325 @@ fn test_horizontal_rule_disabled() {
     // ASSERT
     // Rule should not render or be minimal
 }
+
+// ============================================================================
+// Test Group 11: Blockquotes
+// ============================================================================
+
+#[test]
+fn test_blockquote_renders_with_marker() {
+    // ARRANGE
+    let input = r#"
+> This is a blockquote
+> with multiple lines
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(
+        result.contains("This is a blockquote"),
+        "Blockquote text should be present"
+    );
+    assert!(
+        result.contains("▌") || result.contains(">"),
+        "Should contain blockquote marker"
+    );
+}
+
+#[test]
+fn test_nested_blockquotes() {
+    // ARRANGE
+    let input = r#"
+> Level 1
+>> Level 2
+>>> Level 3
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(result.contains("Level 1"), "First level should be present");
+    assert!(result.contains("Level 2"), "Second level should be present");
+    assert!(result.contains("Level 3"), "Third level should be present");
+}
+
+#[test]
+fn test_blockquote_with_markdown() {
+    // ARRANGE
+    let input = r#"
+> **Bold** in blockquote
+> *Italic* too
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(
+        result.contains("Bold"),
+        "Bold text in blockquote should be present"
+    );
+    assert!(
+        result.contains("Italic"),
+        "Italic text in blockquote should be present"
+    );
+}
+
+// ============================================================================
+// Test Group 12: Nested Lists
+// ============================================================================
+
+#[test]
+fn test_nested_unordered_lists() {
+    // ARRANGE
+    let input = r#"
+- Level 1 item 1
+  - Level 2 item 1
+  - Level 2 item 2
+- Level 1 item 2
+  - Level 2 item 3
+    - Level 3 item 1
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(
+        result.contains("Level 1 item 1"),
+        "First level item should be present"
+    );
+    assert!(
+        result.contains("Level 2 item 1"),
+        "Second level item should be present"
+    );
+    assert!(
+        result.contains("Level 3 item 1"),
+        "Third level item should be present"
+    );
+    assert!(result.contains("•"), "Should contain list markers");
+}
+
+#[test]
+fn test_nested_ordered_lists() {
+    // ARRANGE
+    let input = r#"
+1. First
+   1. Nested first
+   2. Nested second
+2. Second
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(result.contains("First"), "First item should be present");
+    assert!(
+        result.contains("Nested first"),
+        "Nested item should be present"
+    );
+    assert!(result.contains("1."), "Should contain ordered markers");
+}
+
+#[test]
+fn test_mixed_nested_lists() {
+    // ARRANGE
+    let input = r#"
+1. Ordered item
+   - Unordered nested
+   - Another unordered
+2. Second ordered
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(
+        result.contains("Ordered item"),
+        "Ordered item should be present"
+    );
+    assert!(
+        result.contains("Unordered nested"),
+        "Unordered nested should be present"
+    );
+}
+
+#[test]
+fn test_deeply_nested_lists() {
+    // ARRANGE
+    let input = r#"
+- L1
+  - L2
+    - L3
+      - L4
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(result.contains("L1"), "Level 1 should be present");
+    assert!(result.contains("L2"), "Level 2 should be present");
+    assert!(result.contains("L3"), "Level 3 should be present");
+    assert!(result.contains("L4"), "Level 4 should be present");
+}
+
+// ============================================================================
+// Test Group 13: Definition Lists
+// ============================================================================
+
+#[test]
+fn test_definition_list_renders() {
+    // ARRANGE
+    let input = r#"
+Term 1
+: Definition 1
+
+Term 2
+: Definition 2a
+: Definition 2b
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(result.contains("Term 1"), "Term should be present");
+    assert!(
+        result.contains("Definition 1"),
+        "Definition should be present"
+    );
+    assert!(result.contains("Term 2"), "Second term should be present");
+}
+
+#[test]
+fn test_definition_list_indentation() {
+    // ARRANGE
+    let input = r#"
+Apple
+: A red fruit
+
+Banana
+: A yellow fruit
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(result.contains("Apple"), "Term should be present");
+    assert!(
+        result.contains("A red fruit"),
+        "Definition should be present"
+    );
+    // Definitions should be indented (contains spaces before text)
+}
+
+#[test]
+fn test_definition_list_with_markdown() {
+    // ARRANGE
+    let input = r#"
+**Bold Term**
+: Definition with *italic*
+
+Code
+: Use `code` in definition
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(result.contains("Bold Term"), "Bold term should be present");
+    assert!(
+        result.contains("italic"),
+        "Italic in definition should be present"
+    );
+    assert!(result.contains("code"), "Code should be present");
+}
+
+// ============================================================================
+// Test Group 14: Combined Extended Features
+// ============================================================================
+
+#[test]
+fn test_blockquote_with_lists() {
+    // ARRANGE
+    let input = r#"
+> Quoted list:
+> - Item 1
+> - Item 2
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(
+        result.contains("Quoted list"),
+        "Blockquote text should be present"
+    );
+    assert!(result.contains("Item 1"), "List item should be present");
+}
+
+#[test]
+fn test_nested_lists_in_blockquote() {
+    // ARRANGE
+    let input = r#"
+> Parent list:
+> - Level 1
+>   - Level 2
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(result.contains("Parent list"), "Text should be present");
+    assert!(result.contains("Level 1"), "Level 1 should be present");
+    assert!(result.contains("Level 2"), "Level 2 should be present");
+}
+
+#[test]
+fn test_all_extended_features_combined() {
+    // ARRANGE
+    let input = r#"
+# Extended Features
+
+> Blockquote with **bold**
+
+Nested list:
+- Item 1
+  - Sub 1
+  - Sub 2
+
+Definition:
+Term
+: Definition text
+"#;
+
+    // ACT
+    let result = builder().markdown().render(input).unwrap();
+
+    // ASSERT
+    assert!(
+        result.contains("Extended Features"),
+        "Header should be present"
+    );
+    assert!(
+        result.contains("Blockquote"),
+        "Blockquote should be present"
+    );
+    assert!(result.contains("Item 1"), "List should be present");
+    assert!(result.contains("Sub 1"), "Nested list should be present");
+    assert!(result.contains("Term"), "Definition term should be present");
+    assert!(
+        result.contains("Definition text"),
+        "Definition should be present"
+    );
+}
